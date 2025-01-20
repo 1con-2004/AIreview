@@ -1,0 +1,184 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0e7ff 0%, #818cf8 100%);
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.header-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.login-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 0;
+}
+
+.login-title {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 24px;
+}
+
+.form-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.form-item input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.password-suffix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.remember-pwd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  cursor: pointer;
+}
+
+.forget-pwd {
+  color: #666;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #818cf8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+button[type="submit"]:hover {
+  background: #6366f1;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.divider span {
+  background: white;
+  padding: 0 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.login-methods {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.method-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+}
+
+.method-btn:hover {
+  border-color: #818cf8;
+  color: #818cf8;
+}
+
+.other-accounts {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.account-types {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.account-type {
+  color: #818cf8;
+  cursor: pointer;
+}
+
+.account-type:hover {
+  text-decoration: underline;
+} 

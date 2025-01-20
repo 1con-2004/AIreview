@@ -1,0 +1,70 @@
+/* 通用布局样式 */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: white;
+  padding: 0 20px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-menu {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-menu a {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 22px 0;
+}
+
+.nav-menu a.active {
+  color: #1890ff;
+  border-bottom: 2px solid #1890ff;
+}
+
+.user-section {
+  display: flex;
+  gap: 16px;
+}
+
+.user-section a {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.main-content {
+  flex: 1;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.footer {
+  background-color: white;
+  padding: 20px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content {
+  color: #666;
+  font-size: 14px;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  padding: 40px 0;
+} 
