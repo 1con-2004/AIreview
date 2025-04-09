@@ -1,0 +1,24 @@
+<invoke name="file_search">
+<parameter name="query">login.vue</parameter>
+<parameter name="explanation">搜索登录页面组件文件</parameter>
+</invoke>
+
+<invoke name="file_search">
+<parameter name="query">api.js</parameter>
+<parameter name="explanation">搜索 API 配置文件</parameter>
+</invoke>
+
+<invoke name="file_search">
+<parameter name="query">store login</parameter>
+<parameter name="explanation">搜索包含登录相关的 store 文件</parameter>
+</invoke>
+
+<invoke name="grep_search">
+<parameter name="query">/api/login</parameter>
+<parameter name="explanation">搜索前端代码中的登录 API 调用</parameter>
+</invoke>
+
+<invoke name="codebase_search">
+<parameter name="query">login request axios</parameter>
+<parameter name="explanation">搜索登录请求相关的代码</parameter>
+</invoke> 

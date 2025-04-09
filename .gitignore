@@ -1,4 +1,39 @@
+# 依赖
+node_modules/
 /frontend/node_modules/
-/node_modules/
 /backend/node_modules/
-/target/
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+
+# 日志
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器目录和文件
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 上传和临时文件
+/backend/uploads/
+/backend/temp/
+/frontend/dist/
+
+# 其他
+*.pid
+*.seed
+*.pid.lock

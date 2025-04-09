@@ -1,0 +1,82 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Technology Stack
+## Front - end Language
+The front - end is mainly developed using Vue3.
+
+## Back - end Language
+The back - end is mainly developed using JavaScript.
+
+# Dependency Manager
+Yarn is used as the dependency manager.
+Note: When installing dependencies, to install front - end dependencies, you need to first enter the `frontend` folder in the project root directory. To install back - end dependencies, you need to first enter the `backend` folder in the project root directory.
+
+# Project Overview
+## Project Goal
+This project is an AI intelligent question - reviewing system. It adds AI functions on the basis of imitating traditional question - brushing platforms such as LeetCode, such as sending the code uploaded by users to AI for review and analysis, and using AI to generate learning paths for users.
+
+## Target Audience
+This project is targeted at schools rather than commercial enterprises and is promoted to college students in schools. The distinguishing point is that this project can collect some learning status of students and display the statistics in the background.
+
+# Project Structure Index Help
+## Front - end Part
+1. Front - end related code is stored in the `frontend` folder in the project root directory.
+2. The page routing configuration file is stored in `frontend/src/router/index.js`.
+3. To start Front end part, in file frontend and "yarn serve" to start.
+
+## Back - end Part
+1. Back - end related code is stored in the `backend` folder in the project root directory.
+2. The routing import file is stored in `backend/src/api/index.js`.
+3. The file related to using `app.use` for API routing is stored in `backend/src/app.js`.
+4. To start Back end part, in file backend and "yarn dev" to start.
+
+# Operation Preferences
+## Database
+1. For database reading, the database file is defaultly placed in the `数据库文件/AIreview.sql` folder in the project root directory. This file is not automatically updated but is exported by users from Navicat irregularly for viewing only.
+2. For some database modification operations, provide executable statements for users in Navicat. When the code for database modification operations is too long, present it in segments.
+
+# Code Preferences
+## Front - end Code
+1. When improving front - end related code, make it adaptable to browsers of different sizes. That is, use percentage - based layout instead of fixed pixel density.
+
+## Back - end Code
+1. When improving back - end related code, add necessary debugging statements to facilitate debugging in case of bugs later.
+
+## When Writing Code
+1. Add some comments to indicate what the code is doing, making it easier for beginners to understand the project structure.
+2. After editing the relevant code, review the code again to ensure that all requirements are fully met and there are no obvious bugs.
+
+## When Thinking
+### When a user presents a new requirement or modifies an existing one
+1. **Understand the Behavioral Logic**
+    - First, comprehensively analyze the user - provided requirement. Identify the main actions, decision - making points, and the sequence of operations within the requirement. For example, if the requirement is about an e - commerce product search function, determine how the search query is processed, how results are filtered, and what actions can be taken on the search results.
+2. **Generate Flowchart Code for the Solution (Compatible with Mermaid Visualization)**
+    - Use Mermaid's syntax to create a flowchart that accurately represents the behavioral logic of the requirement. For a simple user login process requirement, the Mermaid code could be:
+```mermaid
+graph TD;
+    A[Start] --> B[Enter Username and Password];
+    B --> C{Verify Credentials};
+    C -->|Success| D[Login Successful];
+    C -->|Failure| E[Show Error Message];
+    E --> B;
+    D --> F[End];
+```
+3. **Handling Multiple Requirements**
+    - If there are multiple requirements, for each requirement, repeat the above two steps. Generate separate flowchart codes for each requirement. For instance, if in addition to the user login requirement, there is a product checkout requirement, create a new Mermaid flowchart code for the checkout process.
+```mermaid
+graph TD;
+    Start --> AddProductsToCart;
+    AddProductsToCart --> ReviewCart;
+    ReviewCart -->|Proceed| EnterShippingInfo;
+    EnterShippingInfo --> EnterPaymentInfo;
+    EnterPaymentInfo --> ConfirmOrder;
+    ConfirmOrder -->|Success| OrderPlaced;
+    ConfirmOrder -->|Failure| HandlePaymentError;
+    HandlePaymentError --> EnterPaymentInfo;
+    OrderPlaced --> End;
+```
+
+The key here is to clearly understand each requirement's unique behavior and represent it accurately in the Mermaid - compatible flowchart code. This helps in visualizing the solution and communicating the design effectively. 

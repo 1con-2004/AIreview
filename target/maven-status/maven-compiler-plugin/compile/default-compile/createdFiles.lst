@@ -1,0 +1,7 @@
+org/example/aireview/entity/SubmissionId.class
+org/example/aireview/entity/StudyRecord.class
+org/example/aireview/entity/Question.class
+org/example/aireview/AIreviewApplication.class
+org/example/aireview/entity/StudyRecordId.class
+org/example/aireview/entity/Submission.class
+org/example/aireview/entity/User.class
