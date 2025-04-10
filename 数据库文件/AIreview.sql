@@ -11,7 +11,7 @@
  Target Server Version : 80039 (8.0.39)
  File Encoding         : 65001
 
- Date: 04/04/2025 17:24:39
+ Date: 10/04/2025 09:29:48
 */
 
 SET NAMES utf8mb4;
@@ -25,7 +25,7 @@ CREATE TABLE `classes` (
   `id` int NOT NULL AUTO_INCREMENT,
   `class_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '班级名称',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='班级信息表';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台管理——班级信息表';
 
 -- ----------------------------
 -- Records of classes
@@ -51,7 +51,7 @@ CREATE TABLE `classroom_discussions` (
   KEY `fk_discussion_user` (`user_id`),
   CONSTRAINT `fk_discussion_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_discussion_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂讨论表';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂讨论表';
 
 -- ----------------------------
 -- Records of classroom_discussions
@@ -79,7 +79,7 @@ CREATE TABLE `classroom_files` (
   PRIMARY KEY (`id`),
   KEY `fk_file_classroom` (`classroom_id`),
   CONSTRAINT `fk_file_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂文件表';
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂文件表';
 
 -- ----------------------------
 -- Records of classroom_files
@@ -105,7 +105,7 @@ CREATE TABLE `classroom_messages` (
   PRIMARY KEY (`id`),
   KEY `fk_message_classroom` (`classroom_id`),
   CONSTRAINT `fk_message_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂留言表';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂留言表';
 
 -- ----------------------------
 -- Records of classroom_messages
@@ -136,13 +136,13 @@ CREATE TABLE `classrooms` (
   UNIQUE KEY `uk_classroom_code` (`classroom_code`),
   KEY `fk_classroom_teacher` (`teacher_id`),
   CONSTRAINT `fk_classroom_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂信息表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂基本信息表';
 
 -- ----------------------------
 -- Records of classrooms
 -- ----------------------------
 BEGIN;
-INSERT INTO `classrooms` (`id`, `classroom_code`, `teacher_id`, `title`, `description`, `status`, `created_at`, `updated_at`) VALUES (1, 'BWXHW', 1, 'JAVA', 'JAVA', 0, '2025-03-06 08:11:19', '2025-04-03 10:24:35');
+INSERT INTO `classrooms` (`id`, `classroom_code`, `teacher_id`, `title`, `description`, `status`, `created_at`, `updated_at`) VALUES (1, 'BWXHW', 1, 'JAVA', 'JAVA', 1, '2025-03-06 08:11:19', '2025-04-04 20:13:45');
 COMMIT;
 
 -- ----------------------------
@@ -166,7 +166,7 @@ CREATE TABLE `communities` (
   PRIMARY KEY (`id`),
   KEY `idx_created_by` (`created_by`),
   CONSTRAINT `fk_community_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社区——社区基本信息表';
 
 -- ----------------------------
 -- Records of communities
@@ -188,7 +188,7 @@ CREATE TABLE `community_announcements` (
   `announcement` text NOT NULL,
   `announcement_updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COMMENT='社区——公告内容表';
 
 -- ----------------------------
 -- Records of community_announcements
@@ -219,7 +219,7 @@ CREATE TABLE `community_members` (
   CONSTRAINT `fk_community_member` FOREIGN KEY (`community_id`) REFERENCES `communities` (`id`),
   CONSTRAINT `fk_member_inviter` FOREIGN KEY (`invited_by`) REFERENCES `users` (`id`),
   CONSTRAINT `fk_member_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社区——社区成员表';
 
 -- ----------------------------
 -- Records of community_members
@@ -257,7 +257,7 @@ CREATE TABLE `community_posts` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `community_posts_ibfk_1` FOREIGN KEY (`community_id`) REFERENCES `communities` (`id`) ON DELETE CASCADE,
   CONSTRAINT `community_posts_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3 COMMENT='社区——社区帖子表';
 
 -- ----------------------------
 -- Records of community_posts
@@ -271,363 +271,6 @@ INSERT INTO `community_posts` (`id`, `community_id`, `user_id`, `title`, `conten
 INSERT INTO `community_posts` (`id`, `community_id`, `user_id`, `title`, `content`, `view_count`, `like_count`, `comment_count`, `created_at`, `updated_at`) VALUES (6, 1, 1, '每周技术分享：Docker容器化实践', 'Docker容器化应用实战指南：\n\n1. Dockerfile最佳实践\n2. 多容器应用编排\n3. 性能优化技巧\n4. 常见问题解决', 289, 45, 12, '2025-01-21 17:00:00', '2025-01-22 09:30:00');
 INSERT INTO `community_posts` (`id`, `community_id`, `user_id`, `title`, `content`, `view_count`, `like_count`, `comment_count`, `created_at`, `updated_at`) VALUES (7, 1, 1, '编程工具推荐：提高生产力的VSCode插件', '精选VSCode插件推荐：\n\n1. 代码补全增强\n2. Git集成工具\n3. 代码质量检查\n4. 主题美化插件', 578, 98, 34, '2025-01-21 18:00:00', '2025-01-22 09:30:00');
 INSERT INTO `community_posts` (`id`, `community_id`, `user_id`, `title`, `content`, `view_count`, `like_count`, `comment_count`, `created_at`, `updated_at`) VALUES (8, 1, 1, '云原生技术探讨：Kubernetes入门指南', 'Kubernetes基础知识和实践指南：\n\n1. 核心概念解析\n2. 部署策略\n3. 服务发现\n4. 监控方案', 645, 112, 28, '2025-01-21 19:00:00', '2025-01-22 09:30:00');
-COMMIT;
-
--- ----------------------------
--- Table structure for group_members
--- ----------------------------
-DROP TABLE IF EXISTS `group_members`;
-CREATE TABLE `group_members` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `group_id` int NOT NULL COMMENT '班级ID',
-  `user_id` int NOT NULL COMMENT '用户ID',
-  `join_time` datetime NOT NULL COMMENT '加入时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_user` (`group_id`,`user_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `group_members_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `classroom_groups` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `group_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='班级成员表';
-
--- ----------------------------
--- Records of group_members
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for learning_activities
--- ----------------------------
-DROP TABLE IF EXISTS `learning_activities`;
-CREATE TABLE `learning_activities` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `activity_type` enum('problem_view','solution_view','submission','problem_complete') NOT NULL COMMENT '活动类型',
-  `problem_id` varchar(10) NOT NULL COMMENT '题目ID',
-  `additional_info` json DEFAULT NULL COMMENT '额外信息',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `learning_activities_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=262 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Records of learning_activities
--- ----------------------------
-BEGIN;
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (1, 1, 'solution_view', '0002', NULL, '2025-01-24 16:14:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (2, 1, 'solution_view', '0003', NULL, '2025-01-24 16:16:49');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (3, 1, 'solution_view', '0002', NULL, '2025-01-24 16:16:52');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (4, 1, 'solution_view', '0003', NULL, '2025-01-24 16:35:45');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (5, 1, 'solution_view', '0003', NULL, '2025-01-24 16:48:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (6, 1, 'solution_view', '0003', NULL, '2025-01-24 16:56:26');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (7, 1, 'solution_view', '0003', NULL, '2025-01-24 17:00:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (8, 1, 'solution_view', '0002', NULL, '2025-01-24 17:19:45');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (9, 1, 'solution_view', '0001', NULL, '2025-01-24 18:00:31');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (10, 1, 'solution_view', '0001', NULL, '2025-01-25 09:06:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (11, 1, 'solution_view', '0009', NULL, '2025-01-25 09:25:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (12, 1, 'solution_view', '0009', NULL, '2025-01-25 09:26:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (13, 1, 'solution_view', '0009', NULL, '2025-01-25 09:27:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (14, 1, 'solution_view', '0009', NULL, '2025-01-25 09:36:07');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (15, 1, 'solution_view', '0009', NULL, '2025-01-25 09:36:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (16, 1, 'solution_view', '0009', NULL, '2025-01-25 09:36:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (17, 1, 'solution_view', '0009', NULL, '2025-01-25 09:40:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (18, 1, 'solution_view', '0009', NULL, '2025-01-25 09:45:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (19, 1, 'solution_view', '0009', NULL, '2025-01-25 09:52:03');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (20, 1, 'solution_view', '0009', NULL, '2025-01-25 09:52:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (21, 1, 'solution_view', '0009', NULL, '2025-01-25 09:54:06');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (22, 1, 'solution_view', '0009', NULL, '2025-01-25 09:54:52');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (23, 1, 'solution_view', '0009', NULL, '2025-01-25 09:55:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (24, 1, 'solution_view', '0009', NULL, '2025-01-25 09:56:31');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (25, 1, 'solution_view', '0009', NULL, '2025-01-25 09:59:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (26, 1, 'solution_view', '0009', NULL, '2025-01-25 10:12:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (27, 1, 'solution_view', '0009', NULL, '2025-01-25 10:16:28');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (28, 1, 'solution_view', '0009', NULL, '2025-01-25 10:18:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (29, 1, 'solution_view', '0009', NULL, '2025-01-25 10:18:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (30, 1, 'solution_view', '0009', NULL, '2025-01-25 10:21:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (31, 1, 'solution_view', '0009', NULL, '2025-01-25 10:21:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (32, 1, 'solution_view', '0009', NULL, '2025-01-25 10:21:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (33, 1, 'solution_view', '0009', NULL, '2025-01-25 10:21:29');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (34, 1, 'solution_view', '0010', NULL, '2025-01-25 12:17:20');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (35, 1, 'solution_view', '0001', NULL, '2025-01-25 12:18:15');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (36, 1, 'solution_view', '0011', NULL, '2025-01-25 12:18:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (37, 1, 'solution_view', '0001', NULL, '2025-01-25 12:20:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (38, 1, 'solution_view', '0004', NULL, '2025-01-25 12:27:28');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (39, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (40, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:15');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (41, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:15');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (42, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (43, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (44, 1, 'solution_view', '0004', NULL, '2025-01-25 12:30:38');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (45, 1, 'solution_view', '0001', NULL, '2025-01-26 11:11:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (46, 1, 'solution_view', '0001', NULL, '2025-01-26 11:27:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (47, 1, 'solution_view', '0001', NULL, '2025-01-26 11:35:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (48, 1, 'solution_view', '0001', NULL, '2025-01-26 11:40:20');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (49, 1, 'solution_view', '0011', NULL, '2025-01-26 11:40:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (50, 1, 'solution_view', '0011', NULL, '2025-01-26 11:40:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (51, 1, 'solution_view', '0011', NULL, '2025-01-26 11:42:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (52, 1, 'solution_view', '0011', NULL, '2025-01-26 11:42:35');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (53, 1, 'solution_view', '0011', NULL, '2025-01-26 11:44:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (54, 1, 'solution_view', '0011', NULL, '2025-01-26 11:44:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (55, 1, 'solution_view', '0011', NULL, '2025-01-26 11:44:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (56, 1, 'solution_view', '0011', NULL, '2025-01-26 11:46:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (57, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (58, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:50');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (59, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (60, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (61, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (62, 1, 'solution_view', '0011', NULL, '2025-01-26 11:47:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (63, 1, 'solution_view', '0011', NULL, '2025-01-26 11:49:18');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (64, 1, 'solution_view', '0011', NULL, '2025-01-26 11:49:43');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (65, 1, 'solution_view', '0011', NULL, '2025-01-26 11:53:50');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (66, 1, 'solution_view', '0011', NULL, '2025-01-26 11:54:40');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (67, 1, 'solution_view', '0011', NULL, '2025-01-26 11:56:43');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (68, 1, 'solution_view', '0011', NULL, '2025-01-26 11:58:18');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (69, 1, 'solution_view', '0011', NULL, '2025-01-26 11:58:21');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (70, 1, 'solution_view', '0011', NULL, '2025-01-26 11:59:54');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (71, 1, 'solution_view', '0011', NULL, '2025-01-26 11:59:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (72, 1, 'solution_view', '0011', NULL, '2025-01-26 11:59:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (73, 1, 'solution_view', '0019', NULL, '2025-01-26 12:00:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (74, 1, 'solution_view', '0019', NULL, '2025-01-26 12:01:44');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (75, 1, 'solution_view', '0019', NULL, '2025-01-26 12:01:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (76, 1, 'solution_view', '0019', NULL, '2025-01-26 12:01:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (77, 1, 'solution_view', '0019', NULL, '2025-01-26 12:03:39');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (78, 1, 'solution_view', '0019', NULL, '2025-01-26 12:03:43');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (79, 1, 'solution_view', '0019', NULL, '2025-01-26 12:03:43');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (80, 1, 'solution_view', '0019', NULL, '2025-01-26 12:04:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (81, 1, 'solution_view', '0019', NULL, '2025-01-26 12:04:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (82, 1, 'solution_view', '0001', NULL, '2025-01-26 12:04:59');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (83, 1, 'solution_view', '0001', NULL, '2025-01-26 12:05:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (84, 1, 'solution_view', '0001', NULL, '2025-01-26 12:05:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (85, 1, 'solution_view', '0004', NULL, '2025-01-26 12:05:20');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (86, 1, 'solution_view', '0004', NULL, '2025-01-26 12:06:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (87, 1, 'solution_view', '0004', NULL, '2025-01-26 12:06:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (88, 1, 'solution_view', '0004', NULL, '2025-01-26 12:07:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (89, 1, 'solution_view', '0004', NULL, '2025-01-26 12:07:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (90, 1, 'solution_view', '0004', NULL, '2025-01-26 12:07:16');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (91, 1, 'solution_view', '0004', NULL, '2025-01-26 12:07:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (92, 1, 'solution_view', '0004', NULL, '2025-01-26 12:08:38');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (93, 1, 'solution_view', '0004', NULL, '2025-01-26 12:08:40');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (94, 1, 'solution_view', '0004', NULL, '2025-01-26 12:08:40');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (95, 1, 'solution_view', '0015', NULL, '2025-01-26 12:09:18');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (96, 1, 'solution_view', '0015', NULL, '2025-01-26 12:11:03');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (97, 1, 'solution_view', '0015', NULL, '2025-01-26 12:11:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (98, 1, 'solution_view', '0015', NULL, '2025-01-26 12:11:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (99, 1, 'solution_view', '0015', NULL, '2025-01-26 12:12:52');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (100, 1, 'solution_view', '0015', NULL, '2025-01-26 12:12:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (101, 1, 'solution_view', '0015', NULL, '2025-01-26 12:12:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (102, 1, 'solution_view', '0015', NULL, '2025-01-26 12:18:54');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (103, 1, 'solution_view', '0015', NULL, '2025-01-26 12:19:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (104, 1, 'solution_view', '0015', NULL, '2025-01-26 12:20:30');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (105, 1, 'solution_view', '0015', NULL, '2025-01-26 12:20:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (106, 1, 'solution_view', '0015', NULL, '2025-01-26 12:20:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (107, 1, 'solution_view', '0015', NULL, '2025-01-26 12:22:44');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (108, 1, 'solution_view', '0015', NULL, '2025-01-26 12:22:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (109, 1, 'solution_view', '0015', NULL, '2025-01-26 12:22:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (110, 1, 'solution_view', '0015', NULL, '2025-01-26 12:25:18');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (111, 1, 'solution_view', '0003', NULL, '2025-01-26 12:25:41');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (112, 1, 'solution_view', '0003', NULL, '2025-01-26 12:26:39');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (113, 1, 'solution_view', '0003', NULL, '2025-01-26 12:27:54');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (114, 1, 'solution_view', '0003', NULL, '2025-01-26 12:28:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (115, 1, 'solution_view', '0003', NULL, '2025-01-26 12:28:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (116, 1, 'solution_view', '0003', NULL, '2025-01-26 12:29:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (117, 1, 'solution_view', '0003', NULL, '2025-01-26 12:29:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (118, 1, 'solution_view', '0003', NULL, '2025-01-26 12:29:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (119, 1, 'solution_view', '0003', NULL, '2025-01-26 12:29:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (120, 1, 'solution_view', '0003', NULL, '2025-01-26 12:29:54');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (121, 1, 'solution_view', '0003', NULL, '2025-01-26 12:31:23');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (122, 1, 'solution_view', '0003', NULL, '2025-01-26 12:33:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (123, 1, 'solution_view', '0003', NULL, '2025-01-26 12:33:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (124, 1, 'solution_view', '0003', NULL, '2025-01-26 12:33:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (125, 1, 'solution_view', '0003', NULL, '2025-01-26 12:34:41');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (126, 1, 'solution_view', '0003', NULL, '2025-01-26 12:34:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (127, 1, 'solution_view', '0003', NULL, '2025-01-26 12:34:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (128, 1, 'solution_view', '0003', NULL, '2025-01-26 12:37:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (129, 1, 'solution_view', '0003', NULL, '2025-01-26 12:37:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (130, 1, 'solution_view', '0003', NULL, '2025-01-26 12:37:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (131, 1, 'solution_view', '0010', NULL, '2025-01-26 12:39:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (132, 1, 'solution_view', '0017', NULL, '2025-01-26 12:42:29');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (133, 1, 'solution_view', '0017', NULL, '2025-01-26 12:45:29');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (134, 1, 'solution_view', '0017', NULL, '2025-01-26 12:45:35');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (135, 1, 'solution_view', '0017', NULL, '2025-01-26 12:45:35');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (136, 1, 'solution_view', '0017', NULL, '2025-01-26 12:45:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (137, 1, 'solution_view', '0017', NULL, '2025-01-26 12:47:42');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (138, 1, 'solution_view', '0017', NULL, '2025-01-26 12:49:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (139, 1, 'solution_view', '0017', NULL, '2025-01-26 13:00:30');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (140, 1, 'solution_view', '0017', NULL, '2025-01-26 13:00:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (141, 1, 'solution_view', '0017', NULL, '2025-01-26 13:00:49');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (142, 1, 'solution_view', '0017', NULL, '2025-01-26 13:04:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (143, 1, 'solution_view', '0017', NULL, '2025-01-26 13:04:44');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (144, 1, 'solution_view', '0003', NULL, '2025-01-26 13:04:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (145, 1, 'solution_view', '0001', NULL, '2025-01-26 13:09:45');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (146, 1, 'solution_view', '0001', NULL, '2025-01-26 13:15:03');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (147, 1, 'solution_view', '0001', NULL, '2025-01-27 10:15:29');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (148, 1, 'solution_view', '0001', NULL, '2025-01-27 10:16:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (149, 1, 'solution_view', '0001', NULL, '2025-01-27 10:16:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (150, 1, 'solution_view', '0001', NULL, '2025-02-03 11:37:27');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (151, 1, 'solution_view', '0001', NULL, '2025-02-03 11:41:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (152, 1, 'solution_view', '0001', NULL, '2025-02-03 11:46:29');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (153, 1, 'solution_view', '0001', NULL, '2025-02-03 11:49:57');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (154, 1, 'solution_view', '0001', NULL, '2025-02-03 11:55:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (155, 1, 'solution_view', '0001', NULL, '2025-02-03 12:13:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (156, 1, 'solution_view', '0001', NULL, '2025-02-05 13:44:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (157, 1, 'solution_view', '0001', NULL, '2025-02-05 13:44:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (158, 1, 'solution_view', '0001', NULL, '2025-02-05 13:44:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (159, 1, 'solution_view', '0001', NULL, '2025-02-05 13:45:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (160, 1, 'solution_view', '0001', NULL, '2025-02-05 13:46:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (161, 1, 'solution_view', '0001', NULL, '2025-02-05 13:47:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (162, 1, 'solution_view', '0001', NULL, '2025-02-05 13:47:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (163, 1, 'solution_view', '0001', NULL, '2025-02-05 13:47:30');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (164, 1, 'solution_view', '0001', NULL, '2025-02-05 13:48:10');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (165, 1, 'solution_view', '0001', NULL, '2025-02-05 13:48:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (166, 1, 'solution_view', '0001', NULL, '2025-02-05 13:49:14');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (167, 1, 'solution_view', '0001', NULL, '2025-02-05 13:49:14');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (168, 1, 'solution_view', '0001', NULL, '2025-02-05 13:50:34');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (169, 1, 'solution_view', '0001', NULL, '2025-02-05 13:50:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (170, 1, 'solution_view', '0001', NULL, '2025-02-05 13:50:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (171, 1, 'solution_view', '0001', NULL, '2025-02-05 13:51:31');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (172, 1, 'solution_view', '0001', NULL, '2025-02-05 13:51:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (173, 1, 'solution_view', '0001', NULL, '2025-02-05 13:51:37');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (174, 1, 'solution_view', '0001', NULL, '2025-02-05 13:51:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (175, 1, 'solution_view', '0001', NULL, '2025-02-05 13:51:47');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (176, 1, 'solution_view', '0001', NULL, '2025-02-05 13:53:19');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (177, 1, 'solution_view', '0001', NULL, '2025-02-05 13:53:23');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (178, 1, 'solution_view', '0001', NULL, '2025-02-05 13:54:32');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (179, 1, 'solution_view', '0001', NULL, '2025-02-05 13:54:36');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (180, 1, 'solution_view', '0001', NULL, '2025-02-05 13:54:36');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (181, 1, 'solution_view', '0001', NULL, '2025-02-05 13:55:06');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (182, 1, 'solution_view', '0001', NULL, '2025-02-05 13:55:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (183, 1, 'solution_view', '0001', NULL, '2025-02-05 13:56:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (184, 1, 'solution_view', '0001', NULL, '2025-02-05 13:56:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (185, 1, 'solution_view', '0001', NULL, '2025-02-05 13:57:16');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (186, 1, 'solution_view', '0001', NULL, '2025-02-05 13:58:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (187, 1, 'solution_view', '0001', NULL, '2025-02-05 13:58:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (188, 1, 'solution_view', '0001', NULL, '2025-02-05 13:58:24');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (189, 1, 'solution_view', '0001', NULL, '2025-02-05 13:59:50');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (190, 1, 'solution_view', '0001', NULL, '2025-02-05 13:59:59');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (191, 1, 'solution_view', '0001', NULL, '2025-02-05 14:00:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (192, 1, 'solution_view', '0001', NULL, '2025-02-05 14:00:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (193, 1, 'solution_view', '0001', NULL, '2025-02-05 14:00:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (194, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (195, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (196, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (197, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:31');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (198, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:31');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (199, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:35');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (200, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:35');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (201, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:48');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (202, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (203, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (204, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (205, 1, 'solution_view', '0001', NULL, '2025-02-05 14:04:51');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (206, 1, 'solution_view', '0001', NULL, '2025-02-05 14:05:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (207, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (208, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (209, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:50');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (210, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:50');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (211, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:58');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (212, 1, 'solution_view', '0001', NULL, '2025-02-05 14:06:58');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (213, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:20');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (214, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:38');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (215, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:41');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (216, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:42');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (217, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (218, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:55');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (219, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:56');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (220, 1, 'solution_view', '0001', NULL, '2025-02-05 14:07:56');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (221, 1, 'solution_view', '0001', NULL, '2025-02-05 14:12:38');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (222, 1, 'solution_view', '0001', NULL, '2025-02-05 14:13:45');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (223, 1, 'solution_view', '0001', NULL, '2025-02-05 14:13:49');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (224, 1, 'solution_view', '0001', NULL, '2025-02-05 14:13:49');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (225, 1, 'solution_view', '0001', NULL, '2025-02-05 14:15:01');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (226, 1, 'solution_view', '0001', NULL, '2025-02-05 14:15:11');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (227, 1, 'solution_view', '0001', NULL, '2025-02-05 14:16:42');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (228, 1, 'solution_view', '0001', NULL, '2025-02-05 14:16:42');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (229, 1, 'solution_view', '0001', NULL, '2025-02-05 14:16:42');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (230, 1, 'solution_view', '0001', NULL, '2025-02-05 14:17:40');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (231, 1, 'solution_view', '0001', NULL, '2025-02-05 14:17:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (232, 1, 'solution_view', '0001', NULL, '2025-02-05 14:17:46');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (233, 1, 'solution_view', '0001', NULL, '2025-02-05 14:19:28');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (234, 1, 'solution_view', '0001', NULL, '2025-02-05 14:19:34');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (235, 1, 'solution_view', '0001', NULL, '2025-02-05 14:19:34');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (236, 1, 'solution_view', '0001', NULL, '2025-02-05 14:20:58');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (237, 1, 'solution_view', '0001', NULL, '2025-02-05 14:21:03');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (238, 1, 'solution_view', '0001', NULL, '2025-02-05 14:21:03');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (239, 1, 'solution_view', '0001', NULL, '2025-02-05 14:21:04');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (240, 1, 'solution_view', '0001', NULL, '2025-02-05 14:21:04');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (241, 1, 'solution_view', '0001', NULL, '2025-02-05 14:22:00');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (242, 1, 'solution_view', '0001', NULL, '2025-02-05 14:22:08');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (243, 1, 'solution_view', '0001', NULL, '2025-02-05 14:22:53');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (244, 1, 'solution_view', '0001', NULL, '2025-02-05 14:22:56');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (245, 1, 'solution_view', '0001', NULL, '2025-02-05 14:22:56');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (246, 1, 'solution_view', '0001', NULL, '2025-02-05 14:23:54');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (247, 1, 'solution_view', '0001', NULL, '2025-02-05 14:23:58');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (248, 1, 'solution_view', '0001', NULL, '2025-02-05 14:23:58');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (249, 1, 'solution_view', '0001', NULL, '2025-02-05 14:24:01');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (250, 1, 'solution_view', '0001', NULL, '2025-02-05 14:24:01');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (251, 1, 'solution_view', '0001', NULL, '2025-02-05 14:24:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (252, 1, 'solution_view', '0001', NULL, '2025-02-05 14:24:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (253, 1, 'solution_view', '0001', NULL, '2025-02-05 14:25:09');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (254, 1, 'solution_view', '0001', NULL, '2025-02-05 14:25:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (255, 1, 'solution_view', '0001', NULL, '2025-02-05 14:25:13');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (256, 1, 'solution_view', '0001', NULL, '2025-02-05 14:26:02');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (257, 1, 'solution_view', '0001', NULL, '2025-02-05 14:26:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (258, 1, 'solution_view', '0001', NULL, '2025-02-05 14:26:05');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (259, 1, 'solution_view', '0001', NULL, '2025-02-05 14:27:12');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (260, 1, 'solution_view', '0001', NULL, '2025-02-05 14:27:17');
-INSERT INTO `learning_activities` (`id`, `user_id`, `activity_type`, `problem_id`, `additional_info`, `created_at`) VALUES (261, 1, 'solution_view', '0001', NULL, '2025-02-05 14:27:17');
-COMMIT;
-
--- ----------------------------
--- Table structure for learning_path_problems
--- ----------------------------
-DROP TABLE IF EXISTS `learning_path_problems`;
-CREATE TABLE `learning_path_problems` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `path_id` int NOT NULL,
-  `problem_id` int NOT NULL,
-  `order_index` int NOT NULL DEFAULT '0',
-  `section` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_path_problem` (`path_id`,`problem_id`),
-  KEY `idx_path_id` (`path_id`),
-  KEY `idx_problem_id` (`problem_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Records of learning_path_problems
--- ----------------------------
-BEGIN;
-INSERT INTO `learning_path_problems` (`id`, `path_id`, `problem_id`, `order_index`, `section`, `created_at`) VALUES (1, 1, 1, 1, NULL, '2025-02-06 21:52:24');
-INSERT INTO `learning_path_problems` (`id`, `path_id`, `problem_id`, `order_index`, `section`, `created_at`) VALUES (2, 1, 2, 2, NULL, '2025-02-06 21:52:24');
-INSERT INTO `learning_path_problems` (`id`, `path_id`, `problem_id`, `order_index`, `section`, `created_at`) VALUES (3, 1, 3, 3, NULL, '2025-02-06 21:52:24');
-INSERT INTO `learning_path_problems` (`id`, `path_id`, `problem_id`, `order_index`, `section`, `created_at`) VALUES (4, 1, 4, 4, NULL, '2025-02-06 21:52:24');
-INSERT INTO `learning_path_problems` (`id`, `path_id`, `problem_id`, `order_index`, `section`, `created_at`) VALUES (5, 1, 5, 5, NULL, '2025-02-06 21:52:24');
-COMMIT;
-
--- ----------------------------
--- Table structure for learning_path_progress
--- ----------------------------
-DROP TABLE IF EXISTS `learning_path_progress`;
-CREATE TABLE `learning_path_progress` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `path_id` int NOT NULL,
-  `completed_problems` text,
-  `last_problem_id` int DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_path` (`user_id`,`path_id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_path_id` (`path_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Records of learning_path_progress
--- ----------------------------
-BEGIN;
 COMMIT;
 
 -- ----------------------------
@@ -747,7 +390,7 @@ CREATE TABLE `likes` (
   UNIQUE KEY `uk_user_target` (`user_id`,`target_id`,`target_type`),
   KEY `idx_target` (`target_id`,`target_type`),
   CONSTRAINT `fk_like_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社区——帖子点赞表';
 
 -- ----------------------------
 -- Records of likes
@@ -779,241 +422,12 @@ CREATE TABLE `posts` (
   KEY `idx_user_id` (`user_id`),
   CONSTRAINT `fk_post_community` FOREIGN KEY (`community_id`) REFERENCES `communities` (`id`),
   CONSTRAINT `fk_post_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社区——帖子表';
 
 -- ----------------------------
 -- Records of posts
 -- ----------------------------
 BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for practice_plans
--- ----------------------------
-DROP TABLE IF EXISTS `practice_plans`;
-CREATE TABLE `practice_plans` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `plan_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '计划名称',
-  `daily_goal` int DEFAULT '1' COMMENT '每日目标题数',
-  `focus_areas` json DEFAULT NULL COMMENT '重点练习领域',
-  `difficulty_preference` json DEFAULT NULL COMMENT '难度偏好设置',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_user_id` (`user_id`),
-  CONSTRAINT `fk_plan_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of practice_plans
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_set_categories
--- ----------------------------
-DROP TABLE IF EXISTS `problem_set_categories`;
-CREATE TABLE `problem_set_categories` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分类名称',
-  `description` text COLLATE utf8mb4_unicode_ci COMMENT '分类描述',
-  `icon` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '分类图标',
-  `parent_id` int DEFAULT NULL COMMENT '父分类ID',
-  `sort_order` int DEFAULT '0' COMMENT '排序权重',
-  `status` tinyint(1) DEFAULT '1' COMMENT '状态：0-禁用，1-启用',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_parent_id` (`parent_id`),
-  CONSTRAINT `fk_category_parent` FOREIGN KEY (`parent_id`) REFERENCES `problem_set_categories` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_set_categories
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_set_category_relations
--- ----------------------------
-DROP TABLE IF EXISTS `problem_set_category_relations`;
-CREATE TABLE `problem_set_category_relations` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `problem_set_id` int NOT NULL COMMENT '题集ID',
-  `category_id` int NOT NULL COMMENT '分类ID',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_set_category` (`problem_set_id`,`category_id`),
-  KEY `idx_category_id` (`category_id`),
-  CONSTRAINT `fk_relation_category` FOREIGN KEY (`category_id`) REFERENCES `problem_set_categories` (`id`),
-  CONSTRAINT `fk_relation_problem_set` FOREIGN KEY (`problem_set_id`) REFERENCES `problem_sets` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_set_category_relations
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_set_items
--- ----------------------------
-DROP TABLE IF EXISTS `problem_set_items`;
-CREATE TABLE `problem_set_items` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `problem_set_id` int NOT NULL COMMENT '题集ID',
-  `problem_id` int NOT NULL COMMENT '题目ID',
-  `order_index` int DEFAULT '0' COMMENT '题目在题集中的顺序',
-  `note` text COLLATE utf8mb4_unicode_ci COMMENT '题目说明或提示',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_set_problem` (`problem_set_id`,`problem_id`),
-  KEY `idx_problem_id` (`problem_id`),
-  CONSTRAINT `fk_problem_set` FOREIGN KEY (`problem_set_id`) REFERENCES `problem_sets` (`id`),
-  CONSTRAINT `fk_set_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_set_items
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_set_logs
--- ----------------------------
-DROP TABLE IF EXISTS `problem_set_logs`;
-CREATE TABLE `problem_set_logs` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `problem_set_id` int NOT NULL COMMENT '题集ID',
-  `operator_id` int NOT NULL COMMENT '操作者ID',
-  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '操作类型',
-  `detail` text COLLATE utf8mb4_unicode_ci COMMENT '操作详情',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `ip_address` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '操作IP',
-  PRIMARY KEY (`id`),
-  KEY `idx_problem_set_id` (`problem_set_id`),
-  KEY `idx_operator_id` (`operator_id`),
-  CONSTRAINT `fk_log_operator` FOREIGN KEY (`operator_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `fk_log_problem_set` FOREIGN KEY (`problem_set_id`) REFERENCES `problem_sets` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_set_logs
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_set_tags
--- ----------------------------
-DROP TABLE IF EXISTS `problem_set_tags`;
-CREATE TABLE `problem_set_tags` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名称',
-  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '标签描述',
-  `icon` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '标签图标',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_tag_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_set_tags
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_sets
--- ----------------------------
-DROP TABLE IF EXISTS `problem_sets`;
-CREATE TABLE `problem_sets` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '题集标题',
-  `description` text COLLATE utf8mb4_unicode_ci COMMENT '题集描述',
-  `cover_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '封面图片URL',
-  `type` enum('recommended','learning_plan','premium') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '题集类型：推荐、学习计划、会员专享',
-  `difficulty` enum('easy','medium','hard') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '难度等级',
-  `tags` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '标签，逗号分隔',
-  `problem_count` int DEFAULT '0' COMMENT '包含的题目数量',
-  `view_count` int DEFAULT '0' COMMENT '浏览次数',
-  `favorite_count` int DEFAULT '0' COMMENT '收藏次数',
-  `completion_count` int DEFAULT '0' COMMENT '完成人数',
-  `sort_order` int DEFAULT '0' COMMENT '排序权重',
-  `is_featured` tinyint(1) DEFAULT '0' COMMENT '是否推荐',
-  `is_hot` tinyint(1) DEFAULT '0' COMMENT '是否热门',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `created_by` int DEFAULT NULL COMMENT '创建者ID',
-  `updated_by` int DEFAULT NULL COMMENT '最后修改者ID',
-  `is_public` tinyint(1) DEFAULT '1' COMMENT '是否公开',
-  `status` tinyint(1) DEFAULT '1' COMMENT '状态：0-禁用，1-启用',
-  `remark` text COLLATE utf8mb4_unicode_ci COMMENT '管理员备注',
-  PRIMARY KEY (`id`),
-  KEY `idx_created_by` (`created_by`),
-  KEY `idx_updated_by` (`updated_by`),
-  KEY `idx_type_status` (`type`,`status`),
-  KEY `idx_sort_order` (`sort_order`),
-  CONSTRAINT `fk_problem_set_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
-  CONSTRAINT `fk_problem_set_updater` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_sets
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for problem_solutions
--- ----------------------------
-DROP TABLE IF EXISTS `problem_solutions`;
-CREATE TABLE `problem_solutions` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `problem_id` int NOT NULL COMMENT '题目ID',
-  `standard_solution` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标准答案代码',
-  `solution_language` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '答案使用的编程语言',
-  `solution_approach` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '解题思路',
-  `time_complexity` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '时间复杂度',
-  `space_complexity` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '空间复杂度',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_solution_problem` (`problem_id`),
-  CONSTRAINT `fk_solution_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of problem_solutions
--- ----------------------------
-BEGIN;
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', '直接读取两个整数并相加输出即可。注意使用scanf读取输入，printf输出结果。', 'O(1)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (2, 2, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], max;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    max = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] > max) max = arr[i];\n    }\n    printf(\"%d\\n\", max);\n    return 0;\n}', 'c', '先读取数组长度，然后依次读取数组元素。用一个变量记录当前最大值，遍历数组更新最大值。', 'O(n)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (3, 3, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[100];\n    scanf(\"%s\", str);\n    int len = strlen(str);\n    for(int i = len-1; i >= 0; i--) {\n        printf(\"%c\", str[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '读取字符串后，从后向前遍历字符串，依次输出每个字符即可得到反转结果。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (4, 4, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    long long result = 1;\n    for(int i = 1; i <= n; i++) {\n        result *= i;\n    }\n    printf(\"%lld\\n\", result);\n    return 0;\n}', 'c', '使用循环从1乘到n，注意使用long long类型避免整数溢出。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (5, 5, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++) {\n        if(n % i == 0) return 0;\n    }\n    return 1;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", isPrime(n) ? \"是\" : \"否\");\n    return 0;\n}', 'c', '定义isPrime函数判断是否为质数。从2到sqrt(n)遍历，如果n能被任何数整除则不是质数。', 'O(sqrt(n))', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (6, 6, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', '直接读取两个整数并相减输出即可。', 'O(1)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (7, 7, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], min;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) min = arr[i];\n    }\n    printf(\"%d\\n\", min);\n    return 0;\n}', 'c', '先读取数组长度，然后依次读取数组元素。用一个变量记录当前最小值，遍历数组更新最小值。', 'O(n)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (8, 8, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str1[100], str2[100];\n    scanf(\"%s %s\", str1, str2);\n    printf(\"%s%s\\n\", str1, str2);\n    return 0;\n}', 'c', '读取两个字符串后直接拼接输出即可。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (9, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', '使用循环计算斐波那契数列。维护两个变量记录前两个数，不断更新得到下一个数。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (10, 10, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", n % 2 == 0 ? \"是\" : \"否\");\n    return 0;\n}', 'c', '判断一个数除以2的余数是否为0即可。使用取模运算符%。', 'O(1)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (11, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '使用冒泡排序算法，通过两层循环不断比较相邻元素并交换位置，将最大的元素逐步\"冒泡\"到数组末尾。', 'O(n^2)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (12, 12, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[100], ch;\n    scanf(\"%s %c\", str, &ch);\n    int count = 0;\n    for(int i = 0; str[i]; i++) {\n        if(str[i] == ch) count++;\n    }\n    printf(\"%d\\n\", count);\n    return 0;\n}', 'c', '遍历字符串，统计目标字符出现的次数。使用循环和计数器实现。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (13, 13, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[1000];\n    gets(str);\n    char *token = strtok(str, \" \");\n    printf(\"%s\", token);\n    token = strtok(NULL, \" \");\n    while(token != NULL) {\n        if(strcmp(token, \"world\") != 0) {\n            printf(\" %s\", token);\n        }\n        token = strtok(NULL, \" \");\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '使用strtok函数分割字符串，遍历所有单词，跳过\"world\"单词不输出。注意处理空格和字符串拼接。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (14, 14, '#include <stdio.h>\n\nint gcd(int a, int b) {\n    return b == 0 ? a : gcd(b, a % b);\n}\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", gcd(a, b));\n    return 0;\n}', 'c', '使用欧几里得算法（辗转相除法）求最大公约数。递归实现：当b为0时返回a，否则递归计算gcd(b, a%b)。', 'O(log(min(a,b)))', 'O(log(min(a,b)))', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (15, 15, '#include <stdio.h>\n\nint isPalindrome(int n) {\n    int reversed = 0, original = n;\n    while(n > 0) {\n        reversed = reversed * 10 + n % 10;\n        n /= 10;\n    }\n    return original == reversed;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", isPalindrome(n) ? \"是\" : \"否\");\n    return 0;\n}', 'c', '将数字反转，如果反转后的数字等于原数字，则是回文数。使用取模和除法运算逐位提取数字并重新组合。', 'O(log n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (16, 16, '#include <stdio.h>\n\nint main() {\n    int n, m;\n    scanf(\"%d %d\", &n, &m);\n    int mat1[10][10], mat2[10][10];\n    \n    for(int i = 0; i < n; i++)\n        for(int j = 0; j < m; j++)\n            scanf(\"%d\", &mat1[i][j]);\n            \n    for(int i = 0; i < n; i++)\n        for(int j = 0; j < m; j++)\n            scanf(\"%d\", &mat2[i][j]);\n            \n    for(int i = 0; i < n; i++) {\n        for(int j = 0; j < m; j++)\n            printf(\"%d \", mat1[i][j] + mat2[i][j]);\n        printf(\"\\n\");\n    }\n    return 0;\n}', 'c', '使用二维数组存储两个矩阵，对应位置的元素相加即可。注意输出格式的处理。', 'O(n*m)', 'O(n*m)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (17, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', '先将字符串按空格分割成单词数组，然后从后向前遍历数组输出单词。注意处理单词之间的空格。', 'O(n)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (18, 18, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int triangle[30][30] = {0};\n    \n    for(int i = 0; i < n; i++) {\n        triangle[i][0] = 1;\n        for(int j = 1; j <= i; j++) {\n            triangle[i][j] = triangle[i-1][j-1] + triangle[i-1][j];\n        }\n    }\n    \n    for(int i = 0; i < n; i++) {\n        for(int j = 0; j <= i; j++) {\n            printf(\"%d \", triangle[i][j]);\n        }\n        printf(\"\\n\");\n    }\n    return 0;\n}', 'c', '使用二维数组存储杨辉三角，每个数是上一行相邻两个数的和。第一列全为1，其他位置的值等于上一行的相邻两个数之和。', 'O(n^2)', 'O(n^2)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (19, 19, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++)\n        if(n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int start, end;\n    scanf(\"%d %d\", &start, &end);\n    int first = 1;\n    for(int i = start; i <= end; i++) {\n        if(isPrime(i)) {\n            if(!first) printf(\" \");\n            printf(\"%d\", i);\n            first = 0;\n        }\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '在给定范围内遍历每个数，使用isPrime函数判断是否为质数。注意输出格式，数字之间需要空格分隔。', 'O((end-start)*sqrt(max(end)))', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (20, 20, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], unique[100], uniqueCount = 0;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n        int isUnique = 1;\n        for(int j = 0; j < uniqueCount; j++) {\n            if(arr[i] == unique[j]) {\n                isUnique = 0;\n                break;\n            }\n        }\n        if(isUnique) unique[uniqueCount++] = arr[i];\n    }\n    for(int i = 0; i < uniqueCount; i++) {\n        printf(\"%d \", unique[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '使用一个新数组存储不重复的元素。遍历原数组，对于每个元素，检查是否已经在新数组中存在，如果不存在则添加到新数组。', 'O(n^2)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (21, 21, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], sum = 0;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n        sum += arr[i];\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}', 'c', '使用一个变量sum累加数组中的每个元素。遍历一次数组即可得到总和。', 'O(n)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (22, 22, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[100];\n    scanf(\"%s\", str);\n    int len = strlen(str);\n    for(int i = len-1; i >= 0; i--) {\n        printf(\"%c\", str[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', '从字符串末尾向前遍历，依次输出每个字符即可得到反转的字符串。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (23, 23, '#include <stdio.h>\n\nint fibonacci(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fibonacci(n));\n    return 0;\n}', 'c', '使用迭代方法计算斐波那契数列。维护三个变量a、b、c，其中a和b分别表示前两个数，c用于计算它们的和。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (25, 25, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", (n % 2 == 0) ? \"是\" : \"否\");\n    return 0;\n}', 'c', '判断一个数是否为偶数，只需要判断它除以2的余数是否为0。使用取模运算符%即可。', 'O(1)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (29, 29, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char binary[33];\n    scanf(\"%s\", binary);\n    int decimal = 0;\n    int len = strlen(binary);\n    for(int i = 0; i < len; i++) {\n        decimal = decimal * 2 + (binary[i] - \'0\');\n    }\n    printf(\"%d\\n\", decimal);\n    return 0;\n}', 'c', '从左到右遍历二进制字符串，对于每一位，将当前结果乘2再加上当前位的值。注意字符转数字需要减去字符\'0\'的ASCII值。', 'O(n)', 'O(1)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
-INSERT INTO `problem_solutions` (`id`, `problem_id`, `standard_solution`, `solution_language`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (30, 30, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[1000];\n    for(int i = 0; i < n; i++)\n        scanf(\"%d\", &arr[i]);\n    \n    int max_len = 1, curr_len = 1;\n    for(int i = 1; i < n; i++) {\n        if(arr[i] == arr[i-1] + 1)\n            curr_len++;\n        else {\n            if(curr_len > max_len)\n                max_len = curr_len;\n            curr_len = 1;\n        }\n    }\n    if(curr_len > max_len)\n        max_len = curr_len;\n    \n    printf(\"%d\\n\", max_len);\n    return 0;\n}', 'c', '遍历数组，用curr_len记录当前连续序列的长度，用max_len记录最长连续序列的长度。如果当前数字比前一个数字大1，则curr_len加1，否则更新max_len并重置curr_len。', 'O(n)', 'O(n)', '2025-01-23 08:58:07', '2025-01-23 08:58:07');
 COMMIT;
 
 -- ----------------------------
@@ -1032,7 +446,7 @@ CREATE TABLE `problem_test_cases` (
   PRIMARY KEY (`id`),
   KEY `problem_id` (`problem_id`),
   CONSTRAINT `fk_problem_test_cases` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——题目测试样例表';
 
 -- ----------------------------
 -- Records of problem_test_cases
@@ -1093,13 +507,13 @@ CREATE TABLE `problems` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_problem_number` (`problem_number`),
   CONSTRAINT `check_submissions` CHECK ((`accepted_submissions` <= `total_submissions`))
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb3 COMMENT='题目——题目详细表';
 
 -- ----------------------------
 -- Records of problems
 -- ----------------------------
 BEGIN;
-INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 156, 91.03, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 142);
+INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 157, 91.08, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 143);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (2, '0002', '寻找最大值', '简单', 279, 87.46, '基础,数组', '给定一个整数数组，找出其中的最大值。第一行输入一个整数n表示数组长度，第二行输入n个整数表示数组元素。', 1000, 256, 244);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (3, '0003', '字符串反转', '中等', 240, 94.58, '字符串', '将一个字符串进行反转。', 1000, 256, 227);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (4, '0004', '阶乘计算', '中等', 151, 65.56, '数学,递归', '计算一个正整数的阶乘。', 1000, 256, 99);
@@ -1147,7 +561,7 @@ CREATE TABLE `solution_code` (
   KEY `fk_code_language` (`language_id`),
   CONSTRAINT `fk_code_language` FOREIGN KEY (`language_id`) REFERENCES `solution_languages` (`id`),
   CONSTRAINT `fk_code_main` FOREIGN KEY (`solution_id`) REFERENCES `solution_main` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=144 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=144 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答代码';
 
 -- ----------------------------
 -- Records of solution_code
@@ -1282,7 +696,7 @@ CREATE TABLE `solution_languages` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_language` (`language_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——代码预设模板';
 
 -- ----------------------------
 -- Records of solution_languages
@@ -1309,7 +723,7 @@ CREATE TABLE `solution_main` (
   PRIMARY KEY (`id`),
   KEY `fk_main_problem` (`problem_id`),
   CONSTRAINT `fk_main_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答方案、时空复杂度';
 
 -- ----------------------------
 -- Records of solution_main
@@ -1367,7 +781,7 @@ CREATE TABLE `student_info` (
   KEY `fk_student_class` (`class_id`),
   CONSTRAINT `fk_student_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_student_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学生信息表';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台管理——学生管理信息表';
 
 -- ----------------------------
 -- Records of student_info
@@ -1398,7 +812,7 @@ CREATE TABLE `submissions` (
   KEY `fk_submission_problem` (`problem_id`),
   CONSTRAINT `fk_submission_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`),
   CONSTRAINT `fk_submission_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=90 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——用户提交记录表';
 
 -- ----------------------------
 -- Records of submissions
@@ -1481,280 +895,7 @@ INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `code`, `language`, `r
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (87, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 0, 0, NULL, '2025-04-03 08:56:05', 'System Error', '2025-04-03 08:56:05');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (88, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 0, 0, NULL, '2025-04-03 08:58:58', 'System Error', '2025-04-03 08:58:58');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (89, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 2997, 592, NULL, '2025-04-03 09:00:32', 'Accepted', '2025-04-03 09:00:45');
-COMMIT;
-
--- ----------------------------
--- Table structure for submissions_backup
--- ----------------------------
-DROP TABLE IF EXISTS `submissions_backup`;
-CREATE TABLE `submissions_backup` (
-  `id` int NOT NULL DEFAULT '0',
-  `user_id` int NOT NULL COMMENT '提交用户ID',
-  `problem_id` int NOT NULL COMMENT '题目ID',
-  `code` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '提交的代码',
-  `language` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '编程语言',
-  `runtime` int DEFAULT NULL COMMENT '运行时间(ms)',
-  `memory` int DEFAULT NULL COMMENT '内存消耗(KB)',
-  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '错误信息',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
-  `new_status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `completed_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
--- ----------------------------
--- Records of submissions_backup
--- ----------------------------
-BEGIN;
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (1, 1, 1, 'dawdwa', 'c', 0, 632, 'Command failed: docker exec judge-d273ef5b-71fc-420c-a01d-e39ce74c6bcc bash -c \"gcc -o /app/solution /app/solution.c && /app/solution < /app/input.txt\"\n/app/solution.c:1:1: error: expected \'=\', \',\', \';\', \'asm\' or \'__attribute__\' at end of input\n    1 | dawdwa\n      | ^~~~~~\n', '2025-01-22 15:52:59', 'Runtime Error', 'Runtime Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (2, 1, 1, 'dwada', 'c_cpp', 0, 0, '不支持的编程语言: c_cpp', '2025-01-22 15:59:54', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (3, 1, 1, 'sdawddw', 'c', 0, 648, 'Command failed: docker exec judge-6e29f569-774a-463d-ac97-f2e050c99eea bash -c \"gcc -o /app/solution /app/solution.c && /app/solution < /app/input.txt\"\n/app/solution.c:1:1: error: expected \'=\', \',\', \';\', \'asm\' or \'__attribute__\' at end of input\n    1 | sdawddw\n      | ^~~~~~~\n', '2025-01-22 16:00:09', 'Runtime Error', 'Runtime Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (4, 1, 1, 'dwadwa', 'c', 0, 632, 'Command failed: docker exec judge-b95bcccc-affd-4b1e-8d42-5870f375d7bf bash -c \"gcc -o /app/solution /app/solution.c && /app/solution < /app/input.txt\"\n/app/solution.c:1:1: error: expected \'=\', \',\', \';\', \'asm\' or \'__attribute__\' at end of input\n    1 | dwadwa\n      | ^~~~~~\n', '2025-01-22 16:03:09', 'Runtime Error', 'Runtime Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (5, 1, 7, '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        cin >> arr[i];\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    cout << min << endl;\n    return 0;\n}', 'cpp', NULL, NULL, '题目或测试用例不存在', '2025-01-22 16:05:37', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (6, 1, 7, '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        cin >> arr[i];\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    cout << min << endl;\n    return 0;\n}', 'cpp', 0, 968, NULL, '2025-01-22 16:06:47', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (7, 1, 7, '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        cin >> arr[i];\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    cout << min << endl;\n    return 0;\n}', 'cpp', 0, 912, NULL, '2025-01-22 16:10:04', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (8, 1, 7, '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        cin >> arr[i];\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    cout << min << endl;\n    return 0;\n}', 'cpp', 0, 920, NULL, '2025-01-22 16:12:45', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (9, 1, 7, '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        cin >> arr[i];\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    cout << min << endl;\n    return 0;\n}', 'cpp', 0, 912, NULL, '2025-01-22 16:14:48', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (10, 1, 7, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    printf(\"%d\\n\", min);\n    return 0;\n}', 'c', 0, 716, NULL, '2025-01-22 16:18:03', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (11, 1, 7, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);  // 读取数组大小\n    \n    int arr[100];  // 假设数组最大长度为100\n    \n    // 读取数组元素\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    \n    // 找最小值\n    int min = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] < min) {\n            min = arr[i];\n        }\n    }\n    \n    printf(\"%d\\n\", min);\n    return 0;\n}', 'c', 0, 780, NULL, '2025-01-22 16:18:42', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (12, 1, 2, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], max;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    max = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] > max) max = arr[i];\n    }\n    printf(\"%d\\n\", max);\n    return 0;\n}', 'cpp', 0, 736, NULL, '2025-01-23 09:11:17', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (13, 1, 6, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 0, 720, NULL, '2025-01-23 10:09:15', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (14, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', '', NULL, NULL, 'Command failed: docker run -d --network none --cpus=1 --memory=512m --name=judge-8c3a65c2-9edf-45b7-8f85-eb1850574220 -w /app python:3.9-slim tail -f /dev/null\ndocker: Cannot connect to the Docker daemon at unix:///Users/apple/.docker/run/docker.sock. Is the docker daemon running?.\nSee \'docker run --help\'.\n', '2025-01-23 14:04:00', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (15, 1, 6, '？？？', '', NULL, NULL, 'Command failed: docker run -d --network none --cpus=1 --memory=512m --name=judge-506c7e0d-fa9f-4826-a515-6c6e21f2994c -w /app python:3.9-slim tail -f /dev/null\ndocker: Cannot connect to the Docker daemon at unix:///Users/apple/.docker/run/docker.sock. Is the docker daemon running?.\nSee \'docker run --help\'.\n', '2025-01-23 14:04:38', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (16, 1, 9, '1111', '', NULL, NULL, 'Command failed: docker run -d --network none --cpus=1 --memory=512m --name=judge-2a428ea4-b310-490e-ab83-5a6ff1f4280b -w /app python:3.9-slim tail -f /dev/null\ndocker: Cannot connect to the Docker daemon at unix:///Users/apple/.docker/run/docker.sock. Is the docker daemon running?.\nSee \'docker run --help\'.\n', '2025-01-23 14:05:19', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (17, 1, 8, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str1[100], str2[100];\n    scanf(\"%s %s\", str1, str2);\n    printf(\"%s%s\\n\", str1, str2);\n    return 0;\n}', 'c', 0, 34, NULL, '2025-01-23 14:06:31', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (18, 1, 8, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str1[100], str2[100];\n    scanf(\"%s %s\", str1, str2);\n    printf(\"%s%s\\n\", str1, str2);\n    return 0;\n}', '', 0, 0, '不支持的编程语言: ', '2025-01-23 14:08:28', 'System Error', 'System Error', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (19, 1, 8, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str1[100], str2[100];\n    scanf(\"%s %s\", str1, str2);\n    printf(\"%s%s\\n\", str1, str2);\n    return 0;\n}', 'c', 0, 720, NULL, '2025-01-23 14:08:44', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (20, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 1, NULL, '2025-01-23 16:24:13', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (21, 1, 3, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[100];\n    scanf(\"%s\", str);\n    int len = strlen(str);\n    for(int i = len-1; i >= 0; i--) {\n        printf(\"%c\", str[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 2, NULL, '2025-01-23 16:24:55', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (22, 1, 4, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    long long result = 1;\n    for(int i = 1; i <= n; i++) {\n        result *= i;\n    }\n    printf(\"%lld\\n\", result);\n    return 0;\n}', 'c', 0, 916, NULL, '2025-01-23 16:28:04', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (23, 1, 5, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++) {\n        if(n % i == 0) return 0;\n    }\n    return 1;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", isPrime(n) ? \"是\" : \"否\");\n    return 0;\n}', 'c', 0, 1, NULL, '2025-01-23 16:28:24', 'Accepted', 'Accepted', NULL);
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (29, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'cpp', 0, 724, 'Wrong Answer\n输入: 6\n期望输出: undefined\n实际输出: ', '2025-01-25 10:06:52', NULL, 'Not Accepted', '2025-01-25 10:06:55');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (30, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'cpp', 0, 732, 'Wrong Answer\n输入: 6\n期望输出: 8\n实际输出: ', '2025-01-25 10:09:52', NULL, 'System Error', '2025-01-25 10:09:55');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (31, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', 0, 24, 'Wrong Answer\n输入: 6\n期望输出: 8\n实际输出: ', '2025-01-25 10:10:09', NULL, 'System Error', '2025-01-25 10:10:13');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (32, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', 0, 704, 'Wrong Answer\n输入: 6\n期望输出: 8\n实际输出: ', '2025-01-25 10:12:58', NULL, 'System Error', '2025-01-25 10:13:01');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (33, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', 0, 708, 'Wrong Answer\n输入: 6\n期望输出: 8\n实际输出: ', '2025-01-25 10:14:53', NULL, 'System Error', '2025-01-25 10:14:56');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (34, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', 0, 708, NULL, '2025-01-25 10:16:37', NULL, 'Accepted', '2025-01-25 10:16:45');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (35, 1, 9, '#include <stdio.h>\n\nint fib(int n) {\n    if(n <= 1) return n;\n    int a = 0, b = 1, c;\n    for(int i = 2; i <= n; i++) {\n        c = a + b;\n        a = b;\n        b = c;\n    }\n    return b;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", fib(n));\n    return 0;\n}', 'c', 0, 712, NULL, '2025-01-25 10:21:47', NULL, 'Accepted', '2025-01-25 10:21:55');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (36, 1, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 1, NULL, '2025-01-25 12:18:43', NULL, 'Accepted', '2025-01-25 12:18:50');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (37, 1, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 0, 'Command failed: docker run -d --network none --cpus=1 --memory=512m --name=judge-4c49472e-d895-4264-9605-d9f7561c0c28 -w /app gcc:latest tail -f /dev/null\ndocker: Cannot connect to the Docker daemon at unix:///Users/apple/.docker/run/docker.sock. Is the docker daemon running?.\nSee \'docker run --help\'.\n', '2025-01-26 11:47:20', NULL, 'System Error', '2025-01-26 11:47:20');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (38, 1, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 36, NULL, '2025-01-26 11:55:03', NULL, 'Accepted', '2025-01-26 11:55:10');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (39, 1, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 716, NULL, '2025-01-26 11:57:19', NULL, 'Accepted', '2025-01-26 11:57:26');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (40, 1, 11, '#include <stdio.h>\n\nvoid bubbleSort(int arr[], int n) {\n    for(int i = 0; i < n-1; i++) {\n        for(int j = 0; j < n-i-1; j++) {\n            if(arr[j] > arr[j+1]) {\n                int temp = arr[j];\n                arr[j] = arr[j+1];\n                arr[j+1] = temp;\n            }\n        }\n    }\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100];\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    bubbleSort(arr, n);\n    for(int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'cpp', 0, 29, NULL, '2025-01-26 11:58:57', NULL, 'Accepted', '2025-01-26 11:59:04');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (41, 1, 19, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++)\n        if(n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int start, end;\n    scanf(\"%d %d\", &start, &end);\n    int first = 1;\n    for(int i = start; i <= end; i++) {\n        if(isPrime(i)) {\n            if(!first) printf(\" \");\n            printf(\"%d\", i);\n            first = 0;\n        }\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 1, NULL, '2025-01-26 12:00:42', NULL, 'Accepted', '2025-01-26 12:00:50');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (42, 1, 19, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++)\n        if(n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int start, end;\n    scanf(\"%d %d\", &start, &end);\n    int first = 1;\n    for(int i = start; i <= end; i++) {\n        if(isPrime(i)) {\n            if(!first) printf(\" \");\n            printf(\"%d\", i);\n            first = 0;\n        }\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 768, NULL, '2025-01-26 12:02:21', NULL, 'Accepted', '2025-01-26 12:02:29');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (43, 1, 19, '#include <stdio.h>\n\nint isPrime(int n) {\n    if(n <= 1) return 0;\n    for(int i = 2; i * i <= n; i++)\n        if(n % i == 0) return 0;\n    return 1;\n}\n\nint main() {\n    int start, end;\n    scanf(\"%d %d\", &start, &end);\n    int first = 1;\n    for(int i = start; i <= end; i++) {\n        if(isPrime(i)) {\n            if(!first) printf(\" \");\n            printf(\"%d\", i);\n            first = 0;\n        }\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 704, NULL, '2025-01-26 12:04:13', NULL, 'Accepted', '2025-01-26 12:04:21');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (44, 1, 15, '#include <stdio.h>\n\nint isPalindrome(int n) {\n    int reversed = 0, original = n;\n    while(n > 0) {\n        reversed = reversed * 10 + n % 10;\n        n /= 10;\n    }\n    return original == reversed;\n}\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", isPalindrome(n) ? \"是\" : \"否\");\n    return 0;\n}', 'c', 0, 712, NULL, '2025-01-26 12:09:54', NULL, 'Accepted', '2025-01-26 12:10:01');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (45, 1, 10, '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", n % 2 == 0 ? \"是\" : \"否\");\n    return 0;\n}', 'c', 0, 852, NULL, '2025-01-26 12:39:17', NULL, 'Accepted', '2025-01-26 12:39:24');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (46, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 664, 'Wrong Answer\n输入: I love programming\n期望输出: programming love I\n实际输出: ', '2025-01-26 12:42:37', NULL, 'Not Accepted', '2025-01-26 12:42:40');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (47, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    fgets(s, 1000, stdin);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 740, NULL, '2025-01-26 12:44:06', NULL, 'Accepted', '2025-01-26 12:44:13');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (48, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 660, 'Wrong Answer\n输入: I love programming\n期望输出: programming love I\n实际输出: ', '2025-01-26 12:46:28', NULL, 'Not Accepted', '2025-01-26 12:46:31');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (49, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 668, 'Wrong Answer\n输入: I love programming\n期望输出: programming love I\n实际输出: ', '2025-01-26 12:48:22', NULL, 'Not Accepted', '2025-01-26 12:48:26');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (50, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 672, 'Wrong Answer\n输入: I love programming\n期望输出: programming love I\n实际输出: ', '2025-01-26 12:48:42', NULL, 'Not Accepted', '2025-01-26 12:48:46');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (51, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 668, 'Wrong Answer\n输入: I love programming\n期望输出: programming love I\n实际输出: ', '2025-01-26 12:49:29', NULL, 'Not Accepted', '2025-01-26 12:49:31');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (52, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    gets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 664, '提交结果：答案错误\n\n测试用例：\n输入：I love programming\n期望输出：programming love I\n您的输出：(无输出)\n\n请检查您的代码逻辑是否正确。', '2025-01-26 12:51:51', NULL, 'Not Accepted', '2025-01-26 12:51:54');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (53, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    fgets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 664, '提交结果：答案错误\n\n测试用例：\n输入：I love programming\n期望输出：programming love I\n您的输出：(无输出)\n\n请检查您的代码逻辑是否正确。', '2025-01-26 12:52:13', NULL, 'Not Accepted', '2025-01-26 12:52:17');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (54, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    fgets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 652, '提交结果：答案错误\n\n测试用例：\n输入：I love programming\n期望输出：programming love I\n您的输出：(无输出)\n\n请检查您的代码逻辑是否正确。', '2025-01-26 12:52:21', NULL, 'Not Accepted', '2025-01-26 12:52:23');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (55, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    fgets(s);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 684, '提交结果：答案错误\n\n测试用例：\n输入：I love programming\n期望输出：programming love I\n您的输出：(无输出)\n\n请检查您的代码逻辑是否正确。', '2025-01-26 12:52:54', NULL, 'Not Accepted', '2025-01-26 12:52:58');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (57, 1, 17, '#include <stdio.h>\n#include <string.h>\n\nvoid reverseWords(char *s) {\n    char words[100][100];\n    int wordCount = 0;\n    char *token = strtok(s, \" \");\n    while(token != NULL) {\n        strcpy(words[wordCount++], token);\n        token = strtok(NULL, \" \");\n    }\n    for(int i = wordCount-1; i >= 0; i--) {\n        printf(\"%s\", words[i]);\n        if(i > 0) printf(\" \");\n    }\n    printf(\"\\n\");\n}\n\nint main() {\n    char s[1000];\n    fgets(s, 1000, stdin);\n    reverseWords(s);\n    return 0;\n}', 'c', 0, 748, NULL, '2025-01-26 12:55:29', NULL, 'Accepted', '2025-01-26 12:55:36');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (58, 1, 3, '#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char str[100];\n    scanf(\"%s\", str);\n    int len = strlen(str);\n    for(int i = len-1; i >= 0; i--) {\n        printf(\"%c\", str[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}', 'c', 0, 728, NULL, '2025-01-26 13:04:58', NULL, 'Accepted', '2025-01-26 13:05:05');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (59, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 0, 'Cannot read properties of undefined (reading \'0\')', '2025-02-05 16:43:55', NULL, 'System Error', '2025-02-05 16:43:57');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (60, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 0, '系统错误：判题过程出现异常，请稍后重试。', '2025-02-05 16:45:48', NULL, 'System Error', '2025-02-05 16:45:50');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (61, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 0, NULL, '2025-02-05 16:47:35', NULL, 'Accepted', '2025-02-05 16:47:38');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (62, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 0, NULL, '2025-02-05 16:47:58', NULL, 'Accepted', '2025-02-05 16:48:01');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (63, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'c', 0, 0, NULL, '2025-02-05 16:49:49', NULL, 'Accepted', '2025-02-05 16:49:51');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (64, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 387, 0, '提交结果：答案错误\n\n测试用例：\n输入：2 3\n期望输出：5\n您的输出：-1\n\n请检查您的代码逻辑是否正确。', '2025-02-05 16:52:55', NULL, 'Not Accepted', '2025-02-05 16:52:57');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (65, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 401, 0, '提交结果：答案错误\n\n测试用例：\n输入：2 3\n期望输出：5\n您的输出：-1\n\n请检查您的代码逻辑是否正确。', '2025-02-05 16:58:36', NULL, 'Not Accepted', '2025-02-05 16:58:38');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (66, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 397, 0, '提交结果：答案错误\n\n测试用例：\n输入：2 3\n期望输出：5\n您的输出：-1\n\n请检查您的代码逻辑是否正确。', '2025-02-05 17:08:04', NULL, 'Not Accepted', '2025-02-05 17:08:06');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (67, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 426, 0, '提交结果：答案错误\n\n测试用例：\n输入：2 3\n期望输出：5\n您的输出：-1\n\n请检查您的代码逻辑是否正确。', '2025-02-05 17:13:22', NULL, 'Not Accepted', '2025-02-05 17:13:24');
-INSERT INTO `submissions_backup` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `new_status`, `status`, `completed_at`) VALUES (68, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a - b);\n    return 0;\n}', 'c', 304, 0, '提交结果：答案错误\n\n测试用例：\n输入：2 3\n期望输出：5\n您的输出：-1\n\n请检查您的代码逻辑是否正确。', '2025-02-05 17:13:24', NULL, 'Not Accepted', '2025-02-05 17:13:26');
-COMMIT;
-
--- ----------------------------
--- Table structure for teacher_messages
--- ----------------------------
-DROP TABLE IF EXISTS `teacher_messages`;
-CREATE TABLE `teacher_messages` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `session_id` int NOT NULL COMMENT '课堂ID',
-  `teacher_id` int NOT NULL COMMENT '教师ID',
-  `teacher_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '教师姓名',
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '留言内容',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
-  `is_pinned` tinyint(1) DEFAULT '0' COMMENT '是否置顶',
-  PRIMARY KEY (`id`),
-  KEY `idx_session_id` (`session_id`),
-  KEY `idx_teacher_id` (`teacher_id`),
-  CONSTRAINT `fk_message_session` FOREIGN KEY (`session_id`) REFERENCES `classroom_sessions` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_message_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='老师留言表';
-
--- ----------------------------
--- Records of teacher_messages
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for test_cases
--- ----------------------------
-DROP TABLE IF EXISTS `test_cases`;
-CREATE TABLE `test_cases` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `problem_id` int NOT NULL COMMENT '题目ID',
-  `input` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '测试输入',
-  `expected_output` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '期望输出',
-  `is_example` tinyint(1) DEFAULT '0' COMMENT '是否为示例测试用例',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_testcase_problem` (`problem_id`),
-  CONSTRAINT `fk_testcase_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of test_cases
--- ----------------------------
-BEGIN;
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (1, 1, '2 3', '5', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (2, 1, '10 20', '30', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (3, 1, '-5 8', '3', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (4, 2, '5\n1 5 3 8 2', '8', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (5, 2, '5\n10 20 30 40 50', '50', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (6, 2, '3\n-1 -5 -3', '-1', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (7, 3, 'hello', 'olleh', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (8, 3, 'programming', 'gnimmargorp', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (9, 3, '12345', '54321', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (10, 4, '5', '120', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (11, 4, '3', '6', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (12, 4, '6', '720', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (13, 5, '7', '是', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (14, 5, '4', '否', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (15, 5, '13', '是', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (16, 6, '5 3', '2', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (17, 6, '10 7', '3', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (18, 6, '20 5', '15', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (19, 7, '5\n4 2 7 1 9', '1', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (20, 7, '3\n10 5 8', '5', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (21, 7, '4\n15 3 9 2', '2', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (22, 8, 'abc def', 'abcdef', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (23, 8, 'hello world', 'helloworld', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (24, 8, '123 456', '123456', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (25, 9, '6', '8', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (26, 9, '7', '13', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (27, 9, '8', '21', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (28, 10, '8', '是', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (29, 10, '15', '否', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (30, 10, '100', '是', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (31, 11, '5\n9 3 6 2 7', '2 3 6 7 9', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (32, 11, '5\n5 2 8 1 9', '1 2 5 8 9', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (33, 11, '3\n7 3 1', '1 3 7', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (34, 12, 'apple p', '2', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (35, 12, 'hello l', '2', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (36, 12, 'programming m', '2', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (37, 13, 'hello world world java', 'hello java', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (38, 13, 'good morning morning evening', 'good evening', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (39, 13, 'programming is fun fun interesting', 'programming is interesting', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (40, 14, '12 18', '6', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (41, 14, '25 35', '5', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (42, 14, '48 64', '16', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (43, 15, '121', '是', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (44, 15, '123', '否', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (45, 15, '12321', '是', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (46, 16, '2 2\n1 2\n3 4\n5 6\n7 8', '6 8\n10 12', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (47, 16, '2 2\n1 1\n1 1\n2 2\n2 2', '3 3\n3 3', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (48, 16, '2 2\n0 1\n2 3\n1 2\n3 4', '1 3\n5 7', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (49, 17, 'I love programming', 'programming love I', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (50, 17, 'Hello World', 'World Hello', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (51, 17, 'Good Morning Everyone', 'Everyone Morning Good', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (52, 18, '5', '1\n1 1\n1 2 1\n1 3 3 1\n1 4 6 4 1', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (53, 18, '3', '1\n1 1\n1 2 1', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (54, 18, '4', '1\n1 1\n1 2 1\n1 3 3 1', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (55, 19, '10 20', '11 13 17 19', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (56, 19, '20 30', '23 29', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (57, 19, '1 10', '2 3 5 7', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (58, 20, '6\n1 2 2 3 3 3', '1 2 3', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (59, 20, '5\n4 4 4 5 5', '4 5', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (60, 20, '6\n1 1 2 2 3 3', '1 2 3', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (61, 21, '5\n1 2 3 4 5', '15', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (62, 21, '3\n10 20 30', '60', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (63, 21, '4\n2 4 6 8', '20', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (64, 22, 'hello', 'olleh', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (65, 22, 'world', 'dlrow', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (66, 22, '12345', '54321', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (67, 23, '6', '8', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (68, 23, '7', '13', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (69, 23, '8', '21', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (73, 25, '8', '是', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (74, 25, '15', '否', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (75, 25, '100', '是', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (85, 29, '1010', '10', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (86, 29, '1100', '12', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (87, 29, '1111', '15', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (88, 30, '6\n100 4 200 1 3 2', '4', 1, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (89, 30, '5\n1 2 3 4 5', '5', 0, '2025-01-23 08:42:32');
-INSERT INTO `test_cases` (`id`, `problem_id`, `input`, `expected_output`, `is_example`, `created_at`) VALUES (90, 30, '9\n0 3 7 2 5 8 4 6 1', '9', 0, '2025-01-23 08:42:32');
-COMMIT;
-
--- ----------------------------
--- Table structure for user_learning_plan_progress
--- ----------------------------
-DROP TABLE IF EXISTS `user_learning_plan_progress`;
-CREATE TABLE `user_learning_plan_progress` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL COMMENT '用户ID',
-  `plan_id` int NOT NULL COMMENT '学习计划ID',
-  `started_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
-  `last_problem_id` int DEFAULT NULL COMMENT '最后做的题目ID',
-  `completed_problems` int DEFAULT '0' COMMENT '已完成题目数',
-  `total_problems` int DEFAULT '0' COMMENT '总题目数',
-  `status` enum('not_started','in_progress','completed') DEFAULT 'not_started' COMMENT '进度状态',
-  `completed_at` timestamp NULL DEFAULT NULL COMMENT '完成时间',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_plan` (`user_id`,`plan_id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_plan_id` (`plan_id`),
-  CONSTRAINT `fk_ulpp_plan_id` FOREIGN KEY (`plan_id`) REFERENCES `learning_plans` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_ulpp_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户-学习计划进度表';
-
--- ----------------------------
--- Records of user_learning_plan_progress
--- ----------------------------
-BEGIN;
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (1, 1, 1, '2025-02-03 11:19:23', 3, 3, 10, 'in_progress', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (2, 1, 2, '2025-02-03 11:19:23', NULL, 0, 5, 'not_started', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (3, 1, 3, '2025-02-03 11:19:23', 2, 2, 10, 'in_progress', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (4, 1, 4, '2025-02-03 11:19:23', NULL, 0, 5, 'not_started', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (5, 1, 5, '2025-02-03 11:19:23', 1, 1, 10, 'in_progress', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-INSERT INTO `user_learning_plan_progress` (`id`, `user_id`, `plan_id`, `started_at`, `last_problem_id`, `completed_problems`, `total_problems`, `status`, `completed_at`, `created_at`, `updated_at`) VALUES (6, 1, 6, '2025-02-03 11:19:23', NULL, 0, 10, 'not_started', NULL, '2025-02-03 11:19:23', '2025-02-03 11:19:23');
-COMMIT;
-
--- ----------------------------
--- Table structure for user_problem_set_progress
--- ----------------------------
-DROP TABLE IF EXISTS `user_problem_set_progress`;
-CREATE TABLE `user_problem_set_progress` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL COMMENT '用户ID',
-  `problem_set_id` int NOT NULL COMMENT '题集ID',
-  `completed_problems` int DEFAULT '0' COMMENT '已完成题目数',
-  `last_problem_id` int DEFAULT NULL COMMENT '最后做的题目ID',
-  `started_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
-  `last_active_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后活动时间',
-  `is_completed` tinyint(1) DEFAULT '0' COMMENT '是否完成',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_set` (`user_id`,`problem_set_id`),
-  KEY `idx_problem_set_id` (`problem_set_id`),
-  CONSTRAINT `fk_progress_set` FOREIGN KEY (`problem_set_id`) REFERENCES `problem_sets` (`id`),
-  CONSTRAINT `fk_progress_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of user_problem_set_progress
--- ----------------------------
-BEGIN;
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (90, 1, 1, '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 1634, 592, NULL, '2025-04-04 20:08:30', 'Accepted', '2025-04-04 20:08:41');
 COMMIT;
 
 -- ----------------------------
@@ -1780,7 +921,7 @@ CREATE TABLE `user_problem_status` (
   KEY `idx_problem_id` (`problem_id`),
   CONSTRAINT `fk_status_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`),
   CONSTRAINT `fk_status_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=306 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户通过的题目表';
+) ENGINE=InnoDB AUTO_INCREMENT=307 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='题目——用户通过的题目表';
 
 -- ----------------------------
 -- Records of user_problem_status
@@ -1790,7 +931,7 @@ INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `cre
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (2, 1, 2, 'Accepted', '2025-01-23 09:11:27', '2025-01-24 16:14:37', NULL, NULL, 0, NULL, NULL, 1, '2025-02-05 13:14:33');
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (3, 1, 6, 'Accepted', '2025-01-23 10:09:25', '2025-01-23 10:09:25', NULL, NULL, 0, NULL, NULL, 0, '2025-02-05 13:14:33');
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (4, 1, 8, 'Accepted', '2025-01-23 14:06:41', '2025-01-23 14:06:41', NULL, NULL, 0, NULL, NULL, 0, '2025-02-05 13:14:33');
-INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (6, 1, 1, 'Accepted', '2025-01-23 16:24:22', '2025-04-03 09:00:45', NULL, NULL, 12, 2997.45, NULL, 1, '2025-02-05 13:14:33');
+INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (6, 1, 1, 'Accepted', '2025-01-23 16:24:22', '2025-04-04 20:08:41', NULL, NULL, 13, 1634.42, NULL, 1, '2025-02-05 13:14:33');
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (7, 1, 3, 'Accepted', '2025-01-23 16:25:05', '2025-01-26 13:05:05', NULL, NULL, 1, 0, NULL, 1, '2025-02-05 13:14:33');
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (8, 1, 4, 'Accepted', '2025-01-23 16:28:13', '2025-01-25 12:27:28', NULL, NULL, 0, NULL, NULL, 1, '2025-02-05 13:14:33');
 INSERT INTO `user_problem_status` (`id`, `user_id`, `problem_id`, `status`, `created_at`, `updated_at`, `first_submission_time`, `last_submission_time`, `submission_count`, `average_execution_time`, `average_memory_usage`, `viewed_solution`, `completed_at`) VALUES (9, 1, 5, 'Accepted', '2025-01-23 16:28:33', '2025-01-23 16:28:33', NULL, NULL, 0, NULL, NULL, 0, '2025-02-05 13:14:33');
@@ -1821,7 +962,7 @@ CREATE TABLE `user_profile` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_profile_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb3 COMMENT='全局——用户显示资料表';
 
 -- ----------------------------
 -- Records of user_profile
@@ -1837,33 +978,6 @@ INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar
 COMMIT;
 
 -- ----------------------------
--- Table structure for user_role_relations
--- ----------------------------
-DROP TABLE IF EXISTS `user_role_relations`;
-CREATE TABLE `user_role_relations` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL COMMENT '用户ID',
-  `role_id` int NOT NULL COMMENT '角色ID',
-  `expire_time` timestamp NULL DEFAULT NULL COMMENT '角色过期时间（针对会员）',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_role` (`user_id`,`role_id`),
-  KEY `idx_role_id` (`role_id`),
-  CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `user_roles` (`id`),
-  CONSTRAINT `fk_user_role_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of user_role_relations
--- ----------------------------
-BEGIN;
-INSERT INTO `user_role_relations` (`id`, `user_id`, `role_id`, `expire_time`, `created_at`, `updated_at`) VALUES (1, 1, 5, NULL, '2025-02-03 16:27:56', '2025-02-03 16:27:56');
-INSERT INTO `user_role_relations` (`id`, `user_id`, `role_id`, `expire_time`, `created_at`, `updated_at`) VALUES (2, 2, 1, NULL, '2025-02-03 16:27:56', '2025-02-03 16:27:56');
-INSERT INTO `user_role_relations` (`id`, `user_id`, `role_id`, `expire_time`, `created_at`, `updated_at`) VALUES (3, 3, 1, NULL, '2025-02-03 16:27:56', '2025-02-03 16:27:56');
-COMMIT;
-
--- ----------------------------
 -- Table structure for user_roles
 -- ----------------------------
 DROP TABLE IF EXISTS `user_roles`;
@@ -1873,7 +987,7 @@ CREATE TABLE `user_roles` (
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '角色描述',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——角色描述表';
 
 -- ----------------------------
 -- Records of user_roles
@@ -1900,7 +1014,7 @@ CREATE TABLE `user_visits` (
   UNIQUE KEY `uk_user_date` (`user_id`,`visit_date`),
   KEY `idx_visit_date` (`visit_date`),
   CONSTRAINT `fk_visit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=230 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户访问记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=237 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
 
 -- ----------------------------
 -- Records of user_visits
@@ -1930,7 +1044,9 @@ INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `v
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (211, 9, '2025-04-02', '2025-04-02 12:21:55', 1);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (212, 1, '2025-04-02', '2025-04-02 12:22:23', 7);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (219, 1, '2025-04-03', '2025-04-03 00:05:09', 7);
-INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (226, 1, '2025-04-04', '2025-04-04 11:26:46', 4);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (226, 1, '2025-04-04', '2025-04-04 11:26:46', 6);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (232, 1, '2025-04-08', '2025-04-08 11:07:17', 3);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (235, 1, '2025-04-10', '2025-04-10 08:56:51', 2);
 COMMIT;
 
 -- ----------------------------
@@ -1952,7 +1068,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `uk_username` (`username`),
   UNIQUE KEY `uk_phone` (`phone`),
   UNIQUE KEY `uk_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户隐私信息表';
 
 -- ----------------------------
 -- Records of users
