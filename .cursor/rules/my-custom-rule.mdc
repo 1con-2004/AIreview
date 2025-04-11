@@ -28,8 +28,16 @@ This project is targeted at schools rather than commercial enterprises and is pr
 4. To start Back end part, in file backend and "yarn dev" to start.
 # Operation Preferences
 ## Database
-1. For database reading, the database file is defaultly placed in the `数据库文件/AIreview.sql` folder in the project root directory. This file is not automatically updated but is exported by users from Navicat irregularly for viewing only.
-2. For some database modification operations, provide executable statements for users in Navicat. When the code for database modification operations is too long, present it in segments.
+### 1. Database Query
+ - When the user mentions querying a specific table in the database within their question, directly utilize the `mysql` tool of the MCP Server to query the corresponding table in the `AIreview` database. For example, if the user asks to query the `users` table in the `AIreview` database, use the appropriate `mysql` commands like `SELECT * FROM users;` through the MCP Server's `mysql` tool.
+
+### 2. Creating Database Files
+ - When the user requests to create a new database file, place the newly created database file in the folder named "数据库文件" located at the root directory of the project. Ensure proper naming and file - format compliance according to the database requirements.
+
+### 3. Other Database Operations
+ - For any operations other than database queries, such as modifying database content, use the `mysql` tool of the MCP Server. However, prior to performing these operations, obtain manual consent from the user. For instance, if the user requests to update the `email` field in the `users` table, first present the proposed `UPDATE` query like `UPDATE users SET email = 'new_email@example.com' WHERE user_id = 1;` to the user and wait for their approval before executing it.
+
+
 # Code Preferences
 ## Front - end Code
 1. When improving front - end related code, make it adaptable to browsers of different sizes. That is, use percentage - based layout instead of fixed pixel density.

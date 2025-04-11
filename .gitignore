@@ -32,6 +32,9 @@ Thumbs.db
 /backend/uploads/
 /backend/temp/
 /frontend/dist/
+/.cursor/
+/大创
+/数据库文档
 
 # 其他
 *.pid
