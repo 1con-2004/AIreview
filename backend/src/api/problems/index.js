@@ -1008,26 +1008,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       const deletedProblemNumber = problemInfo[0].problem_number;
       console.log('要删除的题目编号:', deletedProblemNumber);
 
-      // 1. 删除题目集中的题目关系
-      console.log('删除 problem_set_items 表数据...');
-      await db.query(
-        'DELETE FROM problem_set_items WHERE problem_id = ?',
-        [problemId]
-      );
-      
-      // 2. 删除题目分类关系（注意：使用 problem_set_id 而不是 problem_id）
-      console.log('删除 problem_set_category_relations 表数据...');
-      await db.query(
-        'DELETE FROM problem_set_category_relations WHERE problem_set_id = ?',
-        [problemId]
-      );
-      
-      // 3. 删除学习路径中的题目关系
-      console.log('删除 learning_path_problems 表数据...');
-      await db.query(
-        'DELETE FROM learning_path_problems WHERE problem_id = ?',
-        [problemId]
-      );
+      // 以下表已弃用，不再需要删除
+      // 1. 删除题目集中的题目关系 - problem_set_items表已弃用
+      // 2. 删除题目分类关系 - problem_set_category_relations表已弃用
+      // 3. 删除学习路径中的题目关系 - learning_path_problems表已弃用
       
       // 4. 删除学习计划中的题目关系
       console.log('删除 learning_plan_problems 表数据...');
@@ -1036,13 +1020,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         [problemId]
       );
 
-      // 5. 删除题目解答（problem_solutions表）
-      console.log('删除 problem_solutions 表数据...');
-      await db.query(
-        'DELETE FROM problem_solutions WHERE problem_id = ?',
-        [problemId]
-      );
-      
+      // 5. 删除题目解答（problem_solutions表已弃用）
+
       // 6. 删除题目解答代码
       console.log('删除 solution_code 表数据...');
       await db.query(
@@ -1074,9 +1053,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       );
 
       // 10. 删除测试用例
-      console.log('删除 test_cases 表数据...');
+      console.log('删除 problem_test_cases 表数据...');
       await db.query(
-        'DELETE FROM test_cases WHERE problem_id = ?',
+        'DELETE FROM problem_test_cases WHERE problem_id = ?',
         [problemId]
       );
       
