@@ -69,6 +69,8 @@ if (!fs.existsSync(avatarsPath)) {
 
 // 配置静态文件中间件
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// 添加 /api/uploads 路径，以便前端可以通过 /api/uploads 访问上传的文件
+app.use('/api/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 app.use('/icons', express.static(iconsPath, {
     setHeaders: (res, path, stat) => {

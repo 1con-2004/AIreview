@@ -638,7 +638,26 @@ export default defineComponent({
         }
 
         const headers = { Authorization: `Bearer ${token}` }
+        
+        // 首先尝试使用路由参数获取提交记录
         const response = await axios.get(`http://localhost:3000/api/problems/${route.params.id}/submissions`, { headers })
+        
+        // 如果没有数据，且是数字ID，尝试将其作为实际的problem_id使用
+        if (response.data && response.data.code === 200 && (!response.data.data || response.data.data.length === 0)) {
+          if (!isNaN(Number(route.params.id))) {
+            console.log('尝试直接通过题目ID获取提交记录:', Number(route.params.id))
+            // 尝试直接用数字ID获取
+            try {
+              const directResponse = await axios.get(`http://localhost:3000/api/judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
+              if (directResponse.data && directResponse.data.length > 0) {
+                submissions.value = directResponse.data
+                return
+              }
+            } catch (directError) {
+              console.error('直接通过ID获取提交记录失败:', directError)
+            }
+          }
+        }
         
         if (response.data && response.data.code === 200) {
           submissions.value = response.data.data

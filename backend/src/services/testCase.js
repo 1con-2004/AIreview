@@ -2,11 +2,22 @@ const db = require('../db');
 
 /**
  * 获取题目的所有测试用例
- * @param {number} problemId 题目ID
+ * @param {number|string} problemId 题目ID或题目编号
  * @returns {Promise<Array>} 测试用例数组
  */
 async function getAllTestCases(problemId) {
     try {
+        // 判断传入的是ID还是题目编号
+        if (isNaN(problemId) || problemId.toString().length === 4) {
+            // 可能是题目编号
+            const sql = 'SELECT * FROM problem_test_cases WHERE problem_number = ? ORDER BY order_num';
+            const [testCases] = await db.query(sql, [problemId]);
+            if (testCases && testCases.length > 0) {
+                return testCases;
+            }
+        }
+
+        // 尝试通过problem_id查询
         const sql = 'SELECT * FROM problem_test_cases WHERE problem_id = ? ORDER BY order_num';
         const [testCases] = await db.query(sql, [problemId]);
         return testCases;
@@ -23,9 +34,20 @@ async function getAllTestCases(problemId) {
  */
 async function getExampleTestCases(problemId) {
     try {
+        // 判断传入的是ID还是题目编号
+        if (isNaN(problemId) || problemId.toString().length === 4) {
+            // 可能是题目编号
+            const sql = 'SELECT * FROM problem_test_cases WHERE problem_number = ? AND is_example = 1 ORDER BY order_num';
+            const [testCases] = await db.query(sql, [problemId]);
+            if (testCases && testCases.length > 0) {
+                return testCases;
+            }
+        }
+
+        // 尝试通过problem_id查询
         const sql = 'SELECT * FROM problem_test_cases WHERE problem_id = ? AND is_example = 1 ORDER BY order_num';
-        const [examples] = await db.query(sql, [problemId]);
-        return examples;
+        const [testCases] = await db.query(sql, [problemId]);
+        return testCases;
     } catch (error) {
         console.error('Error getting example test cases:', error);
         throw error;
@@ -39,15 +61,25 @@ async function getExampleTestCases(problemId) {
  */
 async function addTestCase(testCase) {
     try {
-        const sql = 'INSERT INTO problem_test_cases (problem_id, input, output, is_example, order_num) VALUES (?, ?, ?, ?, ?)';
+        // 查询题目信息，获取 problem_number
+        let problemNumber = testCase.problem_number;
+        if (!problemNumber && testCase.problem_id) {
+            const [problem] = await db.query('SELECT problem_number FROM problems WHERE id = ?', [testCase.problem_id]);
+            if (problem && problem.length > 0) {
+                problemNumber = problem[0].problem_number;
+            }
+        }
+
+        const sql = 'INSERT INTO problem_test_cases (problem_id, problem_number, input, output, is_example, order_num) VALUES (?, ?, ?, ?, ?, ?)';
         const [result] = await db.query(sql, [
             testCase.problem_id,
+            problemNumber,
             testCase.input,
             testCase.output,
             testCase.is_example || 0,
             testCase.order_num || 0
         ]);
-        return { id: result.insertId, ...testCase };
+        return { id: result.insertId, ...testCase, problem_number: problemNumber };
     } catch (error) {
         console.error('Error adding test case:', error);
         throw error;

@@ -8,11 +8,11 @@ const executor = new Executor();
 
 // 提交代码进行判题
 router.post('/problems/:id/submit', async (req, res) => {
-  const problemId = req.params.id;
+  const problemIdParam = req.params.id;
   const { code, language } = req.body;
   const userId = req.user?.id || 1;
 
-  console.log('收到判题请求:', { problemId, language });
+  console.log('收到判题请求:', { problemIdParam, language });
   
   let connection;
   let sandbox;
@@ -21,11 +21,38 @@ router.post('/problems/:id/submit', async (req, res) => {
     await connection.beginTransaction();
     console.log('开启数据库事务');
 
-    // 1. 获取题目信息
-    const [problems] = await connection.execute(
-      'SELECT * FROM problems WHERE id = ?',
-      [problemId]
-    );
+    // 1. 获取题目信息 - 既支持problem_number也支持id
+    let actualProblemId;
+    let problems = [];
+
+    // 检查是否是数字形式的problem_number (例如"0030")
+    if (problemIdParam.match(/^\d+$/)) {
+      const paddedProblemNumber = problemIdParam.padStart(4, '0');
+      console.log('尝试通过problem_number查询:', paddedProblemNumber);
+      
+      // 首先尝试通过problem_number查询
+      [problems] = await connection.execute(
+        'SELECT * FROM problems WHERE problem_number = ?',
+        [paddedProblemNumber]
+      );
+      
+      if (problems && problems.length > 0) {
+        console.log('通过problem_number找到题目:', problems[0].title);
+      } else {
+        // 如果没找到，尝试通过ID查询
+        console.log('通过problem_number未找到题目，尝试通过ID查询');
+        [problems] = await connection.execute(
+          'SELECT * FROM problems WHERE id = ?',
+          [parseInt(problemIdParam)]
+        );
+      }
+    } else {
+      // 非数字ID，直接查询
+      [problems] = await connection.execute(
+        'SELECT * FROM problems WHERE id = ?',
+        [problemIdParam]
+      );
+    }
     
     if (problems.length === 0) {
       await connection.rollback();
@@ -34,12 +61,14 @@ router.post('/problems/:id/submit', async (req, res) => {
         message: '题目不存在'
       });
     }
-    console.log('获取题目信息成功:', problems[0].title);
+    
+    actualProblemId = problems[0].id;
+    console.log('获取题目信息成功: ID =', actualProblemId, ', 标题 =', problems[0].title);
     
     // 2. 获取题目的测试用例
     const [testCases] = await connection.execute(
-      'SELECT id, problem_id, input, output, order_num FROM problem_test_cases WHERE problem_id = ? ORDER BY order_num ASC',
-      [problemId]
+      'SELECT id, problem_id, problem_number, input, output, order_num, is_example FROM problem_test_cases WHERE problem_id = ? OR problem_number = ? ORDER BY order_num ASC',
+      [actualProblemId, problems[0].problem_number]
     );
     
     if (testCases.length === 0) {
@@ -53,8 +82,8 @@ router.post('/problems/:id/submit', async (req, res) => {
 
     // 3. 创建提交记录
     const [submission] = await connection.execute(
-      'INSERT INTO submissions (user_id, problem_id, code, language, status) VALUES (?, ?, ?, ?, ?)',
-      [userId, problemId, code, language, 'Pending']
+      'INSERT INTO submissions (user_id, problem_id, problem_number, code, language, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, actualProblemId, problems[0].problem_number, code, language, 'Pending']
     );
     console.log('创建提交记录成功, ID:', submission.insertId);
 
@@ -101,7 +130,7 @@ router.post('/problems/:id/submit', async (req, res) => {
          status = 'Accepted',
          submission_count = submission_count + 1,
          average_execution_time = ?`,
-        [userId, problemId, judgeResult.runtime || 0, judgeResult.runtime || 0]
+        [userId, actualProblemId, judgeResult.runtime || 0, judgeResult.runtime || 0]
       );
       console.log('更新用户题目状态成功');
 
@@ -112,7 +141,7 @@ router.post('/problems/:id/submit', async (req, res) => {
              total_submissions = total_submissions + 1,
              acceptance_rate = ROUND((accepted_submissions / total_submissions) * 100, 2)
          WHERE id = ?`,
-        [problemId]
+        [actualProblemId]
       );
     } else {
       // 只更新总提交数
@@ -121,7 +150,7 @@ router.post('/problems/:id/submit', async (req, res) => {
          SET total_submissions = total_submissions + 1,
              acceptance_rate = ROUND((accepted_submissions / total_submissions) * 100, 2)
          WHERE id = ?`,
-        [problemId]
+        [actualProblemId]
       );
     }
 
@@ -184,7 +213,7 @@ router.post('/problems/:id/submit', async (req, res) => {
 
 // 获取提交历史的路由
 router.get('/submissions', async (req, res) => {
-  const { user_id, problem_id, page = 1, limit = 20 } = req.query;
+  const { user_id, problem_id, problem_number, page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
 
   let connection;
@@ -202,36 +231,35 @@ router.get('/submissions', async (req, res) => {
       conditions.push('problem_id = ?');
       params.push(problem_id);
     }
+    if (problem_number) {
+      conditions.push('problem_number = ?');
+      params.push(problem_number);
+    }
 
-    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // 获取总记录数
+    // 获取总数
     const [countResult] = await connection.execute(
       `SELECT COUNT(*) as total FROM submissions ${whereClause}`,
       params
     );
     const total = countResult[0].total;
 
-    // 获取提交记录
+    // 获取分页数据
     const [submissions] = await connection.execute(
-      `SELECT id, user_id, problem_id, language, status, runtime, memory, created_at 
-       FROM submissions ${whereClause}
-       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), offset]
+      `SELECT id, user_id, problem_id, problem_number, language, status, runtime, memory, created_at, completed_at
+       FROM submissions
+       ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT ?, ?`,
+      [...params, offset, parseInt(limit)]
     );
 
-    res.json({
-      total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      submissions
-    });
-
+    res.json(submissions);
   } catch (error) {
     console.error('获取提交历史失败:', error);
     res.status(500).json({
-      error: '获取提交历史失败',
-      message: error.message
+      message: '获取提交历史失败'
     });
   } finally {
     if (connection) {
@@ -253,7 +281,7 @@ router.get('/submissions/user', async (req, res) => {
     const [submissions] = await connection.execute(
       `SELECT s.*, p.title as problem_title 
        FROM submissions s
-       LEFT JOIN problems p ON s.problem_id = p.id
+       LEFT JOIN problems p ON s.problem_id = p.id OR s.problem_number = p.problem_number
        WHERE s.user_id = ?
        ORDER BY s.created_at DESC`,
       [userId]
@@ -287,7 +315,7 @@ router.get('/submissions/:id', async (req, res) => {
     const [[submission]] = await connection.execute(
       `SELECT s.*, p.title as problem_title, u.username 
        FROM submissions s
-       LEFT JOIN problems p ON s.problem_id = p.id
+       LEFT JOIN problems p ON s.problem_id = p.id OR s.problem_number = p.problem_number
        LEFT JOIN users u ON s.user_id = u.id
        WHERE s.id = ?`,
       [submissionId]

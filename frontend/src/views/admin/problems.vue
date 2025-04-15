@@ -72,6 +72,10 @@
         </button>
       </div>
       <div class="action-buttons">
+        <button class="btn-import" @click="gotoProblemPool">
+          <i class="fas fa-magic"></i>
+          一键出题
+        </button>
         <button class="btn-create" @click="openCreateDialog">
           <i class="fas fa-plus"></i>
           新建题目
@@ -605,17 +609,11 @@
 import { ref, onMounted, watch, computed, reactive } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from 'axios'
-
-// 引入 PrimeVue 组件
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Textarea from 'primevue/textarea'
-import InputNumber from 'primevue/inputnumber'
-import Editor from 'primevue/editor'
-import Chips from 'primevue/chips'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const toast = useToast()
 
 // 状态数据
@@ -1403,6 +1401,11 @@ const handleCreateTestCaseSortChange = ({ column, prop, order }) => {
     })
   }
 }
+
+// 跳转到题目池页面
+const gotoProblemPool = () => {
+  router.push('/admin/problem-pool')
+}
 </script>
 
 <style scoped>
@@ -1519,7 +1522,7 @@ const handleCreateTestCaseSortChange = ({ column, prop, order }) => {
   gap: 12px;
 }
 
-.btn-create, .btn-reorder, .btn-filter {
+.btn-import, .btn-create, .btn-reorder, .btn-filter {
   padding: 12px 20px;
   border-radius: 12px;
   border: none;
@@ -1530,6 +1533,15 @@ const handleCreateTestCaseSortChange = ({ column, prop, order }) => {
   gap: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.btn-import {
+  background: #007AFF;
+  color: white;
+}
+
+.btn-import:hover {
+  background: #0066CC;
 }
 
 .btn-create {

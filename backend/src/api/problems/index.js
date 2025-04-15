@@ -209,7 +209,7 @@ router.get('/stats', async (req, res) => {
 router.get('/categories', async (req, res) => {
   try {
     console.log('Getting problem categories');
-    const [categories] = await db.query('SELECT * FROM problem_set_categories');
+    const [categories] = await db.query('SELECT * FROM problem_pool_categories');
     
     res.json({
       code: 200,
@@ -670,8 +670,8 @@ router.post('/:id/solution', async (req, res) => {
 
     // 插入提交记录
     const [result] = await db.query(
-      'INSERT INTO submissions (user_id, problem_id, code, language, status) VALUES (?, ?, ?, ?, ?)',
-      [userId, actualProblemId, code, language, 'Pending']
+      'INSERT INTO submissions (user_id, problem_id, problem_number, code, language, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, actualProblemId, problemId, code, language, 'Pending']
     );
 
     // 更新用户题目状态
@@ -706,29 +706,66 @@ router.get('/:id/submissions', authenticateToken, async (req, res) => {
 
   try {
     // 首先尝试通过 problem_number 查询题目
-    let [problems] = await db.query('SELECT id FROM problems WHERE problem_number = ?', [problemId]);
-    
-    // 如果没找到，再尝试通过 id 查询
-    if (!problems || problems.length === 0) {
-      [problems] = await db.query('SELECT id FROM problems WHERE id = ?', [parseInt(problemId)]);
-    }
-    
-    if (!problems || problems.length === 0) {
-      console.log('Problem not found for id:', problemId);
-      return res.status(404).json({
-        code: 404,
-        message: '未找到该题目'
-      });
-    }
+    let actualProblemId;
 
+    // 检查是否是数字形式的problem_number (例如"0030")
+    if (problemId.match(/^\d+$/)) {
+      const paddedProblemNumber = problemId.padStart(4, '0');
+      console.log('查询problem_number:', paddedProblemNumber);
+      
+      // 尝试通过problem_number查询
+      let [problemsByNumber] = await db.query(
+        'SELECT id FROM problems WHERE problem_number = ?',
+        [paddedProblemNumber]
+      );
+      
+      if (problemsByNumber && problemsByNumber.length > 0) {
+        actualProblemId = problemsByNumber[0].id;
+        console.log('通过problem_number找到题目ID:', actualProblemId);
+      } else {
+        // 如果通过problem_number找不到，尝试直接使用id
+        actualProblemId = parseInt(problemId);
+        console.log('尝试直接使用ID:', actualProblemId);
+      }
+    } else {
+      // 非数字形式的ID，直接使用
+      actualProblemId = problemId;
+    }
+    
+    console.log('最终使用的题目ID:', actualProblemId);
+    
     // 获取该用户对该题目的所有提交记录
     const [submissions] = await db.query(
       `SELECT id, code, language, runtime, memory, status, error_message, created_at, completed_at 
        FROM submissions 
-       WHERE user_id = ? AND problem_id = ?
+       WHERE user_id = ? AND (problem_id = ? OR problem_number = ?)
        ORDER BY created_at DESC`,
-      [userId, problems[0].id]
+      [userId, actualProblemId, problemId]
     );
+
+    // 检查是否有提交记录
+    if (submissions.length === 0) {
+      console.log('未找到提交记录，尝试通过数值ID查询:', parseInt(problemId));
+      
+      // 尝试通过直接的数值ID查询
+      const [submissionsByNumericId] = await db.query(
+        `SELECT id, code, language, runtime, memory, status, error_message, created_at, completed_at 
+         FROM submissions 
+         WHERE user_id = ? AND problem_id = ?
+         ORDER BY created_at DESC`,
+        [userId, parseInt(problemId)]
+      );
+      
+      console.log('Found submissions by numeric ID:', submissionsByNumericId.length);
+      
+      if (submissionsByNumericId.length > 0) {
+        // 如果找到了提交记录，使用这些记录
+        return res.json({
+          code: 200,
+          data: submissionsByNumericId
+        });
+      }
+    }
 
     console.log('Found submissions:', submissions.length);
 
@@ -1230,6 +1267,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       if (Array.isArray(test_cases) && test_cases.length > 0) {
         const testCaseValues = test_cases.map(tc => [
           problemId,
+          nextNumber,
           tc.input,
           tc.output,
           tc.is_example ? 1 : 0,
@@ -1238,7 +1276,7 @@ router.post('/create', authenticateToken, async (req, res) => {
 
         await db.query(
           `INSERT INTO problem_test_cases 
-           (problem_id, input, output, is_example, order_num)
+           (problem_id, problem_number, input, output, is_example, order_num)
            VALUES ?`,
           [testCaseValues]
         );
@@ -1302,9 +1340,9 @@ router.get('/:id/test-cases', async (req, res) => {
     const [testCases] = await db.query(
       `SELECT id, input, output, is_example, order_num 
        FROM problem_test_cases 
-       WHERE problem_id = ? 
+       WHERE problem_id = ? OR problem_number = ?
        ORDER BY order_num`,
-      [actualProblemId]
+      [actualProblemId, problemId]
     );
 
     console.log(`找到 ${testCases.length} 个测试用例`);
@@ -1369,14 +1407,15 @@ router.put('/:id/test-cases', async (req, res) => {
     try {
       // 1. 删除原有的测试用例
       await db.query(
-        'DELETE FROM problem_test_cases WHERE problem_id = ?',
-        [actualProblemId]
+        'DELETE FROM problem_test_cases WHERE problem_id = ? OR problem_number = ?',
+        [actualProblemId, problemId]
       );
 
       // 2. 插入新的测试用例
       if (test_cases.length > 0) {
         const values = test_cases.map(tc => [
           actualProblemId,
+          problemId,
           tc.input,
           tc.output,
           tc.is_example ? 1 : 0,
@@ -1385,7 +1424,7 @@ router.put('/:id/test-cases', async (req, res) => {
 
         await db.query(
           `INSERT INTO problem_test_cases 
-           (problem_id, input, output, is_example, order_num)
+           (problem_id, problem_number, input, output, is_example, order_num)
            VALUES ?`,
           [values]
         );

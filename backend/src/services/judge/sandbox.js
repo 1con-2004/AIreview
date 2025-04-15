@@ -147,8 +147,11 @@ class Sandbox {
       // 确保临时目录存在
       await fs.mkdir(this.tempDir, { recursive: true });
 
-      // 写入源代码
-      await fs.writeFile(sourceFile, code);
+      // 预处理代码
+      let processedCode = this.preprocessCode(code, language);
+
+      // 写入处理后的源代码
+      await fs.writeFile(sourceFile, processedCode);
 
       // 编译命令
       const compileCmd = language === 'cpp' 
@@ -196,10 +199,13 @@ class Sandbox {
       const normalizedLanguage = language.toLowerCase();
       console.log('标准化后的语言:', normalizedLanguage);
 
+      // 预处理代码
+      let processedCode = this.preprocessCode(code, normalizedLanguage);
+
       let result;
       if (normalizedLanguage === 'c' || normalizedLanguage === 'cpp') {
         // 编译并运行
-        const compileResult = await this.compile(code, normalizedLanguage);
+        const compileResult = await this.compile(processedCode, normalizedLanguage);
         if (compileResult.error) {
           return compileResult;
         }
@@ -242,12 +248,63 @@ class Sandbox {
             error: error.stderr || '程序执行时发生错误'
           };
         }
+      } else if (normalizedLanguage === 'java') {
+        // 创建Java源文件和输入文件
+        const javaFile = path.join(this.tempDir, `temp_${Date.now()}.java`);
+        const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
+        
+        await fs.writeFile(javaFile, processedCode);
+        await fs.writeFile(inputFile, input || '');
+
+        try {
+          // 使用专门的Java执行方法
+          result = await this.runJava(javaFile, inputFile);
+          
+          if (result.error) {
+            // 清理文件
+            try {
+              await fs.unlink(javaFile);
+              await fs.unlink(inputFile);
+            } catch (e) {
+              console.error('清理文件失败:', e);
+            }
+            
+            return {
+              error: result.error
+            };
+          }
+          
+          // 获取内存使用情况
+          const memory = await this.getMemoryUsage();
+          
+          // 清理文件
+          await fs.unlink(javaFile);
+          await fs.unlink(inputFile);
+          
+          return {
+            output: result.stdout,
+            runtime: result.runtime || 0,
+            memory
+          };
+        } catch (error) {
+          // 清理文件
+          try {
+            await fs.unlink(javaFile);
+            await fs.unlink(inputFile);
+          } catch (e) {
+            console.error('清理文件失败:', e);
+          }
+
+          return {
+            error: error.message || '执行Java代码失败'
+          };
+        }
       } else if (normalizedLanguage === 'python') {
         // 创建Python源文件和输入文件
         const pythonFile = path.join(this.tempDir, `temp_${Date.now()}.py`);
         const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
         
-        await fs.writeFile(pythonFile, code);
+        await fs.writeFile(pythonFile, processedCode);
         await fs.writeFile(inputFile, input || '');
 
         try {
@@ -302,6 +359,353 @@ class Sandbox {
 
   async runPython(pythonFile, inputPath) {
     return await execCommand(`python3 "${pythonFile}" < "${inputPath}"`);
+  }
+
+  async runJava(javaFile, inputPath) {
+    try {
+      // 复制Java文件到容器
+      const fileName = path.basename(javaFile);
+      const containerPath = `/app/${fileName}`;
+      await this.copyToContainer(javaFile, containerPath);
+      
+      // 复制输入文件到容器
+      const inputFileName = path.basename(inputPath);
+      const containerInputPath = `/app/${inputFileName}`;
+      await this.copyToContainer(inputPath, containerInputPath);
+      
+      // 在容器中编译Java代码
+      console.log(`编译Java文件: ${fileName}`);
+      const compileCommand = `javac ${containerPath}`;
+      const compileResult = await execCommand(`docker exec ${this.containerId} ${compileCommand}`);
+      
+      if (compileResult.stderr) {
+        return {
+          error: compileResult.stderr
+        };
+      }
+      
+      // 获取主类名
+      const className = fileName.replace('.java', '');
+      
+      // 在容器中运行Java代码
+      console.log(`运行Java类: ${className}`);
+      const runCommand = `docker exec ${this.containerId} java -cp /app ${className} < ${containerInputPath}`;
+      
+      const startTime = process.hrtime();
+      const result = await execCommand(runCommand);
+      const [seconds, nanoseconds] = process.hrtime(startTime);
+      const runtime = seconds * 1000 + nanoseconds / 1000000;
+      
+      if (result.stderr) {
+        return {
+          error: result.stderr
+        };
+      }
+      
+      return {
+        stdout: result.stdout,
+        stderr: result.stderr,
+        runtime
+      };
+    } catch (error) {
+      console.error('执行Java代码失败:', error);
+      return {
+        error: error.message || '执行Java代码失败'
+      };
+    }
+  }
+
+  // 预处理用户代码，添加必要的数据结构和框架代码
+  preprocessCode(code, language) {
+    // 检测代码可能引用的常见数据结构
+    const commonStructures = {
+      'TreeNode': {
+        regex: /\bTreeNode\b/,
+        defRegex: {
+          'c': /struct\s+TreeNode\s*\{/,
+          'cpp': /\bstruct\s+TreeNode\s*\{|\bclass\s+TreeNode\s*\{/,
+          'python': /class\s+TreeNode\s*:/,
+          'java': /class\s+TreeNode\s*\{/
+        },
+        implementations: {
+          'c': `
+// 二叉树节点结构定义
+struct TreeNode {
+    int val;
+    struct TreeNode *left;
+    struct TreeNode *right;
+};`,
+          'cpp': `
+// 二叉树节点结构定义
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode() : val(0), left(nullptr), right(nullptr) {}
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+};`,
+          'python': `
+# 二叉树节点类定义
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right`,
+          'java': `
+// 二叉树节点类定义
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    
+    TreeNode() {}
+    
+    TreeNode(int val) {
+        this.val = val;
+    }
+    
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}`
+        }
+      },
+      'ListNode': {
+        regex: /\bListNode\b/,
+        defRegex: {
+          'c': /struct\s+ListNode\s*\{/,
+          'cpp': /\bstruct\s+ListNode\s*\{|\bclass\s+ListNode\s*\{/,
+          'python': /class\s+ListNode\s*:/,
+          'java': /class\s+ListNode\s*\{/
+        },
+        implementations: {
+          'c': `
+// 链表节点结构定义
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};`,
+          'cpp': `
+// 链表节点结构定义
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode() : val(0), next(nullptr) {}
+    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode(int x, ListNode *next) : val(x), next(next) {}
+};`,
+          'python': `
+# 链表节点类定义
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next`,
+          'java': `
+// 链表节点类定义
+class ListNode {
+    int val;
+    ListNode next;
+    
+    ListNode() {}
+    
+    ListNode(int val) {
+        this.val = val;
+    }
+    
+    ListNode(int val, ListNode next) {
+        this.val = val;
+        this.next = next;
+    }
+}`
+        }
+      }
+    };
+
+    // 语言特定的处理
+    if (language === 'c') {
+      return this.preprocessCCode(code, commonStructures);
+    } else if (language === 'cpp') {
+      return this.preprocessCppCode(code, commonStructures);
+    } else if (language === 'python') {
+      return this.preprocessPythonCode(code, commonStructures);
+    } else if (language === 'java') {
+      return this.preprocessJavaCode(code, commonStructures);
+    }
+
+    // 默认情况下返回原始代码
+    return code;
+  }
+
+  // 预处理C代码
+  preprocessCCode(code, commonStructures) {
+    // 判断代码中是否包含main函数
+    const hasMain = /\bint\s+main\s*\(/.test(code);
+    
+    // 如果已经有main函数，不进行额外处理
+    if (hasMain) return code;
+    
+    const preamble = [];
+    
+    // 添加常用头文件
+    preamble.push("#include <stdio.h>");
+    preamble.push("#include <stdlib.h>");
+    preamble.push("#include <string.h>");
+    preamble.push("#include <stdbool.h>");
+    
+    // 检查并添加缺失的数据结构定义
+    for (const [structName, structInfo] of Object.entries(commonStructures)) {
+      if (structInfo.regex.test(code) && !structInfo.defRegex.c.test(code)) {
+        preamble.push(structInfo.implementations.c);
+      }
+    }
+    
+    // 添加main函数
+    const postamble = `
+
+// 主函数 - 仅为满足编译要求
+int main() {
+    printf("代码成功编译！\\n");
+    return 0;
+}`;
+    
+    // 组合成完整代码
+    return preamble.join("\n") + "\n\n" + code + postamble;
+  }
+
+  // 预处理C++代码
+  preprocessCppCode(code, commonStructures) {
+    // 判断代码中是否包含main函数
+    const hasMain = /\bint\s+main\s*\(/.test(code);
+    
+    // 如果已经有main函数，不进行额外处理
+    if (hasMain) return code;
+    
+    const preamble = [];
+    
+    // 添加常用头文件
+    preamble.push("#include <iostream>");
+    preamble.push("#include <vector>");
+    preamble.push("#include <string>");
+    preamble.push("#include <algorithm>");
+    preamble.push("#include <queue>");
+    preamble.push("#include <unordered_map>");
+    preamble.push("#include <unordered_set>");
+    
+    // 检查并添加缺失的数据结构定义
+    for (const [structName, structInfo] of Object.entries(commonStructures)) {
+      if (structInfo.regex.test(code) && !structInfo.defRegex.cpp.test(code)) {
+        preamble.push(structInfo.implementations.cpp);
+      }
+    }
+    
+    // 添加main函数
+    const postamble = `
+
+// 主函数 - 仅为满足编译要求
+int main() {
+    std::cout << "代码成功编译！" << std::endl;
+    return 0;
+}`;
+    
+    // 组合成完整代码
+    return preamble.join("\n") + "\n\n" + code + postamble;
+  }
+
+  // 预处理Python代码
+  preprocessPythonCode(code, commonStructures) {
+    // 检查代码是否有if __name__ == "__main__"部分
+    const hasMainBlock = /if\s+__name__\s*==\s*['"]__main__['"]/.test(code);
+    
+    const preamble = [];
+    
+    // 添加常用的导入
+    preamble.push("# 自动添加的常用导入");
+    preamble.push("import sys");
+    preamble.push("import math");
+    preamble.push("from typing import List, Optional");
+    
+    // 检查并添加缺失的数据结构定义
+    for (const [structName, structInfo] of Object.entries(commonStructures)) {
+      if (structInfo.regex.test(code) && !structInfo.defRegex.python.test(code)) {
+        preamble.push(structInfo.implementations.python);
+      }
+    }
+    
+    // 如果没有main块，添加一个简单的main块
+    let postamble = "";
+    if (!hasMainBlock) {
+      postamble = `
+
+# 主函数 - 仅为满足执行要求
+if __name__ == "__main__":
+    print("代码成功运行！")`;
+    }
+    
+    // 组合成完整代码
+    return preamble.join("\n") + "\n\n" + code + postamble;
+  }
+
+  // 预处理Java代码
+  preprocessJavaCode(code, commonStructures) {
+    // 检查代码中是否已经有类定义和main方法
+    const hasClass = /\bclass\s+\w+\s*\{/.test(code);
+    const hasMain = /public\s+static\s+void\s+main\s*\(\s*String\s*\[\]\s*\w*\s*\)/.test(code);
+    
+    // 提取方法名来确定主类名
+    let className = 'Solution';
+    const methodMatch = code.match(/\b(public|private|protected)?\s+\w+\s+(\w+)\s*\(/);
+    if (methodMatch && methodMatch[2]) {
+      // 如果没有类定义但有方法定义，以第一个方法名为基础生成类名
+      if (!hasClass) {
+        const methodName = methodMatch[2];
+        className = methodName.charAt(0).toUpperCase() + methodName.slice(1) + 'Solution';
+      }
+    }
+    
+    // 如果已经有完整的类定义，则不进行预处理
+    if (hasClass && hasMain) return code;
+    
+    // 准备添加的前置代码
+    const preamble = [];
+    
+    // 添加数据结构定义
+    for (const [structName, structInfo] of Object.entries(commonStructures)) {
+      if (structInfo.regex.test(code) && !structInfo.defRegex.java.test(code)) {
+        preamble.push(structInfo.implementations.java);
+      }
+    }
+    
+    // 处理代码
+    let processedCode = code;
+    
+    // 如果没有类定义，添加类包装
+    if (!hasClass) {
+      processedCode = `public class ${className} {
+    ${processedCode.replace(/^/gm, '    ')}
+}`;
+    }
+    
+    // 如果没有main方法，添加main方法
+    if (!hasMain) {
+      // 检查类的结束位置
+      const lastBraceIndex = processedCode.lastIndexOf('}');
+      if (lastBraceIndex !== -1) {
+        // 在类的末尾插入main方法
+        processedCode = processedCode.substring(0, lastBraceIndex) + `
+    
+    // 主函数 - 仅为满足编译要求
+    public static void main(String[] args) {
+        System.out.println("代码成功编译！");
+    }
+` + processedCode.substring(lastBraceIndex);
+      }
+    }
+    
+    // 组合成完整代码
+    return preamble.join("\n") + "\n\n" + processedCode;
   }
 }
 

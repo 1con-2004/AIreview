@@ -132,6 +132,12 @@ const adminRoutes = {
       component: () => import('@/views/admin/problems.vue')
     },
     {
+      path: 'problem-pool',
+      name: 'AdminProblemPool',
+      component: () => import('@/views/admin/problem-pool.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: 'community',
       name: 'AdminCommunity',
       component: () => import('@/views/admin/community.vue')

@@ -738,4 +738,43 @@ router.get('/student-info/:userId', async (req, res) => {
   }
 });
 
+// 获取多个用户的个人资料（按用户ID列表）
+router.post('/profiles', async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '请提供有效的用户ID列表'
+      });
+    }
+    
+    console.log('请求获取用户资料，ID列表:', userIds);
+    
+    // 使用 IN 查询获取多个用户的资料
+    const placeholders = userIds.map(() => '?').join(',');
+    const query = `
+      SELECT up.user_id, u.username, up.display_name, up.avatar_url, up.bio, up.nickname
+      FROM user_profile up
+      JOIN users u ON up.user_id = u.id
+      WHERE up.user_id IN (${placeholders})
+    `;
+    
+    const [rows] = await pool.query(query, userIds);
+    console.log('获取到的用户资料:', rows);
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('获取用户资料失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取用户资料失败: ' + error.message
+    });
+  }
+});
+
 module.exports = router;
