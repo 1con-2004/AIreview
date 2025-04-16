@@ -51,7 +51,6 @@
     <div class="nav-middle" style="padding-left: 250px;">
       <router-link to="/home" class="nav-item">首页</router-link>
       <router-link to="/problems" class="nav-item">题库与练习</router-link>
-      <router-link to="/community" class="nav-item">社区论坛</router-link>
       <router-link to="/classroom" class="nav-item">课堂辅助</router-link>
       <router-link to="/ai-center" class="nav-item">AI中心</router-link>
     </div>

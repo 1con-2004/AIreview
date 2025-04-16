@@ -110,12 +110,20 @@
         </el-table-column>
         <el-table-column 
           label="操作" 
-          width="120"
+          width="200"
           align="center"
           fixed="right"
         >
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+            <div class="operation-buttons">
+              <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+              <el-button 
+                v-if="isAdmin && row.role !== 'admin'" 
+                type="danger" 
+                size="small" 
+                @click="handleDelete(row)"
+              >删除</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -263,7 +271,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 
 // 修改为直接使用配置常量
@@ -657,6 +665,66 @@ const handleSaveAdd = async () => {
   }
 }
 
+// 删除用户相关
+const deleteLoading = ref(false)
+
+// 删除用户按钮点击事件
+const handleDelete = (user) => {
+  if (!isAdmin.value) {
+    ElMessage.warning('只有管理员才能删除用户')
+    return
+  }
+  
+  if (user.role === 'admin') {
+    ElMessage.warning('不能删除管理员用户')
+    return
+  }
+  
+  ElMessageBox.confirm(
+    `确定要删除用户 "${user.username}" 吗？此操作不可恢复！`,
+    '删除用户',
+    {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+      draggable: true,
+    }
+  )
+    .then(() => {
+      deleteUser(user.id)
+    })
+    .catch(() => {
+      ElMessage.info('已取消删除操作')
+    })
+}
+
+// 删除用户的API调用
+const deleteUser = async (userId) => {
+  try {
+    deleteLoading.value = true
+    const token = localStorage.getItem('token')
+    const response = await axios.delete(`/api/user/admin/delete/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.data.success) {
+      ElMessage.success('用户删除成功')
+      // 刷新用户列表和角色统计
+      await fetchUsers()
+      await fetchRoleStats()
+    } else {
+      throw new Error(response.data.message || '删除用户失败')
+    }
+  } catch (error) {
+    console.error('删除用户失败:', error)
+    ElMessage.error(error.response?.data?.message || error.message || '删除用户失败')
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
 // 页面加载时获取数据
 onMounted(() => {
   console.log('页面加载，开始获取数据');
@@ -1003,5 +1071,24 @@ onMounted(() => {
 
 .add-form :deep(.el-select .el-input) {
   width: 100%;
+}
+
+/* 操作按钮样式 */
+.operation-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.operation-buttons .el-button--danger {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+
+.operation-buttons .el-button--danger:hover {
+  background-color: #e64242;
+  border-color: #e64242;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(230, 66, 66, 0.2);
 }
 </style> 

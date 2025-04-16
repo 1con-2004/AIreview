@@ -780,4 +780,95 @@ router.post('/profiles', async (req, res) => {
   }
 });
 
+// 删除用户
+router.delete('/admin/delete/:id', authenticateToken, async (req, res) => {
+  try {
+    // 验证当前用户是否为管理员
+    const currentUser = req.user;
+    const [userInfo] = await pool.query(
+      'SELECT role FROM users WHERE id = ?',
+      [currentUser.id]
+    );
+
+    if (!userInfo || userInfo.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: '用户信息不存在'
+      });
+    }
+
+    const currentUserRole = userInfo[0].role;
+    
+    // 只有管理员可以删除用户
+    if (currentUserRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: '权限不足，只有管理员可以删除用户'
+      });
+    }
+
+    const userId = req.params.id;
+    console.log('删除用户，用户ID:', userId);
+
+    // 检查要删除的用户是否存在
+    const [userToDelete] = await pool.query(
+      'SELECT role FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!userToDelete || userToDelete.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '要删除的用户不存在'
+      });
+    }
+
+    // 不允许删除管理员用户
+    if (userToDelete[0].role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: '不能删除管理员用户'
+      });
+    }
+
+    // 开始事务
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // 删除用户资料
+      await connection.query('DELETE FROM user_profile WHERE user_id = ?', [userId]);
+      
+      // 如果有学生信息，删除学生信息
+      await connection.query('DELETE FROM student_info WHERE user_id = ?', [userId]);
+      
+      // 删除用户
+      await connection.query('DELETE FROM users WHERE id = ?', [userId]);
+
+      // 提交事务
+      await connection.commit();
+      
+      console.log('用户删除成功');
+      res.json({
+        success: true,
+        message: '用户删除成功'
+      });
+    } catch (error) {
+      // 回滚事务
+      await connection.rollback();
+      throw error;
+    } finally {
+      // 释放连接
+      connection.release();
+    }
+  } catch (error) {
+    console.error('删除用户失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '删除用户失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
