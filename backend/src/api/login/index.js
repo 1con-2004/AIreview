@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
 
     // 获取用户信息和角色
     const [rows] = await pool.execute(
-      'SELECT users.*, user_roles.role_name FROM users LEFT JOIN user_role_relations ON users.id = user_role_relations.user_id LEFT JOIN user_roles ON user_role_relations.role_id = user_roles.id WHERE users.username = ?',
+      'SELECT * FROM users WHERE username = ?',
       [username]
     )
 
@@ -99,7 +99,7 @@ router.post('/', async (req, res) => {
       success: true,
       data: {
         ...userInfo,
-        role: user.role_name || user.role, // 优先使用role_name（来自user_roles表），如果没有则使用users表中的role
+        role: user.role, // 直接使用users表中的role字段
         token
       }
     })
