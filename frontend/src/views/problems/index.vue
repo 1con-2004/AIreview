@@ -265,6 +265,22 @@ export default {
     }
   },
   async created() {
+    // 初始化时首先检查用户登录状态是否一致
+    try {
+      const userInfoStr = localStorage.getItem('userInfo')
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr)
+        console.log('Problems页面初始化，当前用户:', userInfo.username)
+        
+        // 直接将用户名存入sessionStorage，不调用可能导致用户切换的全局函数
+        sessionStorage.setItem('current_user', userInfo.username)
+      }
+    } catch (err) {
+      console.error('Problems页面检查用户状态出错:', err)
+    }
+    
+    // 确保初始化完成后再获取数据
+    await this.$nextTick();
     await this.fetchPlans();
     this.fetchProblems();
     this.fetchTags();

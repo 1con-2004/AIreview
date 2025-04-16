@@ -104,4 +104,27 @@ axios.interceptors.response.use(
   }
 );
 
+// 定义全局用户信息修复函数
+window.$fixUserInfo = function() {
+  // 从localStorage获取用户信息
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (!userInfoStr) return false
+  
+  try {
+    const userInfo = JSON.parse(userInfoStr)
+    if (userInfo && userInfo.username) {
+      // 只将用户名存入sessionStorage，但不触发任何可能导致用户切换的操作
+      sessionStorage.setItem('current_user', userInfo.username)
+      console.log('已同步用户信息到sessionStorage:', userInfo.username)
+      return true
+    }
+  } catch (e) {
+    console.error('用户信息修复失败:', e)
+  }
+  return false
+}
+
+// 调用一次修复函数以便初始化
+window.$fixUserInfo()
+
 app.mount('#app')

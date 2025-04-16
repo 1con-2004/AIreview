@@ -205,11 +205,16 @@ export default {
       try {
         console.log('获取用户资料:', props.username)
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const response = await fetch(`http://localhost:3000/api/user/profile/${props.username}`, {
+        
+        // 直接使用传入的用户名作为参数，确保获取正确的用户资料
+        const username = props.username
+        
+        const response = await fetch(`http://localhost:3000/api/user/profile/${username}`, {
           headers: {
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
         })
+        
         const data = await response.json()
         if (response.ok) {
           console.log('获取到的用户资料:', data)
@@ -251,7 +256,7 @@ export default {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           },
           body: JSON.stringify({ [field]: processedValue })
         })
@@ -285,7 +290,7 @@ export default {
         const response = await fetch('http://localhost:3000/api/user/avatar', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           },
           body: formData
         })

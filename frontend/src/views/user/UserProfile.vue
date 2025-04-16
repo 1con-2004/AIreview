@@ -199,9 +199,14 @@ export default {
     const fetchUserProfile = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const response = await fetch(`http://localhost:3000/api/user/profile/${route.params.username}`, {
+        
+        // 直接使用路由参数中的用户名，不做自动切换
+        const targetUsername = route.params.username
+        console.log('正在获取用户资料:', targetUsername)
+        
+        const response = await fetch(`http://localhost:3000/api/user/profile/${targetUsername}`, {
           headers: {
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
         })
         const data = await response.json()
@@ -226,9 +231,13 @@ export default {
     const fetchUserStats = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const response = await fetch(`http://localhost:3000/api/user/stats/${route.params.username}`, {
+        
+        // 直接使用路由参数中的用户名
+        const targetUsername = route.params.username
+        
+        const response = await fetch(`http://localhost:3000/api/user/stats/${targetUsername}`, {
           headers: {
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
         })
         const data = await response.json()
@@ -264,7 +273,7 @@ export default {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           },
           body: JSON.stringify({ [field]: processedValue })
         })
@@ -287,6 +296,12 @@ export default {
     }
 
     const handleAvatarUpload = async (event) => {
+      // 确保当前用户才能上传头像
+      if (!isCurrentUser.value) {
+        toast.add({ severity: 'error', summary: '错误', detail: '只能修改自己的头像' });
+        return;
+      }
+
       const file = event.target.files[0];
       if (!file) return;
 
@@ -298,7 +313,7 @@ export default {
         const response = await fetch('http://localhost:3000/api/user/avatar', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           },
           body: formData
         });

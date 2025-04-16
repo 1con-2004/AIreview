@@ -171,6 +171,10 @@ const togglePassword = () => {
 
 const handleLogin = async () => {
   try {
+    // 在发送请求前先清除所有存储的用户数据
+    localStorage.clear(); // 彻底清除所有localStorage数据
+    sessionStorage.clear(); // 彻底清除所有sessionStorage数据
+    
     const response = await fetch('http://localhost:3000/api/login', {
       method: 'POST',
       headers: {
@@ -189,6 +193,8 @@ const handleLogin = async () => {
     if (data.success) {
       const { accessToken, refreshToken, ...userInfo } = data.data
       
+      console.log(`成功登录用户: ${userInfo.username}, 角色: ${userInfo.role}`);
+      
       // 如果选择记住密码，则保存密码
       if (loginForm.remember) {
         userInfo.password = loginForm.password
@@ -199,6 +205,12 @@ const handleLogin = async () => {
       userInfo.accessToken = accessToken
       userInfo.refreshToken = refreshToken
       
+      // 保存用户信息到localStorage
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      localStorage.setItem('currentUsername', userInfo.username)
+      
       // 保存用户信息到Vuex
       store.dispatch('login', {
         userInfo,
@@ -207,26 +219,15 @@ const handleLogin = async () => {
       })
       
       ElMessage.success('登录成功')
-      router.push('/home')
+      
+      // 直接重定向到主页，避免可能的路由问题
+      window.location.href = '/home'
     } else {
       ElMessage.error(data.message || '登录失败')
     }
   } catch (error) {
     console.error('登录错误：', error)
-    if (error.response) {
-      const data = await error.response.json()
-      if (error.response.status === 403) {
-        ElMessage.error({
-          message: data.message,
-          type: 'error',
-          duration: 5000
-        })
-      } else {
-        ElMessage.error(data.message || '登录失败')
-      }
-    } else {
-      ElMessage.error('登录失败，请稍后重试')
-    }
+    ElMessage.error('登录失败，请稍后重试')
   }
 }
 

@@ -8,6 +8,8 @@ const fs = require('fs');
 const { authenticateToken } = require('../../middleware/auth');
 const mysql = require('mysql2');
 const dbConfig = require('../../config/db');
+const jwt = require('jsonwebtoken');
+const jwtConfig = require('../../config/jwt');
 
 // 配置文件上传
 const storage = multer.diskStorage({
@@ -206,24 +208,55 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
 router.get('/profile/:username', async (req, res) => {
   try {
     const { username } = req.params;
+    // 添加详细日志
+    console.log(`[DEBUG] [${new Date().toISOString()}] 获取用户资料请求开始`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] 请求参数: username=${username}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] 请求头: ${JSON.stringify(req.headers)}`);
+    
+    // 检查认证信息
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      console.log(`[DEBUG] [${new Date().toISOString()}] 认证令牌: ${token}`);
+      
+      try {
+        const decoded = jwt.verify(token, jwtConfig.SECRET_KEY);
+        console.log(`[DEBUG] [${new Date().toISOString()}] 令牌解析结果: ${JSON.stringify(decoded)}`);
+        console.log(`[DEBUG] [${new Date().toISOString()}] 当前请求用户ID: ${decoded.id}, 用户名: ${decoded.username}`);
+        console.log(`[DEBUG] [${new Date().toISOString()}] 尝试获取的用户资料: ${username}`);
+      } catch (error) {
+        console.log(`[DEBUG] [${new Date().toISOString()}] 令牌验证失败: ${error.message}`);
+      }
+    } else {
+      console.log(`[DEBUG] [${new Date().toISOString()}] 请求中没有认证令牌`);
+    }
+    
     const query = `
       SELECT u.id, u.username, u.email, up.* 
       FROM users u 
       LEFT JOIN user_profile up ON u.id = up.user_id 
       WHERE u.username = ?
     `;
+    console.log(`[DEBUG] [${new Date().toISOString()}] 执行SQL查询: ${query.replace(/\s+/g, ' ')}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] 查询参数: [${username}]`);
+    
     const [users] = await pool.query(query, [username]);
     
+    console.log(`[DEBUG] [${new Date().toISOString()}] 查询结果数量: ${users.length}`);
+    
     if (users.length === 0) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] 未找到用户: ${username}`);
       return res.status(404).json({ message: '用户不存在' });
     }
 
     const user = users[0];
     // 删除敏感信息
     delete user.password;
+    
+    console.log(`[DEBUG] [${new Date().toISOString()}] 返回用户资料: ${JSON.stringify(user)}`);
     res.json(user);
   } catch (error) {
-    console.error('获取用户资料失败:', error);
+    console.error(`[ERROR] [${new Date().toISOString()}] 获取用户资料失败:`, error);
     res.status(500).json({ message: '服务器错误' });
   }
 });

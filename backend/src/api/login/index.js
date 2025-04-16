@@ -34,22 +34,23 @@ initDefaultUser()
 // 密码登录
 router.post('/', async (req, res) => {
   const { username, password } = req.body
+  const requestId = `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
   try {
-    console.log('=== 登录调试信息 ===')
-    console.log('1. 接收到的登录信息：', { 
-      username,
-      passwordLength: password ? password.length : 0
-    })
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =====登录过程开始=====`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到的登录信息: username=${username}, passwordLength=${password ? password.length : 0}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 客户端IP: ${req.ip}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 请求头: ${JSON.stringify(req.headers)}`);
 
     const [rows] = await pool.execute(
       'SELECT * FROM users WHERE username = ?',
       [username]
     )
 
-    console.log('2. 数据库查询结果：', rows)
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 数据库查询结果: ${rows.length} 条记录`);
 
     if (rows.length === 0) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户不存在: ${username}`);
       return res.status(401).json({
         success: false,
         message: '用户名或密码错误'
@@ -57,8 +58,10 @@ router.post('/', async (req, res) => {
     }
 
     const user = rows[0]
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 找到用户: ID=${user.id}, 用户名=${user.username}, 角色=${user.role}, 状态=${user.status}`);
 
     if (user.status === 0) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户账号已被封禁: ${username}`);
       return res.status(403).json({
         success: false,
         message: '账号已被封禁，请联系管理员'
@@ -66,8 +69,10 @@ router.post('/', async (req, res) => {
     }
 
     const match = await bcrypt.compare(password, user.password)
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 密码验证结果: ${match ? '密码正确' : '密码错误'}`);
 
     if (!match) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 密码错误，登录失败: ${username}`);
       return res.status(401).json({
         success: false,
         message: '用户名或密码错误'
@@ -87,6 +92,7 @@ router.post('/', async (req, res) => {
       type: 'refresh'
     }
 
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 生成访问令牌，Payload: ${JSON.stringify(tokenPayload)}`);
     const accessToken = jwt.sign(
       tokenPayload,
       jwtConfig.SECRET_KEY,
@@ -96,6 +102,7 @@ router.post('/', async (req, res) => {
       }
     )
 
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 生成刷新令牌，Payload: ${JSON.stringify(refreshTokenPayload)}`);
     const refreshToken = jwt.sign(
       refreshTokenPayload,
       jwtConfig.SECRET_KEY,
@@ -110,8 +117,16 @@ router.post('/', async (req, res) => {
       'UPDATE users SET refresh_token = ? WHERE id = ?',
       [refreshToken, user.id]
     )
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 刷新令牌已存储到数据库`);
 
     const { password: _, refresh_token: __, ...userInfo } = user
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 登录成功，返回用户信息: ${JSON.stringify({
+      ...userInfo,
+      role: user.role
+    })}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 访问令牌: ${accessToken.substring(0, 20)}...`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =====登录过程结束=====`);
+    
     res.json({
       success: true,
       data: {
@@ -122,7 +137,7 @@ router.post('/', async (req, res) => {
       }
     })
   } catch (error) {
-    console.error('登录错误:', error)
+    console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 登录错误:`, error)
     res.status(500).json({
       success: false,
       message: '服务器错误'

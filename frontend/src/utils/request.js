@@ -17,18 +17,47 @@ let requests = []
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    // 从store中获取token
-    const token = store.getters.getAccessToken || localStorage.getItem('accessToken')
+    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    config.requestId = requestId;
     
-    // 如果有token则添加到请求头
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 发送请求: ${config.method.toUpperCase()} ${config.url}`);
+    
+    // 记录请求数据
+    if (config.data) {
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 请求数据:`, 
+        typeof config.data === 'object' ? JSON.stringify(config.data) : config.data);
+    }
+    
+    // 记录请求参数
+    if (config.params) {
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 请求参数:`, JSON.stringify(config.params));
+    }
+    
+    // 特别记录 /user/profile/ 相关请求
+    if (config.url && config.url.includes('/user/profile/')) {
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] ===用户资料请求===`);
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 请求URL: ${config.url}`);
+    }
+    
+    // 从localStorage获取token并添加到请求头
+    const userInfoStr = localStorage.getItem('userInfo')
+    if (userInfoStr) {
+      try {
+        const userInfo = JSON.parse(userInfoStr)
+        if (userInfo.accessToken) {
+          config.headers['Authorization'] = `Bearer ${userInfo.accessToken}`
+          console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 添加认证令牌: Bearer ${userInfo.accessToken.substring(0, 15)}...`);
+          console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 当前用户: ${userInfo.username}, 角色: ${userInfo.role}`);
+        }
+      } catch (e) {
+        console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 解析localStorage中userInfo出错:`, e)
+      }
     }
     
     return config
   },
   error => {
-    console.error('请求错误:', error)
+    console.error(`[前端日志] [${new Date().toISOString()}] 请求错误:`, error)
     return Promise.reject(error)
   }
 )
@@ -36,77 +65,119 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   response => {
-    // 直接返回后端数据
-    return response.data;
+    const requestId = response.config.requestId || `resp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 收到响应: ${response.status} ${response.config.url}`);
+    
+    // 特别记录 /user/profile/ 相关响应
+    if (response.config.url && response.config.url.includes('/user/profile/')) {
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] ===用户资料响应===`);
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 响应状态: ${response.status}`);
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 响应数据:`, JSON.stringify(response.data));
+    }
+    
+    const res = response.data
+    
+    // 返回成功
+    if (res.success === true || response.status === 200) {
+      return res
+    }
+    
+    // 返回失败
+    ElMessage.error(res.message || '请求失败')
+    return Promise.reject(new Error(res.message || '请求失败'))
   },
-  async error => {
-    const originalRequest = error.config
-
-    // 如果是401错误且错误代码为TOKEN_EXPIRED，尝试刷新token
-    if (error.response?.status === 401 && 
-        error.response?.data?.code === 'TOKEN_EXPIRED' && 
-        !originalRequest._retry) {
+  error => {
+    const requestId = error.config?.requestId || `err-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 响应错误:`, error);
+    
+    if (error.config?.url && error.config.url.includes('/user/profile/')) {
+      console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] ===用户资料请求错误===`);
+      console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 请求URL: ${error.config.url}`);
+      console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 错误状态: ${error.response?.status}`);
+      console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 错误信息: ${error.message}`);
+    }
+    
+    // 处理401未授权错误(token过期)
+    if (error.response && error.response.status === 401) {
+      // token过期，尝试刷新
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      const refreshToken = userInfo.refreshToken
       
-      if (isRefreshing) {
-        // 如果正在刷新，将请求添加到队列
+      if (refreshToken && !isRefreshing) {
+        isRefreshing = true
+        
+        // 尝试刷新token
+        return service.post('/api/login/refresh-token', { refreshToken })
+          .then(res => {
+            if (res.success) {
+              const { accessToken } = res.data
+              
+              // 更新store和localStorage中的token
+              store.dispatch('updateTokens', {
+                accessToken,
+                refreshToken // refreshToken保持不变
+              })
+              
+              // 重新发送队列中的请求
+              requests.forEach(cb => cb(accessToken))
+              requests = []
+              
+              // 重试当前请求
+              const config = error.config
+              config.headers['Authorization'] = `Bearer ${accessToken}`
+              
+              return service(config)
+            } else {
+              // 刷新token失败，清除用户信息并跳转到登录页
+              store.dispatch('logout')
+              router.push('/login')
+              ElMessage.error('登录已过期，请重新登录')
+              return Promise.reject(error)
+            }
+          })
+          .catch(refreshError => {
+            console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 刷新token失败:`, refreshError)
+            // 刷新token失败，清除用户信息并跳转到登录页
+            store.dispatch('logout')
+            router.push('/login')
+            ElMessage.error('登录已过期，请重新登录')
+            return Promise.reject(error)
+          })
+          .finally(() => {
+            isRefreshing = false
+          })
+      } else if (refreshToken && isRefreshing) {
+        // 将请求加入队列
         return new Promise(resolve => {
           requests.push(token => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`
-            resolve(service(originalRequest))
+            error.config.headers['Authorization'] = `Bearer ${token}`
+            resolve(service(error.config))
           })
         })
-      }
-
-      originalRequest._retry = true
-      isRefreshing = true
-
-      try {
-        const refreshToken = store.getters.getRefreshToken
-        if (!refreshToken) {
-          throw new Error('No refresh token')
-        }
-
-        const response = await service.post('/api/login/refresh-token', {
-          refreshToken
-        })
-
-        const { accessToken } = response.data
-        store.dispatch('updateTokens', { 
-          accessToken,
-          refreshToken: store.getters.getRefreshToken 
-        })
-
-        // 重试所有请求
-        requests.forEach(cb => cb(accessToken))
-        requests = []
-
-        return service(originalRequest)
-      } catch (refreshError) {
-        console.error('刷新token失败:', refreshError)
+      } else {
+        // 没有refreshToken，直接跳转到登录页
         store.dispatch('logout')
         router.push('/login')
-        ElMessage({
-          message: '登录已过期，请重新登录',
-          type: 'error',
-          duration: 5 * 1000
-        })
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
+        ElMessage.error('登录已过期，请重新登录')
       }
     }
-
-    // 其他错误
-    console.error('响应错误:', error)
-    const errorMsg = error.response?.data?.message || 
-                    error.response?.data?.error || 
-                    error.message || 
-                    '请求失败'
-    ElMessage({
-      message: errorMsg,
-      type: 'error',
-      duration: 5 * 1000
-    })
+    
+    // 处理403禁止访问错误(权限不足)
+    if (error.response && error.response.status === 403) {
+      ElMessage.error('权限不足，无法访问')
+    }
+    
+    // 处理404未找到错误
+    if (error.response && error.response.status === 404) {
+      ElMessage.error('请求的资源不存在')
+    }
+    
+    // 处理500服务器错误
+    if (error.response && error.response.status === 500) {
+      ElMessage.error('服务器内部错误')
+    }
+    
+    ElMessage.error(error.message || '请求失败')
     return Promise.reject(error)
   }
 )
