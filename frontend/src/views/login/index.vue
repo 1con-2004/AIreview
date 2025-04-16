@@ -153,6 +153,7 @@ export default {
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import store from '@/store'
 
 const router = useRouter()
 const showPassword = ref(false)
@@ -186,41 +187,25 @@ const handleLogin = async () => {
     console.log('登录返回数据:', data)
 
     if (data.success) {
-      // 保存完整的用户信息，包括后端返回的所有数据
-      const userInfo = data.data
-      userInfo.remember = loginForm.remember
+      const { accessToken, refreshToken, ...userInfo } = data.data
       
       // 如果选择记住密码，则保存密码
       if (loginForm.remember) {
         userInfo.password = loginForm.password
+        userInfo.remember = true
       }
       
-      // 单独保存token，方便其他地方使用
-      localStorage.setItem('token', data.data.token)
+      // 将token也存储在userInfo中
+      userInfo.accessToken = accessToken
+      userInfo.refreshToken = refreshToken
       
-      // 获取用户资料，包括头像URL
-      try {
-        const profileResponse = await fetch(`http://localhost:3000/api/user/profile/${userInfo.username}`, {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`
-          }
-        })
-        const profileData = await profileResponse.json()
-        
-        if (profileResponse.ok && profileData) {
-          console.log('获取到的用户资料:', profileData)
-          // 将头像URL添加到用户信息中
-          if (profileData.avatar_url) {
-            userInfo.avatar_url = profileData.avatar_url
-          }
-        }
-      } catch (profileError) {
-        console.error('获取用户资料失败:', profileError)
-        // 继续执行，不影响登录流程
-      }
+      // 保存用户信息到Vuex
+      store.dispatch('login', {
+        userInfo,
+        accessToken,
+        refreshToken
+      })
       
-      console.log('保存到localStorage的用户信息:', userInfo)
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
       ElMessage.success('登录成功')
       router.push('/home')
     } else {

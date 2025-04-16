@@ -366,21 +366,22 @@ async function summarizeUserLearningData(userId, db) {
     console.log('开始汇总用户学习数据, userId:', userId);
     try {
         // 1. 获取最近一个月的做题记录
-        console.log('获取最近一个月做题记录...');
+        console.log('获取最近一个月的做题记录...');
         const [recentSubmissions] = await db.query(`
-            SELECT 
+            SELECT DISTINCT
                 p.id,
                 p.title,
                 p.difficulty,
                 p.tags,
-                ups.status,
-                ups.submission_count,
-                ups.last_submission_time
-            FROM user_problem_status ups
-            JOIN problems p ON ups.problem_id = p.id
-            WHERE ups.user_id = ?
-            AND ups.last_submission_time >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-            ORDER BY ups.last_submission_time DESC
+                s.status,
+                COUNT(*) as submission_count,
+                MAX(s.created_at) as last_submission_time
+            FROM submissions s
+            JOIN problems p ON s.problem_id = p.id
+            WHERE s.user_id = ?
+            AND s.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+            GROUP BY p.id, p.title, p.difficulty, p.tags, s.status
+            ORDER BY last_submission_time DESC
         `, [userId]);
         console.log('获取到的做题记录数:', recentSubmissions.length);
 

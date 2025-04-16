@@ -25,7 +25,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 
     const [postCount] = await db.query(`
       SELECT COUNT(*) as count
-      FROM community_posts 
+      FROM posts 
       WHERE DATE(created_at) = CURDATE()
     `);
     console.log('今日帖子数:', postCount[0].count);

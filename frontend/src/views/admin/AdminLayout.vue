@@ -79,8 +79,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const menuItems = ref([
   { name: '系统首页', path: '/admin/dashboard', icon: 'fas fa-home' },
   { name: '用户管理', path: '/admin/users', icon: 'fas fa-users', hideForRoles: ['teacher'] }, // 老师不能访问
@@ -117,6 +119,31 @@ const filteredMenuItems = computed(() => {
     // 如果菜单项没有hideForRoles属性，或者当前角色不在hideForRoles列表中，则显示该菜单项
     return !item.hideForRoles || !item.hideForRoles.includes(currentRole)
   })
+})
+
+// 检查管理员权限
+onMounted(() => {
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (!userInfoStr) {
+    console.log('未登录，跳转到登录页')
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const userInfo = JSON.parse(userInfoStr)
+    const userRole = userInfo.role || 'normal'
+    
+    console.log('当前用户角色:', userRole)
+    
+    if (userRole !== 'admin' && userRole !== 'teacher') {
+      console.log('非管理员或教师账户，跳转到登录页')
+      router.push('/login')
+    }
+  } catch (e) {
+    console.error('解析用户信息失败:', e)
+    router.push('/login')
+  }
 })
 </script>
 

@@ -78,6 +78,7 @@
 <script>
 import NavBar from '@/components/NavBar.vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'LearningPlanDetail',
@@ -108,19 +109,9 @@ export default {
     async fetchPlanDetails() {
       try {
         console.log('开始获取计划详情，计划ID:', this.planId);
-        const userInfoStr = localStorage.getItem('userInfo');
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null;
         
-        if (!token) {
-          console.error('未找到用户token');
-          throw new Error('请先登录');
-        }
-
-        const headers = { Authorization: `Bearer ${token}` };
-        console.log('发送请求，headers:', headers);
-
         // 获取学习计划详情
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}`, { headers });
+        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}`);
         console.log('获取到的原始响应:', response);
 
         if (!response.data || !response.data.success) {
@@ -132,12 +123,12 @@ export default {
         console.log('处理后的计划数据:', plan);
         
         // 设置默认图标
-        const defaultIcon = 'http://localhost:8080/icons/algorithm.png';
+        const defaultIcon = '/icons/algorithm.png';
         
         // 处理图标路径
         this.planIcon = plan.icon 
-          ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
-          : defaultIcon;
+          ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon.startsWith('/') ? plan.icon : `/${plan.icon}`}`)
+          : `http://localhost:8080${defaultIcon}`;
         
         this.planTag = plan.tag || '算法';
         this.planTitle = plan.title || '学习计划';
@@ -164,31 +155,16 @@ export default {
         });
       } catch (error) {
         console.error('获取计划详情失败:', error);
-        if (error.response?.status === 401) {
-          localStorage.removeItem('userInfo');
-          this.$message.error('登录已过期，请重新登录');
-        } else {
-          this.$message.error(error.message || '获取计划详情失败，请稍后重试');
-        }
+        ElMessage.error(error.message || '获取计划详情失败，请稍后重试');
       }
     },
     
     async fetchPlanProblems() {
       try {
         console.log('开始获取计划题目，计划ID:', this.planId);
-        const userInfoStr = localStorage.getItem('userInfo');
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null;
-        
-        if (!token) {
-          console.error('未找到用户token');
-          throw new Error('请先登录');
-        }
-
-        const headers = { Authorization: `Bearer ${token}` };
-        console.log('发送请求获取题目列表，headers:', headers);
 
         // 获取学习路径的题目列表
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/problems`, { headers });
+        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/problems`);
         console.log('API返回的原始数据:', response.data);
         
         if (!response.data || !response.data.success) {
@@ -219,22 +195,18 @@ export default {
         console.log('处理后的题目列表:', this.problems);
       } catch (error) {
         console.error('获取计划题目失败:', error);
-        this.$message.error(error.message || '获取计划题目失败，请稍后重试');
+        ElMessage.error(error.message || '获取计划题目失败，请稍后重试');
       }
     },
     
     async fetchUserProgress() {
       try {
         console.log('开始获取用户进度...');
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!userInfoStr) {
-          throw new Error('请先登录');
-        }
-
-        const userInfo = JSON.parse(userInfoStr);
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         const token = userInfo.token;
         if (!token) {
-          throw new Error('登录信息无效，请重新登录');
+          console.log('用户未登录，跳过获取进度');
+          return;
         }
 
         const headers = { Authorization: `Bearer ${token}` };
@@ -262,28 +234,20 @@ export default {
         console.error('获取用户进度失败:', error);
         if (error.response?.status === 401) {
           localStorage.removeItem('userInfo');
-          this.$message.error('登录已过期，请重新登录');
-        } else {
-          this.$message.error(error.message || '获取用户进度失败，请稍后重试');
+          ElMessage.error('登录已过期，请重新登录');
         }
       }
     },
     
     async startLearning() {
       try {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!userInfoStr) {
-          this.$message.error('请先登录');
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const token = userInfo.token;
+        if (!token) {
+          ElMessage.error('请先登录再开始学习');
           return;
         }
         
-        const userInfo = JSON.parse(userInfoStr);
-        const token = userInfo.token;
-        if (!token) {
-          this.$message.error('登录信息无效，请重新登录');
-          return;
-        }
-
         const headers = { Authorization: `Bearer ${token}` };
         if (!this.userProgress) {
           // 如果还没有进度记录，创建一个
@@ -295,13 +259,13 @@ export default {
         // 获取第一个未完成的题目
         const firstUncompletedProblem = this.problems.find(p => !p.completed);
         if (firstUncompletedProblem) {
-          this.$router.push(`/problems/detail/${firstUncompletedProblem.id}`);
+          this.$router.push(`/problems/detail/${firstUncompletedProblem.problem_number}`);
         } else {
-          this.$router.push(`/problems/detail/${this.problems[0].id}`);
+          this.$router.push(`/problems/detail/${this.problems[0].problem_number}`);
         }
       } catch (error) {
         console.error('开始学习失败:', error);
-        this.$message.error('开始学习失败，请确保已登录并稍后重试');
+        ElMessage.error('开始学习失败，请确保已登录并稍后重试');
       }
     },
     

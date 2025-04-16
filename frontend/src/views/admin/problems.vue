@@ -612,9 +612,11 @@ import axios from 'axios'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 
 const router = useRouter()
 const toast = useToast()
+const store = useStore()
 
 // 状态数据
 const problems = ref([])
@@ -1319,28 +1321,69 @@ const deleteProblem = (problem) => {
 // 确认删除
 const confirmDelete = async () => {
   try {
-    const token = localStorage.getItem('token')
-    await axios.delete(`/api/problems/${currentProblem.value.id}`, {
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken;
+    
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo');
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken');
+    }
+    
+    if (!accessToken) {
+      console.error('认证token不存在');
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      });
+      return;
+    }
+    
+    console.log('开始删除题目，ID:', currentProblem.value.id);
+    
+    const response = await axios.delete(`/api/problems/${currentProblem.value.id}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${accessToken}`
       }
-    })
-    showDeleteDialog.value = false
-    toast.add({
-      severity: 'success',
-      summary: '成功',
-      detail: '题目删除成功',
-      life: 3000
-    })
-    fetchProblems()
+    });
+    
+    if (response.data.code === 200) {
+      showDeleteDialog.value = false;
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '题目删除成功',
+        life: 3000
+      });
+      fetchProblems();
+    } else {
+      throw new Error(response.data.message || '删除失败');
+    }
   } catch (error) {
-    console.error('删除失败:', error)
+    console.error('删除失败:', error);
+    let errorMessage = '删除失败';
+    
+    if (error.response) {
+      console.error('响应错误状态:', error.response.status);
+      console.error('响应错误数据:', error.response.data);
+      errorMessage = error.response.data?.message || errorMessage;
+    } else if (error.request) {
+      console.error('请求错误:', error.request);
+      errorMessage = '服务器无响应';
+    } else {
+      console.error('错误信息:', error.message);
+      errorMessage = error.message;
+    }
+    
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: error.response?.data?.message || '删除失败',
+      detail: errorMessage,
       life: 3000
-    })
+    });
   }
 }
 

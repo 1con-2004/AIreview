@@ -18,6 +18,8 @@ const statsRouter = require('./api/stats');
 const studentRouter = require('./api/admin/student');
 const classRouter = require('./api/admin/class');
 const testCaseRouter = require('./routes/testCase');
+const authRoutes = require('./routes/auth');
+const statisticsRoutes = require('./routes/statistics');
 
 // 添加请求日志中间件
 app.use((req, res, next) => {
@@ -106,6 +108,8 @@ app.use('/api/stats', statsRouter);
 app.use('/api/admin/classes', classRouter);
 app.use('/api', studentRouter);
 app.use('/api/testcases', testCaseRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin/statistics', statisticsRoutes);
 
 // 添加错误处理中间件
 app.use((err, req, res, next) => {

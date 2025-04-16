@@ -120,20 +120,8 @@ router.post('/problems/:id/submit', async (req, res) => {
     );
     console.log('更新提交状态成功');
 
-    // 6. 如果通过，更新用户题目状态
+    // 6. 如果通过，更新题目统计
     if (dbStatus === 'Accepted') {
-      await connection.execute(
-        `INSERT INTO user_problem_status 
-         (user_id, problem_id, status, submission_count, average_execution_time)
-         VALUES (?, ?, 'Accepted', 1, ?)
-         ON DUPLICATE KEY UPDATE
-         status = 'Accepted',
-         submission_count = submission_count + 1,
-         average_execution_time = ?`,
-        [userId, actualProblemId, judgeResult.runtime || 0, judgeResult.runtime || 0]
-      );
-      console.log('更新用户题目状态成功');
-
       // 更新题目的通过率
       await connection.execute(
         `UPDATE problems 

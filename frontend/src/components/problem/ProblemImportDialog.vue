@@ -355,16 +355,34 @@ const removeTag = (index) => {
 
 // 添加测试用例
 const addTestcase = () => {
+  // 计算新测试用例的序号（如果已有测试用例，则为最大序号+1，否则为1）
+  let orderNum = 1;
+  if (formData.testcases.length > 0) {
+    // 找出当前最大的order_num值
+    const maxOrderNum = Math.max(...formData.testcases.map(tc => Number(tc.order_num) || 0));
+    orderNum = maxOrderNum + 1;
+  }
+  
   formData.testcases.push({
     input: '',
     output: '',
-    is_example: formData.testcases.length === 0 // 第一个测试用例默认为示例
-  })
+    is_example: formData.testcases.length === 0, // 第一个测试用例默认为示例
+    order_num: orderNum // 确保每个测试用例都有唯一的顺序编号
+  });
+  
+  console.log(`添加新测试用例，序号: ${orderNum}，当前测试用例数: ${formData.testcases.length}`);
 }
 
 // 移除测试用例
 const removeTestcase = (index) => {
-  formData.testcases.splice(index, 1)
+  formData.testcases.splice(index, 1);
+  
+  // 重新排序所有测试用例的order_num
+  formData.testcases.forEach((tc, idx) => {
+    tc.order_num = idx + 1;
+  });
+  
+  console.log('移除测试用例后重新排序，当前测试用例数:', formData.testcases.length);
 }
 
 // 获取或创建指定语言的解决方案代码
@@ -429,12 +447,21 @@ const loadProblemData = async () => {
             console.log('原始测试用例数据:', testCasesData);
             
             if (testCasesData && testCasesData.length > 0) {
-              formData.testcases = testCasesData.map(tc => ({
-                input: tc.input || '',
-                output: tc.output || '',
-                is_example: tc.is_example === 1 || tc.is_example === true,
-                order_num: tc.order_num || 0
-              }));
+              // 确保每个测试用例都有正确的order_num值
+              formData.testcases = testCasesData.map((tc, index) => {
+                // 如果没有order_num或者order_num为0，则使用索引+1作为order_num
+                const orderNum = tc.order_num && tc.order_num > 0 ? tc.order_num : (index + 1);
+                return {
+                  input: tc.input || '',
+                  output: tc.output || '',
+                  is_example: tc.is_example === 1 || tc.is_example === true,
+                  order_num: orderNum // 确保有有效的order_num
+                };
+              });
+              
+              // 按order_num排序
+              formData.testcases.sort((a, b) => a.order_num - b.order_num);
+              
               console.log('处理后的测试用例:', formData.testcases);
             } else {
               console.log('测试用例数据为空，添加默认测试用例');

@@ -574,14 +574,15 @@ export default defineComponent({
     const fetchProblem = async () => {
       try {
         const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
         
-        if (!token) {
+        if (!accessToken) {
           console.error('未找到用户token')
           return
         }
 
-        const headers = { Authorization: `Bearer ${token}` }
+        const headers = { Authorization: `Bearer ${accessToken}` }
         const problemNumber = route.params.id.padStart(4, '0')
         const [problemRes, solutionRes] = await Promise.all([
           axios.get(`http://localhost:3000/api/problems/${problemNumber}`, { headers }),
@@ -630,14 +631,15 @@ export default defineComponent({
     const fetchSubmissions = async () => {
       try {
         const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
         
-        if (!token) {
+        if (!accessToken) {
           console.error('未找到用户token')
           return
         }
 
-        const headers = { Authorization: `Bearer ${token}` }
+        const headers = { Authorization: `Bearer ${accessToken}` }
         
         // 首先尝试使用路由参数获取提交记录
         const response = await axios.get(`http://localhost:3000/api/problems/${route.params.id}/submissions`, { headers })
@@ -1141,9 +1143,10 @@ export default defineComponent({
 
       try {
         const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
         
-        if (!token) {
+        if (!accessToken) {
           ElMessage.error('请先登录')
           return
         }
@@ -1156,7 +1159,7 @@ export default defineComponent({
             input: customInput.value
           },
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${accessToken}` }
           }
         )
 
@@ -1194,9 +1197,10 @@ export default defineComponent({
 
       try {
         const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
         
-        if (!token) {
+        if (!accessToken) {
           ElMessage.error('请先登录')
           return
         }
@@ -1213,7 +1217,7 @@ export default defineComponent({
             language: selectedLanguageForCode.value
           },
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${accessToken}` }
           }
         )
 
@@ -1227,7 +1231,7 @@ export default defineComponent({
           ElMessage.error(response.data.message || '提交失败')
         }
       } catch (error) {
-        console.error('提交代码失败:', error)
+        console.error('提交失败:', error)
         ElMessage.error(error.response?.data?.message || '提交失败，请稍后重试')
       } finally {
         isSubmitting.value = false
@@ -1472,9 +1476,10 @@ export default defineComponent({
     const fetchProblemExamples = async () => {
       try {
         const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
         
-        if (!token) {
+        if (!accessToken) {
           console.error('未找到用户token')
           return
         }

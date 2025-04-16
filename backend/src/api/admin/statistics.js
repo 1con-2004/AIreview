@@ -128,9 +128,9 @@ router.get('/students', async (req, res) => {
         s.grade,
         c.class_name,
         (
-          SELECT COUNT(*) 
-          FROM user_problem_status ups 
-          WHERE ups.user_id = s.user_id AND ups.status = 'Accepted'
+          SELECT COUNT(DISTINCT problem_id) 
+          FROM submissions sub
+          WHERE sub.user_id = s.user_id AND sub.status = 'Accepted'
         ) as completed_count
       FROM student_info s
       LEFT JOIN classes c ON s.class_id = c.id
@@ -202,17 +202,42 @@ router.get('/student-problems', async (req, res) => {
         p.problem_number,
         p.title,
         p.difficulty,
-        IFNULL(ups.status, 'Not Attempted') as status,
-        IFNULL(ups.submission_count, 0) as submission_count,
-        ups.last_submission_time,
-        ups.first_submission_time,
-        ups.average_execution_time,
-        ups.viewed_solution
+        COALESCE(
+          (SELECT status 
+           FROM submissions s 
+           WHERE s.user_id = ? AND s.problem_id = p.id 
+           ORDER BY created_at DESC 
+           LIMIT 1), 
+          'Not Attempted'
+        ) as status,
+        (
+          SELECT COUNT(*) 
+          FROM submissions s 
+          WHERE s.user_id = ? AND s.problem_id = p.id
+        ) as submission_count,
+        (
+          SELECT created_at 
+          FROM submissions s 
+          WHERE s.user_id = ? AND s.problem_id = p.id 
+          ORDER BY created_at DESC 
+          LIMIT 1
+        ) as last_submission_time,
+        (
+          SELECT created_at 
+          FROM submissions s 
+          WHERE s.user_id = ? AND s.problem_id = p.id 
+          ORDER BY created_at ASC 
+          LIMIT 1
+        ) as first_submission_time,
+        (
+          SELECT AVG(runtime) 
+          FROM submissions s 
+          WHERE s.user_id = ? AND s.problem_id = p.id AND s.status = 'Accepted'
+        ) as average_execution_time
       FROM problems p
-      LEFT JOIN user_problem_status ups ON p.id = ups.problem_id AND ups.user_id = ?
       ORDER BY p.problem_number
       LIMIT ? OFFSET ?
-    `, [userId, parseInt(pageSize), parseInt(offset)]);
+    `, [userId, userId, userId, userId, userId, parseInt(pageSize), parseInt(offset)]);
     
     console.log(`查询到 ${problems.length} 条题目记录`);
     
@@ -227,6 +252,256 @@ router.get('/student-problems', async (req, res) => {
     return res.status(500).json({
       code: 500,
       message: '服务器错误，获取题目完成情况失败'
+    });
+  }
+});
+
+/**
+ * 获取学生题目完成情况统计
+ */
+router.get('/student-completion/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生题目完成情况统计:', userId);
+
+    const [stats] = await db.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM problems) as total_problems,
+        COUNT(DISTINCT CASE WHEN s.status = 'Accepted' THEN s.problem_id END) as completed_problems,
+        (
+          SELECT COUNT(*) 
+          FROM problems p 
+          WHERE NOT EXISTS (
+            SELECT 1 FROM submissions s2 
+            WHERE s2.problem_id = p.id AND s2.user_id = ?
+          )
+        ) as not_attempted_problems,
+        COUNT(DISTINCT CASE WHEN s.status != 'Accepted' THEN s.problem_id END) as failed_problems
+      FROM submissions s
+      WHERE s.user_id = ?
+    `, [userId, userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生题目完成情况统计成功',
+      data: stats[0]
+    });
+  } catch (error) {
+    console.error('获取学生题目完成情况统计失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生题目完成情况统计失败'
+    });
+  }
+});
+
+/**
+ * 获取学生错误类型分析
+ */
+router.get('/student-error-types/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生错误类型分析:', userId);
+
+    const [stats] = await db.query(`
+      SELECT 
+        CASE 
+          WHEN status = 'Runtime Error' AND error_message LIKE '%expected%' THEN '语法错误'
+          WHEN status = 'Runtime Error' AND error_message LIKE '%segmentation fault%' THEN '段错误'
+          WHEN status = 'Runtime Error' AND error_message LIKE '%timeout%' THEN '超时错误'
+          WHEN status = 'System Error' THEN '系统错误'
+          WHEN status = 'Wrong Answer' THEN '答案错误'
+          ELSE '其他错误'
+        END as error_type,
+        COUNT(*) as count
+      FROM submissions 
+      WHERE user_id = ? AND status != 'Accepted'
+      GROUP BY error_type
+      ORDER BY count DESC
+    `, [userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生错误类型分析成功',
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取学生错误类型分析失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生错误类型分析失败'
+    });
+  }
+});
+
+/**
+ * 获取学生知识点掌握情况
+ */
+router.get('/student-knowledge/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生知识点掌握情况:', userId);
+
+    const [stats] = await db.query(`
+      SELECT 
+        p.tags as knowledge_point,
+        COUNT(*) as total_problems,
+        SUM(CASE WHEN s.status = 'Accepted' THEN 1 ELSE 0 END) as completed_problems,
+        ROUND(
+          SUM(CASE WHEN s.status = 'Accepted' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 
+          2
+        ) as mastery_percentage
+      FROM problems p
+      LEFT JOIN submissions s ON p.id = s.problem_id AND s.user_id = ?
+      WHERE p.tags IS NOT NULL AND p.tags != ''
+      GROUP BY p.tags
+      HAVING mastery_percentage > 0
+      ORDER BY mastery_percentage DESC
+      LIMIT 8
+    `, [userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生知识点掌握情况成功',
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取学生知识点掌握情况失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生知识点掌握情况失败'
+    });
+  }
+});
+
+/**
+ * 获取学生解题时间分析
+ */
+router.get('/student-solving-time/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生解题时间分析:', userId);
+
+    const [stats] = await db.query(`
+      WITH FirstAttempts AS (
+        SELECT 
+          problem_id,
+          MIN(created_at) as first_attempt
+        FROM submissions
+        WHERE user_id = ?
+        GROUP BY problem_id
+      ),
+      SuccessfulAttempts AS (
+        SELECT 
+          problem_id,
+          MIN(created_at) as success_time
+        FROM submissions
+        WHERE user_id = ? AND status = 'Accepted'
+        GROUP BY problem_id
+      )
+      SELECT 
+        p.difficulty,
+        ROUND(AVG(
+          CASE 
+            WHEN TIMESTAMPDIFF(MINUTE, fa.first_attempt, sa.success_time) > 0 
+            THEN TIMESTAMPDIFF(MINUTE, fa.first_attempt, sa.success_time)
+            ELSE 1 
+          END
+        ), 2) as avg_time
+      FROM problems p
+      JOIN FirstAttempts fa ON p.id = fa.problem_id
+      JOIN SuccessfulAttempts sa ON p.id = sa.problem_id
+      GROUP BY p.difficulty
+      ORDER BY 
+        CASE p.difficulty
+          WHEN '简单' THEN 1
+          WHEN '中等' THEN 2
+          WHEN '困难' THEN 3
+        END
+    `, [userId, userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生解题时间分析成功',
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取学生解题时间分析失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生解题时间分析失败'
+    });
+  }
+});
+
+/**
+ * 获取学生每日提交趋势
+ */
+router.get('/student-daily-submissions/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生每日提交趋势:', userId);
+
+    const [stats] = await db.query(`
+      WITH RECURSIVE DateRange AS (
+        SELECT CURDATE() - INTERVAL 29 DAY as date
+        UNION ALL
+        SELECT date + INTERVAL 1 DAY
+        FROM DateRange
+        WHERE date < CURDATE()
+      )
+      SELECT 
+        dr.date,
+        COUNT(s.id) as total_submissions,
+        SUM(CASE WHEN s.status = 'Accepted' THEN 1 ELSE 0 END) as accepted_submissions
+      FROM DateRange dr
+      LEFT JOIN submissions s ON DATE(s.created_at) = dr.date AND s.user_id = ?
+      GROUP BY dr.date
+      ORDER BY dr.date
+    `, [userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生每日提交趋势成功',
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取学生每日提交趋势失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生每日提交趋势失败'
+    });
+  }
+});
+
+/**
+ * 获取学生提交时间分布
+ */
+router.get('/student-submission-time/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('获取学生提交时间分布:', userId);
+
+    const [stats] = await db.query(`
+      SELECT 
+        HOUR(created_at) as hour,
+        COUNT(*) as submission_count
+      FROM submissions
+      WHERE user_id = ?
+      GROUP BY HOUR(created_at)
+      ORDER BY hour
+    `, [userId]);
+
+    return res.json({
+      code: 0,
+      message: '获取学生提交时间分布成功',
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取学生提交时间分布失败:', error);
+    return res.status(500).json({
+      code: 500,
+      message: '服务器错误，获取学生提交时间分布失败'
     });
   }
 });

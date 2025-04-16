@@ -146,7 +146,7 @@ const checkLoginStatus = async () => {
       try {
         const response = await fetch(`http://localhost:3000/api/user/profile/${user.username}`, {
           headers: {
-            Authorization: `Bearer ${user.token}`
+            Authorization: `Bearer ${user.accessToken}`
           }
         })
         const data = await response.json()

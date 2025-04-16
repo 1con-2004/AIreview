@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const jwtConfig = require('../config/jwt');
 
 const authenticateToken = (req, res, next) => {
   console.log('验证请求头:', req.headers);
@@ -7,24 +8,35 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   console.log('提取的token:', token);
 
-  // 开发环境临时解决方案：如果没有令牌，设置一个默认用户
   if (!token) {
-    console.log('未提供认证令牌，使用开发环境默认用户');
-    // 设置默认用户ID为1（管理员）
-    req.user = { id: 1, role: 'admin', username: 'admin' };
-    return next();
+    return res.status(401).json({
+      success: false,
+      message: '未提供认证令牌'
+    });
   }
 
-  jwt.verify(token, 'your-secret-key', (err, user) => {
+  jwt.verify(token, jwtConfig.SECRET_KEY, (err, decoded) => {
     if (err) {
-      console.log('令牌验证失败:', err.message);
+      console.error('令牌验证失败:', err.message);
+      
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: '令牌已过期',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+      
       return res.status(403).json({
         success: false,
-        message: '令牌无效或已过期'
+        message: '令牌无效',
+        code: 'TOKEN_INVALID',
+        error: err.message
       });
     }
-    console.log('令牌验证成功，用户信息:', user);
-    req.user = user;
+
+    console.log('令牌验证成功，用户信息:', decoded);
+    req.user = decoded;
     next();
   });
 };

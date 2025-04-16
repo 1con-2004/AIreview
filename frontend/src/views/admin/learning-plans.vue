@@ -224,8 +224,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from 'axios'
+import { useStore } from 'vuex'
 
 const toast = useToast()
+const store = useStore()
 
 // 状态数据
 const learningPlans = ref([])
@@ -266,7 +268,15 @@ const formRules = {
 
 // 获取认证令牌
 const getAuthToken = () => {
-  return localStorage.getItem('token')
+  // 首先尝试从Vuex获取token
+  const storeToken = store.getters.getAccessToken
+  if (storeToken) {
+    return storeToken
+  }
+  
+  // 回退到localStorage
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  return userInfo.accessToken
 }
 
 // 设置axios请求头
@@ -291,14 +301,56 @@ const formatDate = (dateString) => {
 // 获取学习计划
 const fetchLearningPlans = async () => {
   try {
-    setAuthHeader()
-    const response = await axios.get('/api/learning-plans')
-    if (response.data.success) {
+    console.log('获取学习计划列表...')
+    console.log('当前认证令牌:', getAuthToken())
+    
+    // 使用store中的request工具或axios实例
+    const response = await axios.get('/api/learning-plans', {
+      headers: { 
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    })
+    
+    console.log('学习计划API响应:', response)
+    console.log('响应数据类型:', typeof response.data)
+    console.log('响应数据:', response.data)
+    
+    // 处理不同格式的响应
+    if (response.data && response.data.success && Array.isArray(response.data.data)) {
+      // 标准格式: { success: true, data: [...] }
       learningPlans.value = response.data.data
+      console.log('标准格式设置学习计划数据:', learningPlans.value)
+    } else if (Array.isArray(response.data)) {
+      // 直接返回数组的情况
+      learningPlans.value = response.data
+      console.log('数组格式设置学习计划数据:', learningPlans.value)
+    } else {
+      console.error('API响应格式不符合预期:', response.data)
+      toast.add({ 
+        severity: 'error', 
+        summary: '数据格式错误', 
+        detail: '获取学习计划失败: 服务器返回的数据格式不正确' 
+      })
     }
   } catch (error) {
     console.error('获取学习计划失败:', error)
-    toast.add({ severity: 'error', summary: '错误', detail: '获取学习计划失败' })
+    console.error('错误响应:', error.response)
+    console.error('错误详情:', error.response?.data || error.message)
+    
+    // 检查是否为认证错误
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      toast.add({ 
+        severity: 'error', 
+        summary: '认证错误', 
+        detail: '登录已过期或权限不足，请重新登录' 
+      })
+    } else {
+      toast.add({ 
+        severity: 'error', 
+        summary: '错误', 
+        detail: `获取学习计划失败: ${error.response?.data?.message || error.message || '未知错误'}` 
+      })
+    }
   }
 }
 

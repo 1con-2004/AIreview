@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const pool = require('../../db') // 导入数据库连接池
 const router = express.Router()
+const jwtConfig = require('../../config/jwt')
 
 // 初始化默认用户
 async function initDefaultUser() {
@@ -35,14 +36,12 @@ router.post('/', async (req, res) => {
   const { username, password } = req.body
   
   try {
-    // 详细的调试日志
     console.log('=== 登录调试信息 ===')
     console.log('1. 接收到的登录信息：', { 
       username,
       passwordLength: password ? password.length : 0
     })
 
-    // 获取用户信息和角色
     const [rows] = await pool.execute(
       'SELECT * FROM users WHERE username = ?',
       [username]
@@ -59,25 +58,14 @@ router.post('/', async (req, res) => {
 
     const user = rows[0]
 
-    // 检查用户状态
     if (user.status === 0) {
       return res.status(403).json({
         success: false,
         message: '账号已被封禁，请联系管理员'
       })
     }
-    
-    console.log('3. 密码比对信息：')
-    console.log('- 用户输入的密码：', password)
-    console.log('- 数据库中的密码哈希：', user.password)
-    
-    // 直接测试已知正确的密码
-    const testMatch = await bcrypt.compare('123456', user.password)
-    console.log('- 测试固定密码"123456"的匹配结果：', testMatch)
-    
-    // 测试用户输入的密码
+
     const match = await bcrypt.compare(password, user.password)
-    console.log('- 用户输入密码的匹配结果：', match)
 
     if (!match) {
       return res.status(401).json({
@@ -86,29 +74,134 @@ router.post('/', async (req, res) => {
       })
     }
 
-    // 生成JWT token
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      'your-secret-key',
-      { expiresIn: '24h' }
+    // 生成访问令牌和刷新令牌
+    const tokenPayload = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      type: 'access'
+    }
+
+    const refreshTokenPayload = {
+      id: user.id,
+      type: 'refresh'
+    }
+
+    const accessToken = jwt.sign(
+      tokenPayload,
+      jwtConfig.SECRET_KEY,
+      {
+        ...jwtConfig.TOKEN_CONFIG,
+        expiresIn: jwtConfig.ACCESS_TOKEN_EXPIRE
+      }
     )
 
-    // 登录成功，返回用户信息和token
-    const { password: _, ...userInfo } = user
+    const refreshToken = jwt.sign(
+      refreshTokenPayload,
+      jwtConfig.SECRET_KEY,
+      {
+        ...jwtConfig.TOKEN_CONFIG,
+        expiresIn: jwtConfig.REFRESH_TOKEN_EXPIRE
+      }
+    )
+
+    // 存储刷新令牌到数据库
+    await pool.execute(
+      'UPDATE users SET refresh_token = ? WHERE id = ?',
+      [refreshToken, user.id]
+    )
+
+    const { password: _, refresh_token: __, ...userInfo } = user
     res.json({
       success: true,
       data: {
         ...userInfo,
-        role: user.role, // 直接使用users表中的role字段
-        token
+        role: user.role,
+        accessToken,
+        refreshToken
       }
     })
   } catch (error) {
-    console.error('登录错误：', error)
+    console.error('登录错误:', error)
     res.status(500).json({
       success: false,
-      message: '服务器错误',
-      error: error.message
+      message: '服务器错误'
+    })
+  }
+})
+
+// 刷新令牌接口
+router.post('/refresh-token', async (req, res) => {
+  const { refreshToken } = req.body
+
+  if (!refreshToken) {
+    return res.status(400).json({
+      success: false,
+      message: '刷新令牌不能为空'
+    })
+  }
+
+  try {
+    // 验证刷新令牌
+    const decoded = jwt.verify(refreshToken, jwtConfig.SECRET_KEY)
+    
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({
+        success: false,
+        message: '无效的刷新令牌'
+      })
+    }
+
+    // 检查数据库中的刷新令牌
+    const [rows] = await pool.execute(
+      'SELECT * FROM users WHERE id = ? AND refresh_token = ?',
+      [decoded.id, refreshToken]
+    )
+
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: '刷新令牌已失效'
+      })
+    }
+
+    const user = rows[0]
+
+    // 生成新的访问令牌
+    const tokenPayload = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      type: 'access'
+    }
+
+    const newAccessToken = jwt.sign(
+      tokenPayload,
+      jwtConfig.SECRET_KEY,
+      {
+        ...jwtConfig.TOKEN_CONFIG,
+        expiresIn: jwtConfig.ACCESS_TOKEN_EXPIRE
+      }
+    )
+
+    res.json({
+      success: true,
+      data: {
+        accessToken: newAccessToken
+      }
+    })
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: '刷新令牌已过期，请重新登录'
+      })
+    }
+    
+    console.error('刷新令牌错误:', error)
+    res.status(500).json({
+      success: false,
+      message: '服务器错误'
     })
   }
 })

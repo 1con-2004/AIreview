@@ -77,9 +77,9 @@ axios.interceptors.request.use(
     
     // 从localStorage获取token并添加到请求头
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    if (userInfo.token) {
-      config.headers['Authorization'] = `Bearer ${userInfo.token}`;
-      console.log('添加认证令牌:', `Bearer ${userInfo.token}`);
+    if (userInfo.accessToken) {
+      config.headers['Authorization'] = `Bearer ${userInfo.accessToken}`;
+      console.log('添加认证令牌:', `Bearer ${userInfo.accessToken}`);
     } else {
       console.log('未找到认证令牌');
     }

@@ -190,8 +190,9 @@
 
 <script>
 import NavBar from '@/components/NavBar.vue'
-import axios from 'axios';
 import { ElSelect, ElOption } from 'element-plus'
+import request from '@/utils/request'
+import store from '@/store'
 
 export default {
   name: 'ProblemsPage',
@@ -223,6 +224,11 @@ export default {
       selectedStatus: '',
       currentPlanPage: 1,
       plansPerPage: 6,
+      loading: {
+        problems: false,
+        tags: false
+      },
+      total: 0,
     }
   },
   computed: {
@@ -269,153 +275,125 @@ export default {
     async fetchPlans() {
       try {
         console.log('开始获取学习计划...');
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (!userInfoStr) {
-          console.warn('用户未登录，没有userInfo');
-          this.plans = [];
-          return;
-        }
-
-        let userInfo;
-        try {
-          userInfo = JSON.parse(userInfoStr);
-        } catch (e) {
-          console.error('解析userInfo失败:', e);
-          this.plans = [];
-          return;
-        }
-
-        if (!userInfo || !userInfo.token) {
-          console.warn('无效的用户信息或token');
-          this.plans = [];
-          return;
-        }
-
-        console.log('准备发送请求，token:', userInfo.token);
-        console.log('当前用户角色:', userInfo.role);
+        const response = await request.get('/api/learning-plans');
         
-        const response = await axios.get('http://localhost:3000/api/learning-plans', {
-          headers: {
-            'Authorization': `Bearer ${userInfo.token}`
-          },
-          params: {
-            all: true
-          }
-        });
-
-        console.log('服务器返回数据:', response.data);
+        console.log('学习计划响应:', response);
         
-        if (!response.data || !response.data.success) {
-          console.warn('服务器返回错误:', response.data);
-          this.plans = [];
-          return;
-        }
-
-        const plansData = response.data.data;
-        if (!Array.isArray(plansData)) {
-          console.error('返回数据格式不正确，期望数组但收到:', typeof plansData);
-          this.plans = [];
-          return;
-        }
-
-        this.plans = plansData.map(plan => {
-          const iconPath = plan.icon?.startsWith('http') 
-            ? plan.icon 
-            : plan.icon || '/icons/default.png';
-            
-          return {
+        if (response && Array.isArray(response)) {
+          this.plans = response.map(plan => ({
             id: plan.id,
-            title: plan.title,
-            description: plan.description,
-            icon: iconPath,
-            tag: plan.tag,
+            title: plan.title || '',
+            description: plan.description || '',
+            icon: plan.icon 
+              ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
+              : '/icons/default.png',
             creator_name: plan.creator_name || ''
-          };
-        });
-
-        console.log('处理后的学习计划:', this.plans);
+          }));
+          console.log('处理后的学习计划:', this.plans);
+        } else {
+          console.log('学习计划数据格式不正确:', response);
+          this.plans = [];
+        }
       } catch (error) {
         console.error('获取学习计划失败:', error);
-        console.error('错误详情:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
+        if (error.response?.status === 401) {
+          this.$message.error('获取学习计划失败，请稍后重试');
+        } else {
+          this.$message.error('获取学习计划失败: ' + (error.message || '请检查网络连接或稍后重试'));
+        }
         this.plans = [];
-        this.$message.error('获取学习计划失败，请稍后重试');
       }
     },
     async fetchProblems() {
       try {
-        console.log('开始获取题目列表...');
-        const userInfoStr = localStorage.getItem('userInfo');
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null;
+        this.loading.problems = true;
+        const token = store.getters.getAccessToken;
+        const params = {
+          page: this.currentPage,
+          limit: this.itemsPerPage,
+          search: this.searchQuery,
+          difficulty: this.selectedDifficulty,
+          status: this.selectedStatus,
+          tags: this.selectedTags
+        };
         
-        if (!token) {
-          console.error('未找到用户token');
-          throw new Error('请先登录');
-        }
-
-        const headers = { Authorization: `Bearer ${token}` };
-        console.log('发送请求，headers:', headers);
-
-        // 获取题目列表
-        const response = await axios.get('http://localhost:3000/api/problems/user/list', { headers });
-        console.log('获取到的题目数据:', response.data);
+        const response = await request.get('/api/problems', { 
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        console.log('获取到的题目数据:', response);
         
-        if (response.data && response.data.code === 200 && response.data.data) {
-          const problemsData = response.data.data.problems || [];
-          console.log('解析的题目数据:', problemsData);
-          
-          this.problems = problemsData.map(problem => ({
+        if (response && response.data) {
+          this.problems = response.data.map(problem => ({
             id: problem.id,
             problem_number: problem.problem_number || '',
             title: problem.title || '',
             difficulty: problem.difficulty || '简单',
-            tags: Array.isArray(problem.tags) ? problem.tags : 
-                  (problem.tags ? problem.tags.split(',').map(tag => tag.trim()) : []),
-            acceptance_rate: parseFloat(problem.acceptance_rate) || 0,
+            tags: typeof problem.tags === 'string' ? problem.tags.split(',').map(tag => tag.trim()) : [],
             total_submissions: parseInt(problem.total_submissions) || 0,
+            acceptance_rate: parseFloat(problem.acceptance_rate) || 0,
             status: problem.status || 'Not Started',
             description: problem.description || ''
           }));
-          
+          this.total = response.total || this.problems.length;
           console.log('处理后的题目列表:', this.problems);
         } else {
-          console.error('API返回格式不正确:', response.data);
           throw new Error('获取题目列表失败');
         }
       } catch (error) {
-        console.error('获取题目列表失败:', error);
+        console.error('获取问题列表失败:', error);
         if (error.response?.status === 401) {
-          localStorage.removeItem('userInfo');
+          await store.dispatch('logout');
+          this.$router.push('/login');
           this.$message.error('登录已过期，请重新登录');
         } else {
-          this.$message.error(error.message || '获取题目列表失败，请稍后重试');
+          this.$message.error('获取问题列表失败: ' + (error.message || '请检查网络连接或稍后重试'));
+          this.problems = [];
+          this.total = 0;
         }
-        this.problems = [];
+      } finally {
+        this.loading.problems = false;
       }
     },
     async fetchTags() {
       try {
-        console.log('开始获取标签列表...');
-        const response = await axios.get('http://localhost:3000/api/problems/tags');
-        console.log('获取到的标签数据:', response.data);
+        this.loading.tags = true;
+        const token = store.getters.getAccessToken;
+        const response = await request.get('/api/problems/tags', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        console.log('获取到的标签数据:', response);
         
-        if (response.data && response.data.code === 200) {
-          // 确保数据存在且是数组
-          const tags = response.data.data || [];
-          // 去重并排序
-          this.tags = [...new Set(tags)].sort();
+        if (Array.isArray(response)) {
+          // 处理标签数据，去重并排序
+          const allTags = new Set();
+          response.forEach(tag => {
+            if (typeof tag === 'string' && tag.trim()) {
+              allTags.add(tag.trim());
+            }
+          });
+          
+          this.tags = Array.from(allTags).sort();
           console.log('处理后的标签列表:', this.tags);
         } else {
-          console.error('获取标签失败:', response.data);
           throw new Error('获取标签失败');
         }
       } catch (error) {
         console.error('获取标签失败:', error);
-        this.$message.error('获取标签失败，请检查网络连接或稍后重试');
-        this.tags = [];
+        if (error.response?.status === 401) {
+          await store.dispatch('logout');
+          this.$router.push('/login');
+          this.$message.error('登录已过期，请重新登录');
+        } else {
+          this.$message.error('获取标签失败: ' + (error.message || '请检查网络连接或稍后重试'));
+          this.tags = [];
+        }
+      } finally {
+        this.loading.tags = false;
       }
     },
     filterProblems() {

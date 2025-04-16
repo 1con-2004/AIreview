@@ -431,11 +431,20 @@ async function importProblemDirect(req, res) {
       // 2. 插入测试用例
       if (data.test_cases && data.test_cases.length > 0) {
         console.log(`使用提交的测试用例，数量: ${data.test_cases.length}`);
+        // 确保每个测试用例都有正确的order_num
+        let orderIndex = 1;
         for (const testCase of data.test_cases) {
+          // 如果测试用例没有order_num或order_num为0，则使用自增序号
+          const orderNum = (testCase.order_num && testCase.order_num > 0) ? testCase.order_num : orderIndex;
+          
+          console.log(`添加测试用例 ${orderIndex}/${data.test_cases.length}, order_num=${orderNum}, is_example=${testCase.is_example ? 1 : 0}`);
+          
           await pool.query(
             'INSERT INTO problem_test_cases (problem_id, problem_number, input, output, is_example, order_num) VALUES (?, ?, ?, ?, ?, ?)',
-            [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example ? 1 : 0, testCase.order_num || 0]
+            [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example ? 1 : 0, orderNum]
           );
+          
+          orderIndex++;
         }
       } else {
         // 如果没有提供测试用例，尝试从题目池中获取
@@ -451,11 +460,19 @@ async function importProblemDirect(req, res) {
           if (poolTestCases.length > 0) {
             // 使用题目池的测试用例
             console.log(`从题目池获取到测试用例，数量: ${poolTestCases.length}`);
+            let orderIndex = 1;
             for (const testCase of poolTestCases) {
+              // 使用测试用例原有的order_num或者使用自增序号
+              const orderNum = (testCase.order_num && testCase.order_num > 0) ? testCase.order_num : orderIndex;
+              
+              console.log(`添加题目池测试用例 ${orderIndex}/${poolTestCases.length}, order_num=${orderNum}, is_example=${testCase.is_example ? 1 : 0}`);
+              
               await pool.query(
                 'INSERT INTO problem_test_cases (problem_id, problem_number, input, output, is_example, order_num) VALUES (?, ?, ?, ?, ?, ?)',
-                [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example, testCase.order_num]
+                [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example, orderNum]
               );
+              
+              orderIndex++;
             }
           } else {
             // 尝试通过problem_number查询
@@ -475,11 +492,19 @@ async function importProblemDirect(req, res) {
               if (poolTestCasesByNumber.length > 0) {
                 // 使用通过problem_number查询到的测试用例
                 console.log(`通过problem_number获取到测试用例，数量: ${poolTestCasesByNumber.length}`);
+                let orderIndex = 1;
                 for (const testCase of poolTestCasesByNumber) {
+                  // 使用测试用例原有的order_num或者使用自增序号
+                  const orderNum = (testCase.order_num && testCase.order_num > 0) ? testCase.order_num : orderIndex;
+                  
+                  console.log(`添加通过problem_number获取的测试用例 ${orderIndex}/${poolTestCasesByNumber.length}, order_num=${orderNum}, is_example=${testCase.is_example ? 1 : 0}`);
+                  
                   await pool.query(
                     'INSERT INTO problem_test_cases (problem_id, problem_number, input, output, is_example, order_num) VALUES (?, ?, ?, ?, ?, ?)',
-                    [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example, testCase.order_num]
+                    [newProblemId, formattedNumber, testCase.input, testCase.output, testCase.is_example, orderNum]
                   );
+                  
+                  orderIndex++;
                 }
               } else {
                 // 创建默认测试用例

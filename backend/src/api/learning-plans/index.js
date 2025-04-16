@@ -48,68 +48,48 @@ const upload = multer({
 });
 
 // 获取所有学习计划
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { all } = req.query; // 获取查询参数
-    console.log('获取用户学习计划, userId:', userId, '获取所有计划:', all);
-
-    // 获取用户角色信息
-    const [userRows] = await db.query(
-      `SELECT role FROM users WHERE id = ?`,
-      [userId]
-    );
+    const query = `
+      SELECT 
+        lp.*,
+        u.nickname as creator_name,
+        u.avatar_url as creator_avatar
+      FROM learning_plans lp
+      LEFT JOIN user_profile u ON lp.user_id = u.user_id
+      ORDER BY lp.created_at DESC
+    `;
     
-    const userRole = userRows.length > 0 ? userRows[0].role : 'normal';
-    console.log('用户角色:', userRole);
-
-    let query;
-    let params;
-
-    if (all === 'true') {
-      // 获取所有学习计划，不受用户角色限制
-      console.log('获取所有学习计划');
-      query = `
-        SELECT lp.*, u.username as creator_name
-        FROM learning_plans lp
-        JOIN users u ON lp.user_id = u.id
-        ORDER BY lp.created_at DESC
-      `;
-      params = [];
-    } else {
-      // 只获取当前用户创建的学习计划
-      console.log('只获取用户自己的学习计划');
-      query = `
-        SELECT * FROM learning_plans 
-        WHERE user_id = ? 
-        ORDER BY created_at DESC
-      `;
-      params = [userId];
-    }
-
-    console.log('执行查询:', query, '参数:', params);
-    const [plans] = await db.query(query, params);
-    console.log('查询结果数量:', plans.length);
-
-    res.json({
-      success: true,
-      data: plans
-    });
+    const [plans] = await db.query(query);
+    
+    // 直接返回学习计划数组，添加默认图标处理
+    res.json(plans.map(plan => ({
+      id: plan.id,
+      title: plan.title,
+      description: plan.description,
+      estimated_days: plan.estimated_days,
+      points: plan.points,
+      tag: plan.tag,
+      difficulty_level: plan.difficulty_level,
+      creator_name: plan.creator_name,
+      creator_avatar: plan.creator_avatar,
+      created_at: plan.created_at,
+      icon: plan.icon || '/icons/default.png' // 如果没有图标则使用默认图标
+    })));
   } catch (error) {
-    console.error('获取学习计划失败:', error);
+    console.error('获取学习计划列表失败:', error);
     res.status(500).json({
       success: false,
-      message: '获取学习计划失败'
+      message: '获取学习计划列表失败'
     });
   }
 });
 
 // 获取特定学习计划
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-    console.log('获取特定学习计划, planId:', id, 'userId:', userId); // 添加日志
+    console.log('获取特定学习计划, planId:', id); // 添加日志
 
     // 修改查询，允许所有用户查看任何学习计划
     const [plans] = await db.query(
@@ -197,9 +177,29 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // 处理题目管理部分
     if (problems && problems.length > 0) {
-      const values = problems.map(p => [result.insertId, p.problem_id, p.order_index, p.section]);
+      // 获取所有题目的problem_number
+      const problemIds = problems.map(p => p.problem_id);
+      const [problemsInfo] = await db.query(
+        'SELECT id, problem_number FROM problems WHERE id IN (?)', 
+        [problemIds]
+      );
+      
+      // 创建id到problem_number的映射
+      const problemNumberMap = {};
+      problemsInfo.forEach(p => {
+        problemNumberMap[p.id] = p.problem_number;
+      });
+      
+      const values = problems.map(p => [
+        result.insertId, 
+        p.problem_id, 
+        problemNumberMap[p.problem_id] || '', 
+        p.order_index, 
+        p.section
+      ]);
+      
       await db.query(
-        `INSERT INTO learning_plan_problems (plan_id, problem_id, order_index, section) 
+        `INSERT INTO learning_plan_problems (plan_id, problem_id, problem_number, order_index, section) 
          VALUES ?`,
         [values]
       );
@@ -322,12 +322,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 });
 
 // 获取学习计划的题目列表
-router.get('/:id/problems', authenticateToken, async (req, res) => {
+router.get('/:id/problems', async (req, res) => {
   try {
     const planId = req.params.id;
-    const userId = req.user.id;
-    
-    console.log('获取学习计划题目, planId:', planId, 'userId:', userId);
+    console.log('获取学习计划题目, planId:', planId);
 
     // 获取学习计划题目，同时获取用户的完成状态
     const query = `
@@ -339,15 +337,14 @@ router.get('/:id/problems', authenticateToken, async (req, res) => {
       LEFT JOIN (
         SELECT problem_id, status
         FROM submissions
-        WHERE user_id = ?
-        AND status = 'Accepted'
+        WHERE status = 'Accepted'
         GROUP BY problem_id
       ) s ON p.id = s.problem_id
       WHERE lpp.plan_id = ?
       ORDER BY lpp.order_index
     `;
 
-    const [problems] = await db.query(query, [userId, planId]);
+    const [problems] = await db.query(query, [planId]);
 
     console.log('查询到的题目数据:', problems);
 
@@ -734,9 +731,29 @@ router.put('/:id/problems', authenticateToken, async (req, res) => {
 
       // 插入新题目
       if (problems && problems.length > 0) {
-        const values = problems.map(p => [id, p.problem_id, p.order_index, p.section]);
+        // 获取所有题目的problem_number
+        const problemIds = problems.map(p => p.problem_id);
+        const [problemsInfo] = await db.query(
+          'SELECT id, problem_number FROM problems WHERE id IN (?)', 
+          [problemIds]
+        );
+        
+        // 创建id到problem_number的映射
+        const problemNumberMap = {};
+        problemsInfo.forEach(p => {
+          problemNumberMap[p.id] = p.problem_number;
+        });
+        
+        const values = problems.map(p => [
+          id, 
+          p.problem_id, 
+          problemNumberMap[p.problem_id] || '', 
+          p.order_index, 
+          p.section
+        ]);
+        
         await db.query(
-          `INSERT INTO learning_plan_problems (plan_id, problem_id, order_index, section) 
+          `INSERT INTO learning_plan_problems (plan_id, problem_id, problem_number, order_index, section) 
            VALUES ?`,
           [values]
         );

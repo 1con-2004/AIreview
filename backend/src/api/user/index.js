@@ -180,8 +180,9 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
     console.log('正在获取用户题目状态, userId:', userId);
 
     const query = `
-      SELECT problem_id, status 
-      FROM user_problem_status 
+      SELECT DISTINCT problem_id, 
+        FIRST_VALUE(status) OVER (PARTITION BY problem_id ORDER BY created_at DESC) as status
+      FROM submissions 
       WHERE user_id = ?
     `;
     
@@ -370,7 +371,9 @@ router.get('/stats/:username', async (req, res) => {
     // 获取统计信息
     const [stats] = await pool.query(`
       SELECT 
-        (SELECT COUNT(*) FROM user_problem_status WHERE user_id = ? AND status = 'Accepted') as solved_problems,
+        (SELECT COUNT(DISTINCT problem_id) 
+         FROM submissions 
+         WHERE user_id = ? AND status = 'Accepted') as solved_problems,
         (SELECT COUNT(*) FROM community_posts WHERE user_id = ?) as posts,
         (SELECT COUNT(*) FROM likes WHERE target_type = 'post' AND target_id IN 
             (SELECT id FROM community_posts WHERE user_id = ?)) as likes

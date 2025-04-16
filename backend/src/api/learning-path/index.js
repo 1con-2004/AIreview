@@ -40,8 +40,8 @@ router.get('/', authenticateToken, async (req, res) => {
 
     // 获取用户已完成的题目
     const [completedProblems] = await db.query(
-      `SELECT problem_id 
-       FROM user_problem_status 
+      `SELECT DISTINCT problem_id 
+       FROM submissions 
        WHERE user_id = ? AND status = 'Accepted'`,
       [userId]
     );
@@ -84,14 +84,15 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/completed-problems', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('获取用户已完成题目, userId:', userId); // 添加日志
+    console.log('获取用户已完成题目, userId:', userId);
 
     const [problems] = await db.query(
-      `SELECT p.*, ups.completed_at
+      `SELECT p.*, MAX(s.created_at) as completed_at
        FROM problems p
-       JOIN user_problem_status ups ON p.id = ups.problem_id
-       WHERE ups.user_id = ? AND ups.status = 'Accepted'
-       ORDER BY ups.completed_at DESC`,
+       JOIN submissions s ON p.id = s.problem_id
+       WHERE s.user_id = ? AND s.status = 'Accepted'
+       GROUP BY p.id
+       ORDER BY completed_at DESC`,
       [userId]
     );
 
@@ -155,8 +156,8 @@ router.get('/progress', authenticateToken, async (req, res) => {
 
     // 获取已完成的题目
     const [completedProblems] = await db.query(
-      `SELECT problem_id 
-       FROM user_problem_status 
+      `SELECT DISTINCT problem_id 
+       FROM submissions 
        WHERE user_id = ? 
        AND status = 'Accepted' 
        AND problem_id IN (?)`,
@@ -238,7 +239,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
         // 获取用户的刷题历史
         const [userHistory] = await db.query(`
             SELECT ups.*, p.title, p.difficulty, p.tags 
-            FROM user_problem_status ups
+            FROM submissions ups
             JOIN problems p ON ups.problem_id = p.id
             WHERE ups.user_id = ?
         `, [userId]);
@@ -522,7 +523,7 @@ router.post('/advance-stage', authenticateToken, async (req, res) => {
 
         // 获取用户的题目进度
         const [userProgress] = await db.query(`
-            SELECT * FROM user_problem_status
+            SELECT * FROM submissions
             WHERE user_id = ?
         `, [userId]);
 

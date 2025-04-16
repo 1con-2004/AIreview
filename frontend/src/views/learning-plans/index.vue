@@ -81,6 +81,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import NavBar from '@/components/NavBar.vue'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'LearningPlans',
@@ -156,31 +157,34 @@ export default {
 
     const fetchPlans = async () => {
       try {
-        const userInfo = localStorage.getItem('userInfo')
-        if (!userInfo) {
-          router.push('/login')
-          return
-        }
-
-        const { token } = JSON.parse(userInfo)
-        const response = await axios.get('http://localhost:3000/api/learning-plans', {
-          headers: {
-            Authorization: 'Bearer ' + token
-          }
-        })
+        const response = await axios.get('http://localhost:3000/api/learning-plans');
         
-        if (response.data.success) {
-          plans.value = response.data.data
-          filteredPlans.value = plans.value // 初始化过滤后的计划
-          console.log('获取学习计划列表成功:', plans.value)
+        if (response.data) {
+          plans.value = response.data.map(plan => ({
+            id: plan.id,
+            title: plan.title || '',
+            description: plan.description || '',
+            estimated_days: plan.estimated_days,
+            points: plan.points,
+            tag: plan.tag,
+            difficulty_level: plan.difficulty_level,
+            creator_name: plan.creator_name,
+            creator_avatar: plan.creator_avatar,
+            created_at: plan.created_at,
+            icon: plan.icon 
+              ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
+              : '/icons/default.png'
+          }));
+          filteredPlans.value = plans.value; // 初始化过滤后的计划
+          console.log('获取学习计划列表成功:', plans.value);
         } else {
-          console.error('获取学习计划列表失败:', response.data.message)
+          console.error('获取学习计划列表失败:', response.data.message);
+          ElMessage.error('获取学习计划列表失败');
         }
       } catch (error) {
-        console.error('获取学习计划列表失败:', error)
-        if (error.response?.status === 401) {
-          router.push('/login')
-        }
+        console.error('获取学习计划列表失败:', error);
+        ElMessage.error('获取学习计划列表失败: ' + (error.message || '请检查网络连接或稍后重试'));
+        plans.value = [];
       }
     }
 

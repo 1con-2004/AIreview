@@ -8,7 +8,20 @@ const pool = mysql.createPool({
     database: 'AIreview', // 数据库名称
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
 });
+
+// 测试连接
+pool.getConnection()
+    .then(connection => {
+        console.log('数据库连接成功');
+        connection.release();
+    })
+    .catch(err => {
+        console.error('数据库连接失败:', err);
+        process.exit(1);
+    });
 
 module.exports = pool; 

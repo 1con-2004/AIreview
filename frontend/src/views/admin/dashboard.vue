@@ -95,7 +95,8 @@ const fetchStats = async () => {
   try {
     console.log('获取统计数据...');
     // 从localStorage中获取token
-    const token = localStorage.getItem('token');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const token = userInfo.accessToken;
     console.log('当前token:', token);
     
     if (!token) {
@@ -155,7 +156,8 @@ const recordVisit = async () => {
   try {
     console.log('记录用户访问...');
     // 从localStorage中获取token
-    const token = localStorage.getItem('token');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const token = userInfo.accessToken;
     console.log('当前token:', token);
     
     if (!token) {
@@ -183,7 +185,9 @@ const visitChartPeriod = ref('7天')
 // 获取图表数据
 const fetchChartData = async (type, days) => {
   try {
-    const token = localStorage.getItem('token');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const token = userInfo.accessToken;
+    
     if (!token) {
       console.error('未找到token，请重新登录');
       router.push('/login');

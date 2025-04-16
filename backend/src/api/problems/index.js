@@ -88,7 +88,11 @@ const getProblemById = async (id, userId) => {
   
   if (userId) {
     const [statusRows] = await db.query(
-      'SELECT status FROM user_problem_status WHERE user_id = ? AND problem_id = ?',
+      `SELECT status 
+       FROM submissions 
+       WHERE user_id = ? AND problem_id = ? 
+       ORDER BY created_at DESC 
+       LIMIT 1`,
       [userId, problem.id]
     );
     problem.userStatus = statusRows[0]?.status || null;
@@ -230,10 +234,8 @@ router.get('/tags', async (req, res) => {
     const [tags] = await db.query('SELECT DISTINCT tags FROM problems');
     const tagArray = tags.flatMap(tag => tag.tags ? tag.tags.split(',').map(t => t.trim()) : []);
     console.log('获取到的标签数据:', tagArray);
-    res.json({
-      code: 200,
-      data: [...new Set(tagArray)] // 去重后返回
-    });
+    // 直接返回去重后的标签数组，不包装在 data 字段中
+    res.json([...new Set(tagArray)].filter(Boolean).sort());
   } catch (error) {
     console.error('获取标签失败:', error);
     res.status(500).json({
@@ -318,7 +320,7 @@ router.get('/success-rates', authenticateToken, async (req, res) => {
          SUM(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) as accepted_submissions,
          COUNT(DISTINCT problem_id) as total_problems,
          SUM(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) / COUNT(*) * 100 as success_rate
-       FROM user_problem_status
+       FROM submissions
        WHERE user_id = ?`,
       [userId]
     );
@@ -328,7 +330,7 @@ router.get('/success-rates', authenticateToken, async (req, res) => {
          p.difficulty,
          COUNT(DISTINCT ups.problem_id) as solved_count
        FROM problems p
-       JOIN user_problem_status ups ON p.id = ups.problem_id
+       JOIN submissions ups ON p.id = ups.problem_id
        WHERE ups.user_id = ? AND ups.status = 'Accepted'
        GROUP BY p.difficulty`,
       [userId]
@@ -339,7 +341,7 @@ router.get('/success-rates', authenticateToken, async (req, res) => {
          DATE(created_at) as date,
          COUNT(*) as submissions,
          SUM(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) as accepted
-       FROM user_problem_status
+       FROM submissions
        WHERE user_id = ? 
        AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
        GROUP BY DATE(created_at)
@@ -676,7 +678,7 @@ router.post('/:id/solution', async (req, res) => {
 
     // 更新用户题目状态
     await db.query(
-      'INSERT INTO user_problem_status (user_id, problem_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?',
+      'INSERT INTO submissions (user_id, problem_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?',
       [userId, actualProblemId, 'Submitted', 'Submitted']
     );
 
@@ -982,142 +984,136 @@ router.get('/:id/solution/:langId', authenticateToken, async (req, res) => {
 
 // 删除题目
 router.delete('/:id', authenticateToken, async (req, res) => {
-  const problemId = req.params.id;
-  
+  let connection;
   try {
-    console.log('开始删除题目:', problemId);
+    const problemId = req.params.id;
+    console.log('删除题目:', problemId);
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // 删除相关联的数据
+    // 1. 先删除solution_code数据
+    console.log('删除solution_code数据...');
+    await connection.query(
+      `DELETE sc FROM solution_code sc 
+       JOIN solution_main sm ON sc.solution_id = sm.id 
+       WHERE sm.problem_id = ?`,
+      [problemId]
+    );
+
+    // 2. 删除solution_main数据
+    console.log('删除solution_main数据...');
+    await connection.query(
+      'DELETE FROM solution_main WHERE problem_id = ?',
+      [problemId]
+    );
+
+    // 3. 删除测试用例数据
+    console.log('删除测试用例数据...');
+    await connection.query(
+      'DELETE FROM problem_test_cases WHERE problem_id = ?',
+      [problemId]
+    );
+
+    // 4. 删除提交记录
+    console.log('删除提交记录...');
+    await connection.query(
+      'DELETE FROM submissions WHERE problem_id = ?',
+      [problemId]
+    );
+
+    // 5. 删除题目
+    console.log('删除题目数据...');
+    await connection.query(
+      'DELETE FROM problems WHERE id = ?',
+      [problemId]
+    );
+
+    // 6. 自动重新排序剩余题目的编号
+    console.log('自动重新排序剩余题目的编号...');
     
-    // 开始事务
-    await db.query('START TRANSACTION');
+    // 获取所有剩余的题目，按照编号排序
+    const [remainingProblems] = await connection.query(
+      'SELECT id FROM problems ORDER BY CAST(problem_number AS UNSIGNED)'
+    );
     
-    try {
-      // 获取要删除的题目信息
-      const [problemInfo] = await db.query(
-        'SELECT problem_number FROM problems WHERE id = ?',
-        [problemId]
-      );
-
-      if (!problemInfo || problemInfo.length === 0) {
-        await db.query('ROLLBACK');
-        return res.status(404).json({
-          code: 404,
-          message: '未找到该题目'
-        });
-      }
-
-      const deletedProblemNumber = problemInfo[0].problem_number;
-      console.log('要删除的题目编号:', deletedProblemNumber);
-
-      // 以下表已弃用，不再需要删除
-      // 1. 删除题目集中的题目关系 - problem_set_items表已弃用
-      // 2. 删除题目分类关系 - problem_set_category_relations表已弃用
-      // 3. 删除学习路径中的题目关系 - learning_path_problems表已弃用
+    console.log('剩余题目数量:', remainingProblems.length);
+    
+    // 更新每个题目的编号
+    for (let i = 0; i < remainingProblems.length; i++) {
+      const newProblemNumber = String(i + 1).padStart(4, '0');
+      const currProblemId = remainingProblems[i].id;
       
-      // 4. 删除学习计划中的题目关系
-      console.log('删除 learning_plan_problems 表数据...');
-      await db.query(
-        'DELETE FROM learning_plan_problems WHERE problem_id = ?',
-        [problemId]
-      );
-
-      // 5. 删除题目解答（problem_solutions表已弃用）
-
-      // 6. 删除题目解答代码
-      console.log('删除 solution_code 表数据...');
-      await db.query(
-        `DELETE sc FROM solution_code sc
-         JOIN solution_main sm ON sc.solution_id = sm.id
-         WHERE sm.problem_id = ?`,
-        [problemId]
+      console.log(`更新题目 ${currProblemId} 的编号为 ${newProblemNumber}`);
+      
+      // 更新problems表中的problem_number
+      await connection.query(
+        'UPDATE problems SET problem_number = ? WHERE id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      // 7. 删除题目主要解答
-      console.log('删除 solution_main 表数据...');
-      await db.query(
-        'DELETE FROM solution_main WHERE problem_id = ?',
-        [problemId]
+      // 更新problem_test_cases表中的problem_number
+      await connection.query(
+        'UPDATE problem_test_cases SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      // 8. 删除用户题目状态
-      console.log('删除 user_problem_status 表数据...');
-      await db.query(
-        'DELETE FROM user_problem_status WHERE problem_id = ?',
-        [problemId]
+      // 更新submissions表中的problem_number
+      await connection.query(
+        'UPDATE submissions SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      // 9. 删除提交记录
-      console.log('删除 submissions 表数据...');
-      await db.query(
-        'DELETE FROM submissions WHERE problem_id = ?',
-        [problemId]
-      );
-
-      // 10. 删除测试用例
-      console.log('删除 problem_test_cases 表数据...');
-      await db.query(
-        'DELETE FROM problem_test_cases WHERE problem_id = ?',
-        [problemId]
+      // 更新problem_stats表中的problem_number
+      await connection.query(
+        'UPDATE problem_stats SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      // 11. 删除题目本身
-      console.log('删除 problems 表数据...');
-      const [result] = await db.query(
-        'DELETE FROM problems WHERE id = ?',
-        [problemId]
+      // 更新learning_plan_problems表中的problem_number
+      await connection.query(
+        'UPDATE learning_plan_problems SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      if (result.affectedRows === 0) {
-        await db.query('ROLLBACK');
-        return res.status(404).json({
-          code: 404,
-          message: '未找到该题目'
-        });
-      }
-
-      // 12. 更新其他题目的编号
-      console.log('更新其他题目的编号...');
-      await db.query(
-        `UPDATE problems 
-         SET problem_number = LPAD(
-           CAST(
-             CAST(SUBSTRING(problem_number, 1) AS UNSIGNED) - 1 
-             AS CHAR(4)
-           ), 
-           4, 
-           '0'
-         )
-         WHERE CAST(SUBSTRING(problem_number, 1) AS UNSIGNED) > ?`,
-        [parseInt(deletedProblemNumber)]
+      // 更新problem_category_relations表中的problem_number
+      await connection.query(
+        'UPDATE problem_category_relations SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
       );
       
-      // 提交事务
-      await db.query('COMMIT');
-      
-      console.log('题目删除成功');
-      res.json({
-        code: 200,
-        message: '题目删除成功'
-      });
-    } catch (error) {
-      // 如果过程中出现错误，回滚事务
-      await db.query('ROLLBACK');
-      throw error;
+      // 更新solution_main表中的problem_number
+      await connection.query(
+        'UPDATE solution_main SET problem_number = ? WHERE problem_id = ?',
+        [newProblemNumber, currProblemId]
+      );
     }
+
+    await connection.commit();
+    res.json({
+      code: 200,
+      message: '题目删除成功'
+    });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error('删除题目失败:', error);
     res.status(500).json({
       code: 500,
-      message: '删除题目失败',
-      error: error.message
+      message: '删除题目失败'
     });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
 // 重新排序题目编号
 router.post('/reorder', authenticateToken, async (req, res) => {
   try {
-
-    
     console.log('开始重新排序题目编号...');
     
     // 开始事务
@@ -1134,11 +1130,50 @@ router.post('/reorder', authenticateToken, async (req, res) => {
       // 更新每个题目的编号
       for (let i = 0; i < problems.length; i++) {
         const newProblemNumber = String(i + 1).padStart(4, '0');
-        console.log(`更新题目 ${problems[i].id} 的编号为 ${newProblemNumber}`);
+        const problemId = problems[i].id;
         
+        console.log(`更新题目 ${problemId} 的编号为 ${newProblemNumber}`);
+        
+        // 更新problems表中的problem_number
         await db.query(
           'UPDATE problems SET problem_number = ? WHERE id = ?',
-          [newProblemNumber, problems[i].id]
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新problem_test_cases表中的problem_number
+        await db.query(
+          'UPDATE problem_test_cases SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新submissions表中的problem_number
+        await db.query(
+          'UPDATE submissions SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新problem_stats表中的problem_number
+        await db.query(
+          'UPDATE problem_stats SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新learning_plan_problems表中的problem_number
+        await db.query(
+          'UPDATE learning_plan_problems SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新problem_category_relations表中的problem_number
+        await db.query(
+          'UPDATE problem_category_relations SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
+        );
+        
+        // 更新solution_main表中的problem_number
+        await db.query(
+          'UPDATE solution_main SET problem_number = ? WHERE problem_id = ?',
+          [newProblemNumber, problemId]
         );
       }
       

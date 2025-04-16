@@ -10,9 +10,12 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     // 在发送请求之前做些什么
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+    const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
+    
+    if (accessToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`
     }
     return config
   },
@@ -36,7 +39,14 @@ request.interceptors.response.use(
 // 获取题目的显示样例
 export const getProblemExamples = async (problemId) => {
   try {
-    const response = await axios.get(`/api/testcases/examples/${problemId}`)
+    // 确保获取和使用正确的token
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+    const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
+    
+    const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+    
+    const response = await axios.get(`/api/testcases/examples/${problemId}`, { headers })
     return response.data
   } catch (error) {
     console.error('获取题目样例失败:', error)
