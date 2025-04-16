@@ -3,76 +3,171 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Project Technology Stack
-## Front - end Language
-The front - end is mainly developed using Vue3.
-## Back - end Language
-The back - end is mainly developed using JavaScript.
-# Dependency Manager
-Yarn is used as the dependency manager.
-Note: When installing dependencies, to install front - end dependencies, you need to first enter the `frontend` folder in the project root directory. To install back - end dependencies, you need to first enter the `backend` folder in the project root directory.
-# Project Overview
-## Project Goal
-This project is an AI intelligent question - reviewing system. It adds AI functions on the basis of imitating traditional question - brushing platforms such as LeetCode, such as sending the code uploaded by users to AI for review and analysis, and using AI to generate learning paths for users.
-## Target Audience
-This project is targeted at schools rather than commercial enterprises and is promoted to college students in schools. The distinguishing point is that this project can collect some learning status of students and display the statistics in the background.
-# Project Structure Index Help
-## Front - end Part
-1. Front - end related code is stored in the `frontend` folder in the project root directory.
-2. The page routing configuration file is stored in `frontend/src/router/index.js`.
-3. To start Front end part, in file frontend and "yarn serve" to start.
-## Back - end Part
-1. Back - end related code is stored in the `backend` folder in the project root directory.
-2. The routing import file is stored in `backend/src/api/index.js`.
-3. The file related to using `app.use` for API routing is stored in `backend/src/app.js`.
-4. To start Back end part, in file backend and "yarn dev" to start.
-# Operation Preferences
-## Database
-### 1. Database Query
- - When the user mentions querying a specific table in the database within their question, directly utilize the `mysql` tool of the MCP Server to query the corresponding table in the `AIreview` database. For example, if the user asks to query the `users` table in the `AIreview` database, use the appropriate `mysql` commands like `SELECT * FROM users;` through the MCP Server's `mysql` tool.
+# 项目技术栈
+## 前端技术栈
+- Vue 3 框架
+- Vue Router 路由管理
+- Vuex 状态管理
+- Fetch API 进行网络请求
+- Element Plus UI组件库
+## 后端
+- Node.js + Express 服务器框架
+- MySQL 数据库
+- bcrypt 密码加密
 
-### 2. Creating Database Files
- - When the user requests to create a new database file, place the newly created database file in the folder named "数据库文件" located at the root directory of the project. Ensure proper naming and file - format compliance according to the database requirements.
+## 依赖管理
+在项目的 frontend 和 backend 文件夹中，均采用 yarn 作为依赖管理器。yarn 具有高效的依赖安装速度和强大的版本管理功能，能够确保项目依赖的一致性和稳定性，方便团队协作开发与项目部署。​
 
-### 3. Other Database Operations
- - For any operations other than database queries, such as modifying database content, use the `mysql` tool of the MCP Server. However, prior to performing these operations, obtain manual consent from the user. For instance, if the user requests to update the `email` field in the `users` table, first present the proposed `UPDATE` query like `UPDATE users SET email = 'new_email@example.com' WHERE user_id = 1;` to the user and wait for their approval before executing it.
+# 项目预览
+## 项目目标
+该项目在原本LeetCode、PTA、学习通等平台的基础上,  融合以上几款平台的优点,  开发出了一个AI代码审核平台. 不仅有完善的OI判题功能,  还实现了丰富的学生信息状态获取, 有多维度的图分析. 同时,  还在题目解决方案、后台出题、学习路径生成等页面接入了市面上热门的AI大模型进行辅助
 
+## 项目目标人群
+项目目标计划在学校内提供. 为学校老师提供了一个高自由度的个性化平台,  方便管理本校的学生.
 
-# Code Preferences
-## Front - end Code
-1. When improving front - end related code, make it adaptable to browsers of different sizes. That is, use percentage - based layout instead of fixed pixel density.
-## Back - end Code
-1. When improving back - end related code, add necessary debugging statements to facilitate debugging in case of bugs later.
-## When Writing Code
-1. Add some comments to indicate what the code is doing, making it easier for beginners to understand the project structure.
-2. After editing the relevant code, review the code again to ensure that all requirements are fully met and there are no obvious bugs.
-## When Thinking
-### When a user presents a new requirement or modifies an existing one
-1. **Understand the Behavioral Logic**
-- First, comprehensively analyze the user - provided requirement. Identify the main actions, decision - making points, and the sequence of operations within the requirement. For example, if the requirement is about an e - commerce product search function, determine how the search query is processed, how results are filtered, and what actions can be taken on the search results.
-2. **Generate Flowchart Code for the Solution (Compatible with Mermaid Visualization)**
-- Use Mermaid's syntax to create a flowchart that accurately represents the behavioral logic of the requirement. For a simple user login process requirement, the Mermaid code could be:
-```mermaid
-graph TD;
-A[Start] --> B[Enter Username and Password];
-B --> C{Verify Credentials};
-C -->|Success| D[Login Successful];
-C -->|Failure| E[Show Error Message];
-E --> B;
-D --> F[End];
+# 项目理解帮助
+为协助您更精准地把握本项目的结构，每次请参考项目根目录下的 project_information 文件夹。该文件夹包含 4 个子文件夹，具体内容如下：​
+
+1. structure_information 文件夹：此文件夹中的 frontend 文件 [frontend](mdc:project_information/structure_information/frontend) 详细阐述前端文件之间的依赖关系；backend 文件 [backend](mdc:project_information/structure_information/backend) 则对后端文件之间的依赖关系进行说明，清晰呈现项目文件的关联脉络。​
+
+2. database_information 文件夹：其中的 AIreview_database_information 文件 [AIreview_database_information](mdc:project_information/database_information/AIreview_database_information) ，详细解释数据库每个表的功能、表与表之间的依赖关系，以及各表在不同页面中的引用情况，帮助深入理解数据库架构与应用。​
+
+3. api_information 文件夹：通过 backend_api_relations [backend_api_relations](mdc:project_information/api_information/backend_api_relations) 文件，阐明后端 api 之间的关系，助力掌握后端接口的调用逻辑与协作方式。​
+
+4. bug_fixed_information 文件夹：针对某些复杂问题，经过深入分析后给出解决性方案及改进总结，每个特定问题对应一个文件。当遇到问题时，可先在此文件夹中查找是否有相关文件已涵盖该问题的解决方案等，便于快速解决问题与积累经验。
+
+# 操作偏好
+## 回答偏好
+1. 为明确已参考本规则，每次回答您的问题前，将添加提示语：你好，艾垦:​
+
+2. 在使用项目理解帮助文档后，回答问题时会加上提示语：经过我分析了项目理解帮助文件后:
+
+## 工具调用偏好
+1. 对于数据库的查询操作,  请你直接使用MCP的mysql工具进行查询
+
+## 代码编辑偏好
+### 全局代码编写偏好
+
+1. **代码添加中文注释**：在编写代码时，于关键代码行上方或紧邻处添加中文注释。注释应清晰描述代码的功能、作用以及可能涉及的关键逻辑点，确保通过注释中的特殊提示词，后期调用工具时能快速定位到相应代码块。例如：
 ```
-3. **Handling Multiple Requirements**
-- If there are multiple requirements, for each requirement, repeat the above two steps. Generate separate flowchart codes for each requirement. For instance, if in addition to the user login requirement, there is a product checkout requirement, create a new Mermaid flowchart code for the checkout process.
-```mermaid
-graph TD;
-Start --> AddProductsToCart;
-AddProductsToCart --> ReviewCart;
-ReviewCart -->|Proceed| EnterShippingInfo;
-EnterShippingInfo --> EnterPaymentInfo;
-EnterPaymentInfo --> ConfirmOrder;
-ConfirmOrder -->|Success| OrderPlaced;
-ConfirmOrder -->|Failure| HandlePaymentError;
-HandlePaymentError --> EnterPaymentInfo;
-OrderPlaced --> End;
+# [用户认证相关] 验证用户输入的密码是否与数据库中存储的密码匹配
+
+def verify_password(user_input_password, stored_password):
+
+return user_input_password == stored_password
 ```
-The key here is to clearly understand each requirement's unique behavior and represent it accurately in the Mermaid - compatible flowchart code. This helps in visualizing the solution and communicating the design effectively.
+2. **数据库操作记录**：在对数据库进行修改等操作后，手动修改项目根目录文件夹project_information的子文件夹database_information文件夹中的AIreview_database_information文件。记录内容应包含操作涉及的 SQL 语句、对语句的解释、操作影响的表及字段信息。若出现错误及修改情况，需详细记录错误描述、正确解决方案。示例如下：
+```
+- **操作时间**：2025.4.17
+
+- **操作描述**：执行插入数据操作
+
+- **SQL语句**：INSERT INTO users (username, email, password) VALUES ('new_user', 'new_user@example.com', 'hashed_password');
+
+- **解释**：向`users`表中插入一条新用户记录，包含用户名、邮箱和密码字段。
+
+- **表及字段信息**：
+
+- `users`表：存储用户信息
+
+- `username`：用户名字段，字符串类型，用于唯一标识用户
+
+- `email`：用户邮箱字段，字符串类型，用于接收通知等
+
+- `password`：用户密码字段，字符串类型，存储经过哈希处理后的密码
+
+- **错误记录（若有）**：
+
+- **错误描述**：在执行上述SQL语句时，发现`password`字段名拼写错误，写成了`passwd`。
+
+- **正确解决方案**：将SQL语句修改为INSERT INTO users (username, email, password) VALUES ('new_user', 'new_user@example.com', 'hashed_password');，并重新执行。
+```
+3. **问题解决及迭代记录**：在遇到特定问题并解决后，以及后续对同样问题的迭代解决过程中，在项目根目录文件夹project_information的子文件夹bug_fixed_information创建或修改对应的文件。记录格式如下：
+```
+# jwt_bug_fixed_log
+
+1. [ ❎ ] 发现在jwt的登录部分存在令牌无法获取的问题
+
+2. { 2025.4.17.22:00PM } 修改了文件路径为`backend/src/authentication/jwt_utils.py`，添加了令牌认证机制。具体修改内容为在`generate_token`函数中，调整了获取用户信息的逻辑，确保能正确生成令牌。
+
+3. [ ❎ ] 对于令牌无法获取的问题解决方案，需要修改jwt的验证机制、令牌的获取方式。具体计划为：
+
+- 检查jwt验证函数的参数传递是否正确，确保所有必要信息都能正确传入。
+
+- 优化令牌获取逻辑，从用户认证流程的源头开始排查，确保用户信息在生成令牌前已正确获取和处理。
+
+# 后续迭代记录
+
+1. [ ✅ ] 发现在jwt的登录部分存在令牌无法获取的问题
+
+2. { 2025.4.18.10:00AM } 再次修改了`backend/src/authentication/jwt_utils.py`文件，进一步优化了令牌生成算法，提高了令牌生成的稳定性。
+
+3. [ ✅ ] 对于令牌无法获取的问题解决方案，修改jwt的验证机制、令牌的获取方式已完成。经过多轮测试，令牌获取成功率达到99%以上，已解决该问题。
+```
+4. **项目迭代记录**：在每次添加新功能、迭代部分功能、修复部分功能等可记录的操作完成后，在项目根目录文件夹project_information的文件project_iteration_log文件 [project_iteration_log](mdc:project_information/project_iteration_log)
+ 下记录。记录格式如下：
+```
+{ 2025.4.17 } 改动: 修复登录后账户自动切换的问题
+
+主要改动文件:
+
+1. - frontend
+
+    |- src
+
+      |- views
+
+        |- problems
+
+			|- index.vue
+
+				|- description: 该文件负责用户登录后的问题展示页面，此次修改主要涉及登录状态下账户信息的显示逻辑。
+
+	|- components
+
+		|- Navigation.vue
+
+			|- description: 导航栏组件文件，修改了导航栏中账户切换相关的触发逻辑。
+
+2. - backend
+
+	|- src
+
+		|- services
+
+			|- user_service.py
+
+				|- description: 用户服务相关文件，调整了获取用户登录状态及账户信息的接口逻辑。
+
+主要改动逻辑:
+
+- 在前端`index.vue`文件中，通过监听登录状态变化事件，当检测到用户登录成功后，不再自动触发账户切换逻辑，而是等待用户手动操作。
+
+- 在`Navigation.vue`组件中，优化了账户切换按钮的点击事件处理函数，确保只有在用户主动点击时才进行账户切换操作。
+
+- 在后端`user_service.py`中，完善了用户登录状态的持久化机制，避免因错误的状态判断导致账户自动切换。
+
+问题出现原因:
+
+- 前端部分在用户登录成功的回调函数中，错误地同时触发了账户信息更新和账户切换逻辑，导致自动切换。
+
+- 后端在处理用户登录状态时，由于缓存机制不完善，偶尔会返回错误的用户状态信息，误导前端进行账户切换。
+
+解决问题使用的简要方案:
+
+- 前端梳理并优化登录状态相关的事件处理流程，明确各操作的触发条件。
+
+- 后端修复用户状态缓存问题，确保返回准确的用户登录状态信息。
+```
+### 前端部分代码编写偏好
+1. 在编写前端代码时，充分考虑多设备、不同浏览器下的可适配性，避免使用固定像素，采用相对单位和响应式设计，确保页面在各种设备上都能呈现出良好的视觉效果与交互体验。​
+
+2. 遵循现代化的 UI 设计理念，风格参考 Cursor 官网、Apple 官网，打造简洁美观、用户友好的界面，提升用户对平台的好感度与使用意愿。
+
+### 后端部分代码编写偏好
+1. 在编写后端代码时，编写详细的调试日志，记录关键操作、错误信息及程序执行流程，以便在出现问题时，能从后端日志中迅速定位并排查问题，提高问题解决效率。​
+
+2. 在编写后端 api 后，运用 curl 工具对 api 进行测试，验证其是否正常工作，确保接口的稳定性与可靠性，为前端与后端的数据交互提供保障。
+
+
+
