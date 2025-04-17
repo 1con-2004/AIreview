@@ -7,20 +7,46 @@ backend/
 ├── node_modules/       # 依赖包目录
 ├── src/                # 源代码目录
 │   ├── api/            # API模块
+│   │   ├── admin/      # 管理员相关API
+│   │   ├── ai/         # AI功能相关API
+│   │   ├── classroom/  # 课堂相关API
+│   │   ├── community/  # 社区相关API
+│   │   ├── judge/      # 判题系统API
+│   │   ├── learning-paths/ # 学习路径API
+│   │   ├── learning-plans/ # 学习计划API
+│   │   ├── login/      # 登录认证API
+│   │   ├── problems/   # 题目相关API
+│   │   ├── stats/      # 统计相关API
+│   │   ├── user/       # 用户相关API
+│   │   └── index.js    # API路由汇总入口
 │   ├── config/         # 配置文件
 │   ├── controllers/    # 控制器
+│   │   ├── auth.controller.js     # 认证控制器
+│   │   └── problemPoolController.js # 题目池控制器
 │   ├── database/       # 数据库相关
+│   │   └── init.sql    # 数据库初始化SQL
 │   ├── middleware/     # 中间件
+│   │   ├── auth.js     # 认证中间件
+│   │   └── auth.middleware.js # 认证辅助中间件
 │   ├── routes/         # 路由定义
+│   │   ├── auth.js     # 认证路由
+│   │   ├── statistics.js # 统计路由
+│   │   └── testCase.js # 测试用例路由
 │   ├── services/       # 业务服务层
+│   │   ├── judge/      # 判题服务
+│   │   ├── problemPoolModel.js    # 题目池模型
+│   │   ├── problemPoolService.js  # 题目池服务
+│   │   └── testCase.js # 测试用例服务
 │   ├── utils/          # 工具函数
+│   │   ├── fileUpload.js # 文件上传工具
+│   │   ├── generateHash.js # 哈希生成工具
+│   │   ├── mysql.js    # MySQL工具
+│   │   └── zhipuAI.js  # 智谱AI集成工具
 │   ├── app.js          # 应用入口文件
 │   └── db.js           # 数据库连接
 ├── public/             # 静态资源
 ├── uploads/            # 上传文件存储
 ├── logs/               # 日志文件
-├── config/             # 全局配置
-├── routes/             # 外部路由
 ├── .env                # 环境变量
 ├── package.json        # 项目依赖配置
 └── yarn.lock           # 依赖版本锁定文件
@@ -30,92 +56,95 @@ backend/
 
 ### 应用入口依赖关系
 - `src/app.js`: 应用程序入口，配置Express应用，引入中间件和路由
-- `src/db.js`: 数据库连接文件，提供MySQL连接实例
+- `src/db.js`: 数据库连接文件，创建MySQL连接池实例
 
 ### API和路由层
-- `src/routes/`: 定义路由和HTTP方法处理
-  - `routes/index.js`: 路由主入口，汇总各模块路由
+- `src/api/`: 模块化的API路由实现
+  - `api/index.js`: API路由主入口，汇总各模块路由
+  - `api/login/`: 登录认证API
+  - `api/problems/`: 题目相关API
+  - `api/user/`: 用户相关API
+  - `api/admin/`: 管理员相关API
+  - `api/classroom/`: 课堂相关API
+  - `api/ai/`: AI功能相关API
+  - 等其他功能模块
+- `src/routes/`: 独立的路由定义
   - `routes/auth.js`: 认证相关路由
-  - `routes/problems.js`: 题目相关路由
-  - `routes/submissions.js`: 提交相关路由
-  - `routes/users.js`: 用户相关路由
-- 路由依赖关系: routes/* ← controllers/* ← services/*
+  - `routes/statistics.js`: 统计相关路由
+  - `routes/testCase.js`: 测试用例相关路由
+- API依赖关系: api/各模块 ← controllers/控制器 ← services/服务
 
 ### 控制器层
 - `src/controllers/`: 处理HTTP请求，调用服务层
-  - `controllers/authController.js`: 认证控制器
-  - `controllers/problemController.js`: 题目控制器
-  - `controllers/submissionController.js`: 提交控制器
-  - `controllers/userController.js`: 用户控制器
-- 控制器依赖关系: services/* ← controllers/* ← routes/*
+  - `controllers/auth.controller.js`: 认证控制器
+  - `controllers/problemPoolController.js`: 题目池控制器
+- 控制器依赖关系: services/服务 ← controllers/控制器 ← api/路由
 
 ### 服务层
 - `src/services/`: 实现业务逻辑，与数据库交互
-  - `services/authService.js`: 认证服务
-  - `services/problemService.js`: 题目服务
-  - `services/submissionService.js`: 提交服务
-  - `services/userService.js`: 用户服务
-- 服务层依赖关系: database/* ← services/* ← controllers/*
-
-### 数据库操作层
-- `src/database/`: 数据库模型和查询
-  - `database/models/`: 数据库模型定义
-  - `database/queries/`: SQL查询封装
-- 数据库依赖关系: db.js ← database/* ← services/*
+  - `services/problemPoolModel.js`: 题目池数据模型
+  - `services/problemPoolService.js`: 题目池服务
+  - `services/testCase.js`: 测试用例服务
+  - `services/judge/`: 判题服务
+- 服务层依赖关系: utils/工具 + db.js ← services/服务 ← controllers/控制器
 
 ### 中间件
 - `src/middleware/`: 自定义中间件
   - `middleware/auth.js`: 认证中间件
-  - `middleware/error.js`: 错误处理中间件
-  - `middleware/validation.js`: 参数验证中间件
-- 中间件依赖关系: middleware/* ← routes/*
+  - `middleware/auth.middleware.js`: 认证辅助中间件
+- 中间件依赖关系: middleware/* ← app.js + routes/*
 
 ### 工具函数和配置
 - `src/utils/`: 工具函数
-  - `utils/logger.js`: 日志记录
-  - `utils/encryption.js`: 加密解密
-  - `utils/judgeSystem.js`: 判题系统
-- `src/config/`: 配置文件
-  - `config/database.js`: 数据库配置
-  - `config/app.js`: 应用配置
-  - `config/auth.js`: 认证配置
+  - `utils/fileUpload.js`: 文件上传工具
+  - `utils/generateHash.js`: 哈希生成工具
+  - `utils/mysql.js`: MySQL数据库操作工具
+  - `utils/zhipuAI.js`: 智谱AI集成工具
 
 ## 关键业务流程
 
 ### 用户认证流程
-1. 路由层接收请求: `routes/auth.js`
-2. 控制器处理请求: `controllers/authController.js`
-3. 调用服务层: `services/authService.js`
-4. 服务层调用数据库查询: `database/queries/userQueries.js`
+1. 路由层接收请求: `api/login/index.js` 或 `routes/auth.js`
+2. 控制器处理请求: `controllers/auth.controller.js`
+3. 使用中间件验证权限: `middleware/auth.js`
+4. 查询数据库验证用户信息: `db.js`
 5. 生成JWT令牌并返回
 
 ### 题目提交和判题流程
-1. 用户提交代码，请求进入路由: `routes/submissions.js`
-2. 控制器处理提交: `controllers/submissionController.js`
-3. 提交服务处理: `services/submissionService.js`
-4. 调用判题系统: `utils/judgeSystem.js`
-5. 更新提交状态并返回结果
+1. 用户提交代码，请求进入路由: `api/problems/index.js`
+2. 控制器处理提交: `controllers/problemPoolController.js`
+3. 服务层处理业务逻辑: `services/problemPoolService.js`
+4. 调用判题系统: `services/judge/`
+5. 使用测试用例评测: `services/testCase.js`
+6. 更新提交状态并返回结果
 
 ### 数据库操作流程
-1. 服务层调用数据库查询: `services/* → database/queries/*`
-2. 执行SQL查询: `database/queries/* → db.js`
+1. 服务层调用数据库连接: `db.js`
+2. 执行SQL查询: 使用连接池进行查询操作
 3. 返回结果给服务层，进行业务处理
+4. 返回处理后的数据到控制器和路由
+
+### AI辅助功能流程
+1. 路由层接收AI请求: `api/ai/index.js`
+2. 调用智谱AI集成工具: `utils/zhipuAI.js`
+3. 处理AI响应结果
+4. 返回AI生成内容给前端
 
 ## 技术栈与依赖
 - Node.js 运行环境
 - Express 服务器框架
-- MySQL 数据库
+- MySQL 数据库 (使用mysql2/promise库)
 - bcrypt 密码加密
 - jsonwebtoken 用于JWT认证
-- winston 日志记录
 - multer 文件上传处理
 - dotenv 环境变量管理
+- 智谱AI API集成
 
 ## 核心技术实现点
-1. **RESTful API设计**: 遵循REST原则，提供清晰的API交互接口
-2. **中间件机制**: 利用Express中间件实现认证、日志、错误处理等横切关注点
-3. **MVC架构**: 控制器、服务、数据层分离，实现关注点分离
-4. **OJ判题系统**: 实现代码执行、测试用例验证、性能分析等功能
-5. **AI集成**: 与AI模型集成，提供代码审核、学习路径推荐等功能
-6. **安全机制**: 实现密码加密、JWT认证、输入验证等安全措施
-7. **日志系统**: 详细记录系统运行状态，方便调试和问题追踪
+1. **基于Express的模块化API架构**: 将不同功能模块的API路由分离，提高代码组织和维护性
+2. **MySQL连接池**: 使用连接池管理数据库连接，提高性能和可靠性
+3. **JWT认证机制**: 实现基于Token的身份验证和授权
+4. **文件上传处理**: 支持用户上传代码文件、图片等资源
+5. **在线判题系统**: 实现代码执行、测试用例验证、性能分析等功能
+6. **AI代码审核**: 集成智谱AI接口，提供代码审核、路径推荐等AI辅助功能
+7. **安全机制**: 实现密码加密、输入验证等安全措施

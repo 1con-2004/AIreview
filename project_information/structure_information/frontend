@@ -10,10 +10,24 @@ frontend/
 │   ├── api/            # API接口封装
 │   ├── assets/         # 静态资源（图片、样式等）
 │   ├── components/     # 公共组件
+│   │   ├── common/     # 通用组件
+│   │   ├── layout/     # 布局组件
+│   │   ├── problem/    # 题目相关组件
+│   │   ├── NavBar.vue  # 导航栏组件
+│   │   └── UserProfileDialog.vue # 用户资料弹窗组件
 │   ├── router/         # 路由配置
 │   ├── store/          # Vuex状态管理
 │   ├── utils/          # 工具函数
 │   ├── views/          # 页面视图组件
+│   │   ├── admin/      # 管理员相关页面
+│   │   ├── ai/         # AI辅助功能页面
+│   │   ├── classroom/  # 课堂相关页面
+│   │   ├── community/  # 社区相关页面
+│   │   ├── home/       # 首页相关组件
+│   │   ├── learning-plans/ # 学习计划相关页面
+│   │   ├── login/      # 登录注册相关页面
+│   │   ├── problems/   # 题目相关页面
+│   │   └── user/       # 用户相关页面
 │   ├── App.vue         # 根组件
 │   └── main.js         # 入口文件
 ├── .eslintrc.js        # ESLint配置
@@ -26,8 +40,8 @@ frontend/
 ## 核心文件依赖关系
 
 ### 入口文件依赖关系
-- `main.js`: 项目入口文件，引入并挂载根组件App.vue，配置Vue实例，引入Element Plus等UI库，配置全局设置
-- `App.vue`: 根组件，包含整个应用的布局结构，引入router视图
+- `main.js`: 项目入口文件，引入并挂载根组件App.vue，配置Vue实例，引入相关UI库，配置全局设置
+- `App.vue`: 根组件，包含整个应用的布局结构，仅包含router-view，实现基本的全局样式和用户登录状态管理
 
 ### 路由管理
 - `router/index.js`: 定义所有路由配置，引入views文件夹中的页面组件
@@ -50,36 +64,43 @@ frontend/
 
 ### 组件依赖关系
 1. **公共组件 (components/)**
-   - `Navigation.vue`: 导航栏组件，被App.vue引用
-   - `Footer.vue`: 页脚组件，被App.vue引用
-   - 其他功能性组件: 被各个views中的页面组件引用
+   - `NavBar.vue`: 导航栏组件，在各个页面中引用，负责全局导航
+   - `UserProfileDialog.vue`: 用户资料弹窗组件，在NavBar中引用
+   - `components/common/DeleteConfirmDialog.vue`: 删除确认弹窗组件
+   - `components/layout/Header.vue`: 布局头部组件
+   - `components/problem/`: 题目相关组件
 
 2. **页面组件 (views/)**
-   - `Home.vue`: 首页
-   - `Login.vue`: 登录页
-   - `Register.vue`: 注册页
+   - `home/index.vue`: 首页
+   - `login/`: 登录注册相关页面
    - `problems/`: 题目相关页面
-     - `ProblemList.vue`: 题目列表页
-     - `ProblemDetail.vue`: 题目详情页
    - `user/`: 用户相关页面
-     - `Profile.vue`: 用户资料页
-     - `Dashboard.vue`: 用户仪表盘
    - `admin/`: 管理员相关页面
+   - `classroom/`: 课堂辅助相关页面
+   - `ai/`: AI辅助功能相关页面
+   - `community/`: 社区交流相关页面
+   - `learning-plans/`: 学习计划相关页面
 
 ## 关键业务流程
 
 ### 用户认证流程
-1. 用户在`views/Login.vue`输入账号密码
+1. 用户在`views/login/index.vue`输入账号密码
 2. 调用`api/modules/user.js`中的登录API
-3. 登录成功后，通过`utils/auth.js`存储token
-4. 更新`store/modules/user.js`中的用户状态
-5. 使用`router`跳转到首页或指定页面
+3. 登录成功后，将用户信息存储在localStorage，并更新全局状态
+4. `App.vue`中的全局钩子监听登录状态变化，确保用户身份一致性
+5. 使用`router`导航守卫控制页面访问权限，重定向到首页或指定页面
+
+### 页面导航流程
+1. 用户通过`NavBar.vue`中的导航链接选择功能模块
+2. 导航链接调用`router-link`组件，触发路由变化
+3. 路由变化触发`App.vue`中的导航守卫，检查用户权限
+4. 根据用户权限和目标页面要求，允许访问或重定向到登录页
 
 ### 题目展示与提交流程
-1. 通过`views/problems/ProblemList.vue`展示题目列表
-2. 点击题目后路由到`views/problems/ProblemDetail.vue`
-3. 题目详情页通过`api/modules/problem.js`获取题目详细信息
-4. 用户完成代码后，通过`api/modules/submission.js`提交答案
+1. 通过`views/problems/`下的组件展示题目列表
+2. 点击题目后路由到题目详情页
+3. 题目详情页通过API获取题目详细信息
+4. 用户完成代码后提交答案进行评测
 5. 展示提交结果和反馈
 
 ### 数据流转关系
@@ -90,13 +111,14 @@ frontend/
 - Vue 3 框架核心
 - Vue Router 用于路由管理
 - Vuex 用于状态管理
-- Element Plus UI组件库
+- PrimeVue UI组件库（根据App.vue样式引入可见）
 - Axios 用于网络请求
 - 其他辅助库: js-cookie, dayjs等
 
 ## 关键技术实现点
-1. **响应式UI设计**：通过CSS媒体查询和Element Plus的响应式组件实现
-2. **JWT认证机制**：结合utils/auth.js和API请求拦截器实现
-3. **代码编辑器集成**：利用第三方编辑器组件实现在线代码编辑
-4. **AI代码审核**：通过API请求调用后端AI服务进行代码分析
-5. **数据可视化**：使用图表库实现多维度的数据分析展示
+1. **响应式UI设计**：通过CSS变量和媒体查询实现
+2. **用户身份一致性**：App.vue中实现全局用户身份校验和修复机制
+3. **路由权限控制**：基于用户角色的路由访问控制
+4. **代码编辑器集成**：利用第三方编辑器组件实现在线代码编辑
+5. **AI代码审核**：通过API请求调用后端AI服务进行代码分析
+6. **数据可视化**：使用图表库实现多维度的数据分析展示
