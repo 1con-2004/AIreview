@@ -869,13 +869,67 @@ router.delete('/admin/delete/:id', authenticateToken, async (req, res) => {
     await connection.beginTransaction();
 
     try {
+      // 查询communities表中是否有引用此用户的记录
+      const [communityRecords] = await connection.query(
+        'SELECT id FROM communities WHERE created_by = ?',
+        [userId]
+      );
+      
+      // 如果有社区记录，将其创建者更新为系统管理员(ID为1的用户)
+      if (communityRecords && communityRecords.length > 0) {
+        await connection.query(
+          'UPDATE communities SET created_by = 1 WHERE created_by = ?',
+          [userId]
+        );
+        
+        console.log(`用户ID ${userId} 删除前，已将其创建的 ${communityRecords.length} 个社区转移给管理员`);
+      }
+      
+      // 处理其他外键约束
+      console.log(`开始处理用户ID ${userId} 的所有关联数据`);
+      
+      // 删除或更新classroom_discussions中的记录
+      await connection.query('DELETE FROM classroom_discussions WHERE user_id = ?', [userId]);
+      
+      // 更新classrooms表中的teacher_id
+      const [classrooms] = await connection.query('SELECT id FROM classrooms WHERE teacher_id = ?', [userId]);
+      if (classrooms && classrooms.length > 0) {
+        await connection.query('UPDATE classrooms SET teacher_id = 1 WHERE teacher_id = ?', [userId]);
+        console.log(`已将 ${classrooms.length} 个教室的教师转移给管理员`);
+      }
+      
+      // 处理community_members表中的记录
+      await connection.query('DELETE FROM community_members WHERE user_id = ?', [userId]);
+      await connection.query('UPDATE community_members SET invited_by = 1 WHERE invited_by = ?', [userId]);
+      
+      // 删除learning_plans
+      await connection.query('DELETE FROM learning_plans WHERE user_id = ?', [userId]);
+      
+      // 删除likes
+      await connection.query('DELETE FROM likes WHERE user_id = ?', [userId]);
+      
+      // 处理posts表
+      await connection.query('DELETE FROM posts WHERE user_id = ?', [userId]);
+      
+      // 更新problem_pool表中的创建者
+      await connection.query('UPDATE problem_pool SET create_user_id = 1 WHERE create_user_id = ?', [userId]);
+      
+      // 删除problem_pool_usage
+      await connection.query('DELETE FROM problem_pool_usage WHERE user_id = ?', [userId]);
+      
+      // 删除submissions
+      await connection.query('DELETE FROM submissions WHERE user_id = ?', [userId]);
+      
+      // 删除user_visits
+      await connection.query('DELETE FROM user_visits WHERE user_id = ?', [userId]);
+
       // 删除用户资料
       await connection.query('DELETE FROM user_profile WHERE user_id = ?', [userId]);
       
       // 如果有学生信息，删除学生信息
       await connection.query('DELETE FROM student_info WHERE user_id = ?', [userId]);
       
-      // 删除用户
+      // 最后删除用户
       await connection.query('DELETE FROM users WHERE id = ?', [userId]);
 
       // 提交事务

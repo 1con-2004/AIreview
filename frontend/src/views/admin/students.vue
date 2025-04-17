@@ -399,7 +399,7 @@ const classFormRules = {
 }
 const currentPage = ref(1)
 const pageSize = ref(10)
-const totalPages = computed(() => Math.ceil(filteredStudents.value.length / pageSize.value))
+const totalPages = computed(() => Math.ceil(students.value.length / pageSize.value))
 const showClassManageDialog = ref(false)
 const currentClass = ref(null)
 const classStudents = ref([])
@@ -443,6 +443,7 @@ async function fetchStudents() {
   try {
     const res = await axios.get('/api/admin/students')
     students.value = res.data.data
+    currentPage.value = 1 // 重置当前页为1
   } catch (error) {
     handleError(error, '获取学生列表失败')
   }
@@ -493,7 +494,7 @@ const filteredStudents = computed(() => {
   // 分页处理
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return filtered.slice(start, end)
+  return filtered.slice(start, end) // 只返回当前页的学生
 })
 
 function openCreateDialog() {

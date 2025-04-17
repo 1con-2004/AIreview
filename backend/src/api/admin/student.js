@@ -237,4 +237,72 @@ router.delete('/students/:id', async (req, res) => {
   }
 })
 
+// 获取院系列表
+router.get('/departments', async (req, res) => {
+  try {
+    const [departments] = await pool.execute('SELECT * FROM departments')
+    res.json({
+      success: true,
+      data: departments
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '获取院系列表失败',
+      error: error.message
+    })
+  }
+})
+
+// 获取专业列表
+router.get('/majors', async (req, res) => {
+  try {
+    const [majors] = await pool.execute('SELECT * FROM majors')
+    res.json({
+      success: true,
+      data: majors
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '获取专业列表失败',
+      error: error.message
+    })
+  }
+})
+
+// 获取年级列表
+router.get('/grades', async (req, res) => {
+  try {
+    const [grades] = await pool.execute('SELECT * FROM grades')
+    res.json({
+      success: true,
+      data: grades
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '获取年级列表失败',
+      error: error.message
+    })
+  }
+})
+
+// 获取班级列表
+router.get('/classes', async (req, res) => {
+  try {
+    const [classes] = await pool.execute('SELECT * FROM classes')
+    res.json({
+      success: true,
+      data: classes
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '获取班级列表失败',
+      error: error.message
+    })
+  }
+})
+
 module.exports = router

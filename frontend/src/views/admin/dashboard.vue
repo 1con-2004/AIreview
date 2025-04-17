@@ -82,12 +82,7 @@ const stats = ref([
     icon: 'fas fa-chart-line',
     color: '#ffd93d'
   },
-  {
-    label: '社区新帖',
-    value: '0',
-    icon: 'fas fa-comments',
-    color: '#45b6af'
-  }
+  
 ])
 
 // 获取统计数据
@@ -136,12 +131,7 @@ const fetchStats = async () => {
           icon: 'fas fa-chart-line',
           color: '#ffd93d'
         },
-        {
-          label: '社区新帖',
-          value: data.today_posts.toString(),
-          icon: 'fas fa-comments',
-          color: '#45b6af'
-        }
+        
       ];
       
       console.log('更新后的统计卡片数据:', stats.value);
