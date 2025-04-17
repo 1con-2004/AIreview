@@ -1,0 +1,402 @@
+# AIreview 数据库结构说明文档
+
+## 数据库概览
+
+AIreview系统使用MySQL数据库，包含多个表来支持在线编程学习、代码审核和课程管理等功能。数据库设计遵循关系型数据库设计原则，采用了主键、外键约束保证数据完整性。
+
+## 核心表结构及关系
+
+### 用户相关表
+
+#### users表
+存储用户的基本信息和认证数据。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 用户ID，自增主键 |
+| username | varchar(50) | 否 | UNI | 用户名，唯一 |
+| email | varchar(100) | 是 | UNI | 用户邮箱，唯一 |
+| password | varchar(255) | 否 | | 加密后的密码 |
+| phone | varchar(11) | 是 | UNI | 手机号码 |
+| role | enum('normal','vip','super_vip','teacher','admin') | 否 | | 用户角色 |
+| role_expire_time | timestamp | 是 | | 角色过期时间（针对会员） |
+| status | tinyint(1) | 是 | | 用户状态 |
+| token | varchar(255) | 是 | | 认证令牌 |
+| refresh_token | text | 是 | | 刷新令牌 |
+| created_at | timestamp | 是 | | 创建时间 |
+
+#### user_profile表
+存储用户的详细个人资料。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 主键ID |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| avatar | varchar(255) | 是 | | 用户头像URL |
+| bio | text | 是 | | 用户个人简介 |
+| school | varchar(100) | 是 | | 学校名称 |
+| major | varchar(100) | 是 | | 专业 |
+| graduation_year | year | 是 | | 毕业年份 |
+
+#### user_roles表
+定义用户拥有的角色和权限。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 主键ID |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| role | varchar(50) | 否 | | 角色名称 |
+| assigned_at | timestamp | 否 | | 角色分配时间 |
+
+#### user_visits表
+记录用户访问系统的记录。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 主键ID |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| visit_time | timestamp | 否 | | 访问时间 |
+| ip_address | varchar(45) | 是 | | 访问IP地址 |
+| user_agent | varchar(255) | 是 | | 用户代理信息 |
+
+### 题目相关表
+
+#### problems表
+存储编程题目的基本信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 题目ID，自增主键 |
+| problem_number | varchar(50) | 否 | UNI | 题目编号，唯一 |
+| title | varchar(255) | 否 | | 题目标题 |
+| description | text | 是 | | 题目描述 |
+| difficulty | enum('简单','中等','困难') | 否 | | 难度级别 |
+| tags | varchar(255) | 是 | | 题目标签，逗号分隔 |
+| time_limit | int | 是 | | 时间限制(ms) |
+| memory_limit | int | 是 | | 内存限制(MB) |
+| total_submissions | int | 是 | | 总提交数 |
+| accepted_submissions | int | 是 | | 通过提交数 |
+| acceptance_rate | decimal(5,2) | 是 | | 通过率 |
+
+#### problem_test_cases表
+存储题目的测试用例。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 测试用例ID，自增主键 |
+| problem_id | int | 否 | MUL | 关联problems表的外键 |
+| input | text | 是 | | 测试输入 |
+| expected_output | text | 是 | | 期望输出 |
+| is_example | tinyint(1) | 否 | | 是否为示例测试用例 |
+| created_at | timestamp | 是 | | 创建时间 |
+
+#### problem_categories表
+存储题目分类信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 分类ID，自增主键 |
+| name | varchar(100) | 否 | | 分类名称 |
+| description | text | 是 | | 分类描述 |
+| parent_id | int | 是 | MUL | 父分类ID，用于构建分类树 |
+
+#### problem_category_relations表
+存储题目与分类的多对多关系。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 关系ID，自增主键 |
+| problem_id | int | 否 | MUL | 关联problems表的外键 |
+| category_id | int | 否 | MUL | 关联problem_categories表的外键 |
+
+#### problem_pool表
+存储题目池，可用于创建新题目。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 主键ID |
+| problem_number | varchar(10) | 是 | UNI | 题目编号 |
+| title | varchar(255) | 否 | | 题目标题 |
+| description | text | 是 | | 题目描述 |
+| difficulty | enum('简单','中等','困难') | 否 | | 难度等级 |
+| category | varchar(50) | 是 | | 题目分类 |
+| tags | varchar(255) | 是 | | 标签，多个标签用逗号分隔 |
+| time_limit | int | 是 | | 时间限制(ms) |
+| memory_limit | int | 是 | | 内存限制(MB) |
+| source | varchar(100) | 是 | | 题目来源 |
+| status | tinyint(1) | 是 | | 状态：1-启用，0-禁用 |
+| create_user_id | int | 是 | MUL | 创建者ID |
+| reference_count | int | 是 | | 被引用次数 |
+| created_at | timestamp | 是 | | 创建时间 |
+| updated_at | timestamp | 是 | | 更新时间 |
+
+### 提交与评测相关表
+
+#### submissions表
+存储用户代码提交记录。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 提交ID，自增主键 |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| problem_id | int | 否 | MUL | 关联problems表的外键 |
+| problem_number | varchar(50) | 是 | | 题目编号 |
+| code | text | 否 | | 提交的代码 |
+| language | varchar(10) | 否 | | 编程语言 |
+| status | enum('Pending','Accepted','Wrong Answer','Runtime Error','Compilation Error','Time Limit Exceeded','Memory Limit Exceeded','System Error','Not Accepted') | 是 | | 评测状态 |
+| runtime | int | 是 | | 运行时间(ms) |
+| memory | int | 是 | | 内存消耗(KB) |
+| error_message | text | 是 | | 错误信息 |
+| created_at | timestamp | 否 | | 提交时间 |
+| completed_at | timestamp | 是 | | 评测完成时间 |
+
+#### solution_main表
+存储官方或优质解题方案。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 解题方案ID，自增主键 |
+| problem_id | int | 否 | MUL | 关联problems表的外键 |
+| title | varchar(255) | 否 | | 解题方案标题 |
+| description | text | 是 | | 解题思路描述 |
+| complexity | varchar(100) | 是 | | 时间/空间复杂度 |
+| is_official | tinyint(1) | 否 | | 是否为官方解答 |
+| created_by | int | 否 | MUL | 创建者ID |
+| created_at | timestamp | 否 | | 创建时间 |
+
+#### solution_code表
+存储解题方案的代码实现。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 代码ID，自增主键 |
+| solution_id | int | 否 | MUL | 关联solution_main表的外键 |
+| language_id | int | 否 | MUL | 关联solution_languages表的外键 |
+| code | text | 否 | | 解题代码 |
+| created_at | timestamp | 否 | | 创建时间 |
+
+#### solution_languages表
+存储支持的编程语言。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 语言ID，自增主键 |
+| name | varchar(50) | 否 | | 语言名称 |
+| code | varchar(20) | 否 | | 语言代码标识 |
+| version | varchar(20) | 是 | | 语言版本 |
+| is_active | tinyint(1) | 否 | | 是否激活 |
+
+### 学习计划相关表
+
+#### learning_plans表
+存储学习路径和计划。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 学习计划ID，自增主键 |
+| title | varchar(255) | 否 | | 学习计划标题 |
+| description | text | 是 | | 学习计划描述 |
+| difficulty | enum | 是 | | 难度级别 |
+| creator_id | int | 否 | MUL | 创建者ID |
+| is_public | tinyint(1) | 是 | | 是否公开 |
+| created_at | timestamp | 是 | | 创建时间 |
+| updated_at | timestamp | 是 | | 更新时间 |
+
+#### learning_plan_problems表
+存储学习计划包含的题目。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | ID，自增主键 |
+| plan_id | int | 否 | MUL | 关联learning_plans表的外键 |
+| problem_id | int | 否 | MUL | 关联problems表的外键 |
+| order_index | int | 是 | | 题目在计划中的顺序 |
+| notes | text | 是 | | 学习提示或笔记 |
+
+### 课堂与社区相关表
+
+#### classrooms表
+存储虚拟课堂信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 课堂ID，自增主键 |
+| title | varchar(100) | 否 | | 课堂标题 |
+| description | varchar(255) | 是 | | 课堂描述 |
+| teacher_id | int | 否 | MUL | 创建教师ID |
+| classroom_code | varchar(5) | 否 | UNI | 课堂码 |
+| status | tinyint(1) | 是 | | 课堂状态：0-关闭，1-开放 |
+| created_at | timestamp | 是 | | 创建时间 |
+| updated_at | timestamp | 是 | | 更新时间 |
+
+#### classes表
+存储班级信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 班级ID，自增主键 |
+| classroom_id | int | 否 | MUL | 关联classrooms表的外键 |
+| name | varchar(100) | 否 | | 班级名称 |
+| description | text | 是 | | 班级描述 |
+| created_at | timestamp | 是 | | 创建时间 |
+
+#### student_info表
+存储学生在班级中的信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | ID，自增主键 |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| class_id | int | 否 | MUL | 关联classes表的外键 |
+| student_number | varchar(50) | 是 | | 学号 |
+| join_date | timestamp | 是 | | 加入时间 |
+| status | tinyint(1) | 是 | | 学生状态 |
+
+#### classroom_messages表
+存储课堂消息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 消息ID |
+| classroom_id | int | 否 | MUL | 关联classrooms表的外键 |
+| sender_id | int | 否 | MUL | 发送者ID |
+| content | text | 否 | | 消息内容 |
+| created_at | timestamp | 是 | | 发送时间 |
+
+#### classroom_files表
+存储课堂文件资料。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 文件ID |
+| classroom_id | int | 否 | MUL | 关联classrooms表的外键 |
+| uploader_id | int | 否 | MUL | 上传者ID |
+| file_name | varchar(255) | 否 | | 文件名称 |
+| file_path | varchar(255) | 否 | | 文件路径 |
+| file_size | int | 是 | | 文件大小(bytes) |
+| file_type | varchar(50) | 是 | | 文件类型 |
+| uploaded_at | timestamp | 是 | | 上传时间 |
+
+#### communities表
+存储学习社区信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 社区ID，自增主键 |
+| name | varchar(100) | 否 | | 社区名称 |
+| description | text | 是 | | 社区描述 |
+| creator_id | int | 否 | MUL | 创建者ID |
+| created_at | timestamp | 是 | | 创建时间 |
+| is_public | tinyint(1) | 是 | | 是否公开 |
+
+#### community_members表
+存储社区成员信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | ID，自增主键 |
+| community_id | int | 否 | MUL | 关联communities表的外键 |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| role | varchar(20) | 是 | | 成员角色 |
+| join_date | timestamp | 是 | | 加入时间 |
+
+#### posts表
+存储社区内的讨论帖子。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 帖子ID |
+| community_id | int | 否 | MUL | 关联communities表的外键 |
+| author_id | int | 否 | MUL | 作者ID |
+| title | varchar(255) | 否 | | 帖子标题 |
+| content | text | 否 | | 帖子内容 |
+| created_at | timestamp | 是 | | 创建时间 |
+| updated_at | timestamp | 是 | | 更新时间 |
+| view_count | int | 是 | | 浏览次数 |
+
+#### likes表
+存储用户对帖子的点赞。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 点赞ID |
+| post_id | int | 否 | MUL | 关联posts表的外键 |
+| user_id | int | 否 | MUL | 关联users表的外键 |
+| created_at | timestamp | 是 | | 点赞时间 |
+
+### 统计与分析
+
+#### problem_stats表
+存储题目统计信息。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| problem_id | int | 否 | PRI | 关联problems表的外键 |
+| total_attempts | int | 否 | | 总尝试次数 |
+| unique_users | int | 否 | | 尝试的独立用户数 |
+| acceptance_rate | decimal(5,2) | 是 | | 通过率(%) |
+| average_runtime | int | 是 | | 平均运行时间(ms) |
+| average_memory | int | 是 | | 平均内存消耗(KB) |
+| updated_at | timestamp | 是 | | 更新时间 |
+
+#### problem_success_rates表
+存储不同难度题目的成功率。
+
+| 字段名 | 类型 | 可空 | 键 | 描述 |
+|------|------|------|------|------|
+| id | int | 否 | PRI | 主键ID |
+| difficulty | enum('简单','中等','困难') | 否 | | 难度级别 |
+| success_rate | decimal(5,2) | 否 | | 成功率(%) |
+| sample_size | int | 否 | | 样本大小 |
+| calculated_at | timestamp | 否 | | 计算时间 |
+
+## 视图结构
+
+系统包含以下视图用于提供统计和分析数据：
+
+### v_knowledge_mastery视图
+提供用户对各知识点的掌握程度统计。
+
+### v_learning_days视图
+统计用户每日学习情况，根据learning_records表统计用户的学习天数。
+
+### v_learning_path_stats视图
+统计各学习路径的完成情况和受欢迎程度。
+
+## 表间关系
+
+### 一对多关系
+1. users → submissions: 一个用户可以有多个提交记录
+2. problems → submissions: 一个题目可以有多个提交记录
+3. users → user_profile: 一个用户对应一个详细资料
+4. users → classrooms: 一个教师用户可以创建多个课堂
+5. classrooms → classes: 一个课堂可以包含多个班级
+6. classrooms → classroom_messages: 一个课堂可以有多条消息
+7. classrooms → classroom_files: 一个课堂可以有多个文件
+
+### 多对多关系
+1. problems ↔ problem_categories: 通过problem_category_relations表建立
+2. users ↔ classes: 通过student_info表建立
+3. users ↔ communities: 通过community_members表建立
+4. problems ↔ learning_plans: 通过learning_plan_problems表建立
+5. users ↔ posts: 通过likes表建立点赞关系
+
+## 数据库连接与访问
+
+数据库连接配置位于后端代码的`src/db.js`文件中，使用MySQL连接池管理数据库连接。服务层通过数据库查询封装与数据库交互，提供给控制器层调用。
+
+## 索引与性能优化
+
+数据库设计中为常用查询字段建立了索引，包括：
+1. 用户名、邮箱、电话等用户标识字段
+2. 题目编号和分类标识字段
+3. 外键字段（如problem_id, user_id等）
+4. 常用查询条件字段（如submission状态、problem难度等）
+
+## 数据库维护建议
+
+1. 定期备份数据库，防止数据丢失
+2. 监控submissions表大小，考虑定期归档历史提交记录
+3. 为大型文本字段（如代码、描述等）考虑使用压缩存储
+4. 定期优化表结构和索引，提高查询性能
+5. 注意处理视图v_learning_days依赖的learning_records表，该表可能需要创建

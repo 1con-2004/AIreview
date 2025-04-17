@@ -1,0 +1,233 @@
+# 后端API关系说明文档
+
+## API架构概览
+
+AIreview系统后端采用模块化的API结构设计，主要通过Express路由实现。API路由按功能模块进行分组，形成清晰的层次结构，入口通过 `src/api/index.js` 统一管理和注册。
+
+```
+API结构图:
+/api
+├── /problems       # 题目相关API
+├── /login          # 登录与认证
+├── /auth           # 权限验证
+├── /user           # 用户管理
+├── /admin          # 管理员功能
+├── /classroom      # 课堂管理
+├── /learning-plans # 学习计划
+├── /judge          # 代码评测
+├── /ai             # AI辅助功能
+└── /stats          # 统计分析
+```
+
+## 核心API模块功能及关系
+
+### 1. 用户认证与管理模块
+
+#### `/api/login` 模块
+提供用户认证和会话管理功能。
+
+- **主要接口**:
+  - `POST /api/login`: 用户登录，验证凭据并生成JWT令牌
+  - `POST /api/login/register`: 新用户注册
+  - `POST /api/login/refresh`: 刷新访问令牌
+  - `POST /api/login/logout`: 用户登出，销毁会话
+
+#### `/api/auth` 模块
+处理用户权限验证和授权。
+
+- **主要接口**:
+  - `GET /api/auth/verify`: 验证用户令牌
+  - `POST /api/auth/change-password`: 修改密码
+  - `GET /api/auth/permissions`: 获取用户权限列表
+  
+#### `/api/user` 模块
+处理用户个人资料和设置。
+
+- **主要接口**:
+  - `GET /api/user/profile`: 获取用户个人资料
+  - `PUT /api/user/profile`: 更新用户个人资料
+  - `GET /api/user/submissions`: 获取用户提交历史
+  - `GET /api/user/statistics`: 获取用户学习统计
+  - `POST /api/user/avatar`: 上传用户头像
+
+### 2. 题目与评测模块
+
+#### `/api/problems` 模块
+提供题目管理和访问功能。
+
+- **主要接口**:
+  - `GET /api/problems`: 获取题目列表，支持分页和筛选
+  - `GET /api/problems/:id`: 获取指定题目详情
+  - `POST /api/problems`: 创建新题目（需管理员权限）
+  - `PUT /api/problems/:id`: 更新题目信息（需管理员权限）
+  - `DELETE /api/problems/:id`: 删除题目（需管理员权限）
+  - `GET /api/problems/:id/solutions`: 获取题目解答
+  - `POST /api/problems/:id/submit`: 提交代码解答
+
+#### `/api/judge` 模块
+处理代码评测和结果分析。
+
+- **主要接口**:
+  - `POST /api/judge/submit`: 提交代码进行评测
+  - `GET /api/judge/result/:id`: 获取评测结果
+  - `GET /api/judge/languages`: 获取支持的编程语言
+  - `POST /api/judge/custom`: 自定义测试用例评测
+
+### 3. 教学与学习管理模块
+
+#### `/api/classroom` 模块
+提供课堂和班级管理功能。
+
+- **主要接口**:
+  - `GET /api/classroom`: 获取用户的课堂列表
+  - `POST /api/classroom`: 创建新课堂（需教师权限）
+  - `GET /api/classroom/:id`: 获取课堂详情
+  - `POST /api/classroom/:id/join`: 学生加入课堂
+  - `GET /api/classroom/:id/students`: 获取课堂学生列表
+  - `POST /api/classroom/:id/assignment`: 发布课堂作业
+
+#### `/api/learning-plans` 模块
+处理学习计划和路径。
+
+- **主要接口**:
+  - `GET /api/learning-plans`: 获取学习计划列表
+  - `GET /api/learning-plans/:id`: 获取学习计划详情
+  - `POST /api/learning-plans`: 创建学习计划
+  - `POST /api/learning-plans/:id/enroll`: 用户加入学习计划
+  - `GET /api/learning-plans/:id/progress`: 获取学习进度
+
+### 4. 社区与AI功能模块
+
+#### `/api/community` 模块
+提供社区交流和讨论功能。
+
+- **主要接口**:
+  - `GET /api/community/posts`: 获取社区讨论帖子
+  - `POST /api/community/posts`: 发布新帖子
+  - `POST /api/community/posts/:id/comments`: 评论帖子
+  - `POST /api/community/posts/:id/like`: 点赞帖子
+
+#### `/api/ai` 模块
+提供AI辅助功能。
+
+- **主要接口**:
+  - `POST /api/ai/code-review`: 获取代码审核建议
+  - `POST /api/ai/generate-hint`: 生成题目提示
+  - `POST /api/ai/explain-solution`: 获取解题思路解释
+  - `POST /api/ai/learning-path`: 生成个性化学习路径
+
+### 5. 管理与统计模块
+
+#### `/api/admin` 模块
+提供后台管理功能。
+
+- **主要接口**:
+  - `GET /api/admin/users`: 获取用户列表
+  - `PUT /api/admin/users/:id/role`: 更改用户角色
+  - `GET /api/admin/stats`: 获取系统使用统计
+  - `POST /api/admin/announcement`: 发布系统公告
+
+#### `/api/stats` 模块
+提供各类统计分析功能。
+
+- **主要接口**:
+  - `GET /api/stats/problems`: 获取题目统计信息
+  - `GET /api/stats/users`: 获取用户活跃度统计
+  - `GET /api/stats/submissions`: 获取提交统计
+
+## API模块间的依赖关系
+
+### 核心依赖关系
+
+1. **认证依赖**:
+   - 大多数API都依赖于 `/api/auth` 提供的认证中间件来验证用户身份和权限
+   - 认证流程: 客户端 → `/api/login` 获取令牌 → 使用令牌调用其他API
+
+2. **用户与题目依赖**:
+   - `/api/user/submissions` 依赖于 `/api/problems` 获取题目信息
+   - `/api/problems/:id/submit` 依赖于 `/api/judge` 进行代码评测
+
+3. **课堂与题目依赖**:
+   - `/api/classroom/:id/assignment` 依赖于 `/api/problems` 设置作业题目
+   - `/api/learning-plans` 依赖于 `/api/problems` 构建学习计划
+
+4. **AI与评测依赖**:
+   - `/api/ai/code-review` 依赖于 `/api/judge` 的代码执行结果
+   - `/api/ai/learning-path` 依赖于 `/api/user/statistics` 的用户数据
+
+### 中间件依赖链
+
+API请求通常经过以下中间件链处理:
+
+1. 请求解析中间件 (express.json(), express.urlencoded())
+2. 跨域处理中间件 (cors)
+3. 认证中间件 (验证JWT令牌)
+4. 权限检查中间件 (根据用户角色检查权限)
+5. 路由处理函数 (具体API实现)
+6. 错误处理中间件 (捕获并处理异常)
+
+## API安全与权限控制
+
+### 权限级别分类
+
+1. **公开API**: 无需认证即可访问
+   - 例如: `/api/login`, `/api/problems` (GET方法)
+  
+2. **用户级API**: 需要用户认证
+   - 例如: `/api/user/profile`, `/api/problems/:id/submit`
+   
+3. **教师级API**: 需要教师或更高权限
+   - 例如: `/api/classroom/create`, `/api/learning-plans/create`
+   
+4. **管理员级API**: 需要管理员权限
+   - 例如: `/api/admin/*`, `/api/problems` (POST/PUT/DELETE方法)
+
+### 权限验证流程
+
+1. 通过 JWT 令牌验证用户身份
+2. 从数据库获取用户角色信息
+3. 根据路由定义的权限要求检查用户是否有足够权限
+4. 通过则继续处理请求，否则返回403错误
+
+## API错误处理机制
+
+系统采用统一的错误响应格式:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "错误描述信息",
+    "details": {}  // 可选的详细错误信息
+  }
+}
+```
+
+### 常见错误码
+
+- `UNAUTHORIZED`: 未认证或认证失败
+- `FORBIDDEN`: 权限不足
+- `NOT_FOUND`: 请求的资源不存在
+- `BAD_REQUEST`: 请求参数错误
+- `INTERNAL_ERROR`: 服务器内部错误
+- `VALIDATION_ERROR`: 数据验证失败
+
+## API性能优化策略
+
+1. **缓存机制**:
+   - 对 `/api/problems`, `/api/learning-plans` 等频繁访问的资源使用Redis缓存
+   - 使用条件性请求(If-Modified-Since, ETag)减少传输数据
+
+2. **分页与筛选**:
+   - 所有列表API支持分页参数(page, pageSize)
+   - 支持高级筛选条件，减少不必要的数据传输
+
+3. **批量操作**:
+   - 提供批量API，如 `/api/problems/batch` 支持批量操作
+   - 减少客户端与服务器的往返次数
+
+## API版本控制
+
+当前API版本通过URL路径前缀标识。例如，v1版本的API路径为 `/api/v1/*`。
+当API有重大变更时，会发布新版本，同时保持旧版本API一段时间以保证兼容性。
