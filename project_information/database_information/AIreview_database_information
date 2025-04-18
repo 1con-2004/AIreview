@@ -410,91 +410,38 @@ AIreview系统使用MySQL数据库，包含多个表来支持在线编程学习�
 
 ## 数据库操作记录
 
-- **操作时间**：2025.04.18
+- **操作时间**：2025.5.20
 
-- **操作描述**：优化problems表和problem_categories表结构
+- **操作描述**：查询 submissions 表替代已删除的 user_problem_status 表实现用户题目状态追踪
+
+- **解释**：添加了通过查询 submissions 表获取用户题目完成状态的功能，替代之前使用的 user_problem_status 表
 
 - **SQL语句**：
 ```sql
--- 备份原表
-RENAME TABLE problem_categories TO problem_categories_backup;
-
--- 创建新的问题分类表
-CREATE TABLE problem_categories (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL COMMENT '分类名称',
-  description VARCHAR(255) COMMENT '分类描述',
-  parent_id INT COMMENT '父分类ID',
-  order_num INT DEFAULT 0 COMMENT '显示顺序',
-  level INT DEFAULT 1 COMMENT '分类层级: 1-顶级分类, 2-二级分类, 3-三级分类',
-  slug VARCHAR(50) COMMENT '分类标识符',
-  icon VARCHAR(50) COMMENT '分类图标',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  KEY (parent_id)
-);
-
--- 创建问题与分类的关联表
-CREATE TABLE problem_category_relations (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  problem_id INT NOT NULL COMMENT '问题ID',
-  category_id INT NOT NULL COMMENT '分类ID',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY (problem_id, category_id),
-  KEY (problem_id),
-  KEY (category_id)
-);
-
--- 创建问题插入和更新触发器
-CREATE TRIGGER update_problem_categories AFTER UPDATE ON problems
-FOR EACH ROW
-BEGIN
-    -- 如果标签发生了变化
-    IF NEW.tags <> OLD.tags OR (NEW.tags IS NOT NULL AND OLD.tags IS NULL) OR (NEW.tags IS NULL AND OLD.tags IS NOT NULL) THEN
-        -- 删除旧的关联
-        DELETE FROM problem_category_relations WHERE problem_id = NEW.id;
-        
-        -- 如果新标签不为空，则添加新的关联
-        IF NEW.tags IS NOT NULL AND NEW.tags <> '' THEN
-            -- 处理标签并添加关联
-            -- (触发器代码细节略)
-        END IF;
-    END IF;
-END;
-
-CREATE TRIGGER insert_problem_categories AFTER INSERT ON problems
-FOR EACH ROW
-BEGIN
-    -- 如果新标签不为空，则添加新的关联
-    IF NEW.tags IS NOT NULL AND NEW.tags <> '' THEN
-        -- 处理标签并添加关联
-        -- (触发器代码细节略)
-    END IF;
-END;
+SELECT 
+  s1.problem_id,
+  s1.status,
+  s1.created_at
+FROM submissions s1
+INNER JOIN (
+  SELECT problem_id, MAX(created_at) as latest_date
+  FROM submissions
+  WHERE user_id = ? AND problem_id IN (?)
+  GROUP BY problem_id
+) s2
+ON s1.problem_id = s2.problem_id AND s1.created_at = s2.latest_date
+WHERE s1.user_id = ?
 ```
 
-- **解释**：
-  1. 重构了`problem_categories`表，增加了更多字段用于更好地描述和展示分类
-  2. 创建了`problem_category_relations`中间表，用于存储问题和分类之间的多对多关系
-  3. 添加了触发器，当`problems`表中的`tags`字段更新或插入时，自动更新`problem_category_relations`表
-  4. 基于`problems`表中已有的`tags`数据填充了新的分类表和关联表
-
 - **表及字段信息**：
-  - `problem_categories`表：存储题目分类信息
-    - `id`：主键
-    - `name`：分类名称
-    - `description`：分类描述
-    - `parent_id`：父分类ID，用于构建分类层次结构
-    - `order_num`：显示顺序
-    - `level`：分类层级，1表示顶级分类，2表示二级分类
-    - `slug`：URL友好的标识符
-    - `icon`：分类图标
-    - `created_at`、`updated_at`：时间戳
-  
-  - `problem_category_relations`表：存储题目与分类的关联关系
-    - `id`：主键
-    - `problem_id`：关联到problems表的ID
-    - `category_id`：关联到problem_categories表的ID
-    - `created_at`：创建时间
 
-- **错误记录（若有）**：无
+  - `submissions`表：存储用户提交的代码及其评判结果
+    - `problem_id`：题目ID，外键关联problems表
+    - `user_id`：用户ID，外键关联users表
+    - `status`：提交状态，如"Accepted"表示通过
+    - `created_at`：提交时间
+
+- **查询逻辑**：
+  - 子查询首先找出每个题目的最新提交时间
+  - 然后连接回submissions表获取该时间点的具体提交状态
+  - 这样确保我们获取的是每个题目的最新状态

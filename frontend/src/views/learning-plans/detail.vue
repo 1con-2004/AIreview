@@ -210,23 +210,86 @@ export default {
         }
 
         const headers = { Authorization: `Bearer ${token}` };
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/progress`, { headers });
-        
-        console.log('获取到的用户进度数据:', response.data);
-        
-        if (!response.data || !response.data.success) {
-          throw new Error('获取用户进度失败');
-        }
-        
-        this.userProgress = response.data.data;
-        
-        // 更新题目完成状态
-        if (this.userProgress?.completed_problems) {
-          const completedSet = new Set(this.userProgress.completed_problems);
-          this.problems = this.problems.map(problem => ({
-            ...problem,
-            completed: problem.completed || completedSet.has(problem.id)
-          }));
+        try {
+          // 先从学习计划进度API获取数据
+          const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/progress`, { headers });
+          
+          console.log('获取到的用户进度数据:', response.data);
+          
+          if (!response.data || !response.data.success) {
+            throw new Error('获取用户进度失败');
+          }
+          
+          this.userProgress = response.data.data;
+          
+          // 更新题目完成状态
+          if (this.userProgress?.completed_problems) {
+            const completedSet = new Set(this.userProgress.completed_problems);
+            this.problems = this.problems.map(problem => ({
+              ...problem,
+              completed: problem.completed || completedSet.has(problem.id)
+            }));
+          }
+        } catch (error) {
+          console.error('从学习计划获取进度失败，尝试备选方案:', error);
+          
+          // 备选方案：从用户题目状态API获取完成数据
+          try {
+            // 获取所有题目ID
+            const problemIds = this.problems.map(p => p.id).filter(id => id);
+            if (problemIds.length === 0) return;
+            
+            // 方案1：使用问题状态API
+            const problemStatusResponse = await axios.get('http://localhost:3000/api/problems/user-status', {
+              params: { problem_ids: problemIds.join(',') },
+              headers
+            });
+            
+            if (problemStatusResponse.data && problemStatusResponse.data.success) {
+              const statusMap = {};
+              problemStatusResponse.data.data.forEach(item => {
+                if (item.status === 'Accepted') {
+                  statusMap[item.problem_id] = true;
+                }
+              });
+              
+              // 更新题目完成状态
+              this.problems = this.problems.map(problem => ({
+                ...problem,
+                completed: problem.completed || statusMap[problem.id] || false
+              }));
+              
+              console.log('备选方案1更新的题目状态:', 
+                this.problems.filter(p => p.completed).length, '道已完成');
+            }
+          } catch (fallbackError) {
+            console.error('备选方案1失败，尝试备选方案2:', fallbackError);
+            
+            // 方案2：使用用户问题状态API
+            try {
+              const userStatusResponse = await axios.get('http://localhost:3000/api/user/problem-status', { headers });
+              
+              if (userStatusResponse.data && userStatusResponse.data.success) {
+                const statusMap = {};
+                userStatusResponse.data.data.forEach(item => {
+                  if (item.status === 'Accepted') {
+                    statusMap[item.problem_id] = true;
+                  }
+                });
+                
+                // 更新题目完成状态
+                this.problems = this.problems.map(problem => ({
+                  ...problem,
+                  completed: problem.completed || statusMap[problem.id] || false
+                }));
+                
+                console.log('备选方案2更新的题目状态:', 
+                  this.problems.filter(p => p.completed).length, '道已完成');
+              }
+            } catch (finalError) {
+              console.error('所有备选方案均失败:', finalError);
+            }
+          }
         }
         
         console.log('更新后的题目列表:', this.problems);

@@ -66,39 +66,66 @@ const updateAllProblemsAcceptanceRate = async () => {
 
 // 获取题目通过 ID
 const getProblemById = async (id, userId) => {
-  // 先尝试用 problem_number 精确匹配
-  let [problemRows] = await db.query(
-    'SELECT * FROM problems WHERE problem_number = ?', 
-    [id.toString().padStart(4, '0')]
-  );
-  
-  // 如果找不到,再尝试用 id 查询
-  if (!problemRows || problemRows.length === 0) {
-    [problemRows] = await db.query(
-      'SELECT * FROM problems WHERE id = ?', 
-      [parseInt(id)]
+  try {
+    // 检查ID是否为有效值
+    if (!id || (isNaN(parseInt(id)) && isNaN(id.toString().padStart(4, '0')))) {
+      console.error('无效的题目ID:', id);
+      return null;
+    }
+
+    // 先尝试用 problem_number 精确匹配
+    let [problemRows] = await db.query(
+      'SELECT * FROM problems WHERE problem_number = ?', 
+      [id.toString().padStart(4, '0')]
     );
-  }
-  
-  if (!problemRows || problemRows.length === 0) {
+    
+    // 如果找不到,再尝试用 id 查询
+    if (!problemRows || problemRows.length === 0) {
+      // 确保ID是有效数字
+      const numericId = parseInt(id);
+      if (isNaN(numericId)) {
+        console.error('无法将题目ID转换为数字:', id);
+        return null;
+      }
+      
+      [problemRows] = await db.query(
+        'SELECT * FROM problems WHERE id = ?', 
+        [numericId]
+      );
+    }
+    
+    if (!problemRows || problemRows.length === 0) {
+      return null;
+    }
+
+    const problem = problemRows[0];
+    
+    // 如果提供了用户ID，获取用户对这个题目的状态
+    if (userId) {
+      console.log(`查询用户 ${userId} 对题目 ${problem.id} 的状态`);
+      const [statusRows] = await db.query(
+        `SELECT status 
+         FROM submissions 
+         WHERE user_id = ? AND problem_id = ? 
+         ORDER BY created_at DESC 
+         LIMIT 1`,
+        [userId, problem.id]
+      );
+      
+      if (statusRows && statusRows.length > 0) {
+        problem.userStatus = statusRows[0].status;
+        console.log(`题目 ${problem.id} 的用户状态:`, problem.userStatus);
+      } else {
+        problem.userStatus = null;
+        console.log(`用户 ${userId} 没有对题目 ${problem.id} 的提交记录`);
+      }
+    }
+    
+    return problem;
+  } catch (error) {
+    console.error('获取题目失败:', error);
     return null;
   }
-
-  const problem = problemRows[0];
-  
-  if (userId) {
-    const [statusRows] = await db.query(
-      `SELECT status 
-       FROM submissions 
-       WHERE user_id = ? AND problem_id = ? 
-       ORDER BY created_at DESC 
-       LIMIT 1`,
-      [userId, problem.id]
-    );
-    problem.userStatus = statusRows[0]?.status || null;
-  }
-  
-  return problem;
 };
 
 // 获取题目列表
@@ -263,6 +290,61 @@ router.get('/tags', async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '获取标签失败'
+    });
+  }
+});
+
+// 获取用户题目完成状态 - 重要：这个路由必须放在/:id路由之前
+router.get('/user-status', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const problemIdsString = req.query.problem_ids ? req.query.problem_ids.split(',') : [];
+    
+    // 过滤掉不是数字的ID并转换为数字
+    const problemIds = problemIdsString
+      .filter(id => !isNaN(parseInt(id)) && id.trim() !== '')
+      .map(id => parseInt(id));
+    
+    console.log('获取用户题目状态, userId:', userId, 'problemIds:', problemIds);
+    
+    if (!problemIds.length) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // 查询用户对这些题目的最新提交状态
+    // 注意：这里不再依赖getProblemById函数，直接查询submissions表
+    const query = `
+      SELECT 
+        s1.problem_id,
+        s1.status,
+        s1.created_at
+      FROM submissions s1
+      INNER JOIN (
+        SELECT problem_id, MAX(created_at) as latest_date
+        FROM submissions
+        WHERE user_id = ? AND problem_id IN (?)
+        GROUP BY problem_id
+      ) s2
+      ON s1.problem_id = s2.problem_id AND s1.created_at = s2.latest_date
+      WHERE s1.user_id = ?
+    `;
+    
+    const [statusRecords] = await db.query(query, [userId, problemIds, userId]);
+    
+    console.log('查询到的用户题目状态:', statusRecords.length, '条记录');
+    
+    res.json({
+      success: true,
+      data: statusRecords
+    });
+  } catch (error) {
+    console.error('获取用户题目状态失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取用户题目状态失败'
     });
   }
 });

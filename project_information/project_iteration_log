@@ -99,3 +99,34 @@
 - 添加触发器自动维护关系，减少维护成本
 - 保留problems表的tags字段作为兼容层，但将实际分类管理转移到专门的表中
 
+{ 2025-05-20 } 改动: 修复 problems/index.vue 页面题目完成状态追踪功能
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- views
+        |- problems
+          |- index.vue
+            |- description: 题目列表页面，添加了获取用户题目完成状态的功能。
+
+2. - backend
+    |- src
+      |- api
+        |- problems
+          |- index.js
+            |- description: 添加了获取用户题目完成状态的API端点。
+
+主要改动逻辑:
+
+- 在前端的 `index.vue` 文件中，添加了 `fetchUserProblemStatus` 方法，在获取题目列表后调用该方法获取用户的题目完成状态。
+- 在后端 `problems/index.js` 中，添加了 `/api/problems/user-status` 端点，通过查询 submissions 表获取用户最新的题目提交状态。
+
+问题出现原因:
+
+- 由于之前删除了 user_problem_status 表，导致题目列表页面无法跟踪用户是否完成了题目。
+
+解决问题使用的简要方案:
+
+- 参考学习计划详情页面 (learning-plans/detail.vue) 的实现方式，不再依赖已删除的 user_problem_status 表，而是直接查询 submissions 表获取用户的题目完成状态。
+

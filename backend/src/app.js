@@ -111,6 +111,45 @@ app.use('/api/testcases', testCaseRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/statistics', statisticsRoutes);
 
+// 添加调试日志，记录所有注册的路由
+console.log('注册的路由列表:');
+const listRoutes = (router, prefix = '') => {
+  router.stack.forEach(layer => {
+    if (layer.route) {
+      // 路由层
+      const path = prefix + layer.route.path;
+      const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase()).join(',');
+      console.log(`${methods} ${path}`);
+    } else if (layer.name === 'router' && layer.handle.stack) {
+      // 路由中间件
+      listRoutes(layer.handle, prefix);
+    }
+  });
+};
+
+// 遍历所有已注册路由并打印
+Object.keys(app._router.stack).forEach(key => {
+  const layer = app._router.stack[key];
+  if (layer.route) {
+    // 路由层
+    const path = layer.route.path;
+    const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase()).join(',');
+    console.log(`${methods} ${path}`);
+  } else if (layer.name === 'router' && layer.handle.stack) {
+    // 路由中间件
+    listRoutes(layer.handle, layer.regexp.toString().includes('api') ? '/api' : '');
+  }
+});
+
+// 确保捕获所有未处理路由
+app.use((req, res, next) => {
+  console.log(`[404] 未找到路由: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    message: `未找到请求的资源: ${req.method} ${req.originalUrl}`
+  });
+});
+
 // 添加错误处理中间件
 app.use((err, req, res, next) => {
     console.error('错误:', err);

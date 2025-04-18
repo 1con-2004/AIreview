@@ -181,6 +181,7 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
     
     console.log('正在获取用户题目状态, userId:', userId);
 
+    // 查询用户已通过的所有题目
     const query = `
       SELECT DISTINCT problem_id, 
         FIRST_VALUE(status) OVER (PARTITION BY problem_id ORDER BY created_at DESC) as status
@@ -189,7 +190,7 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
     `;
     
     const [results] = await pool.query(query, [userId]);
-    console.log('查询到的用户题目状态:', results);
+    console.log('查询到的用户题目状态:', results.length, '条记录');
 
     res.json({
       success: true,

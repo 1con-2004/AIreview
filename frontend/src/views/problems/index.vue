@@ -106,9 +106,7 @@
               <div class="problem-info">
                 <div class="problem-title">
                   {{ problem.title }}
-                  <template v-if="problem.status === 'Accepted'">
-                    <span class="status-tag accepted">已通过</span>
-                  </template>
+                  <span v-if="problem.status === 'Accepted'" class="status-tag accepted">已通过</span>
                 </div>
                 <div class="problem-stats">
                   <span class="difficulty-tag" :class="problem.difficulty">{{ problem.difficulty }}</span>
@@ -623,6 +621,16 @@ export default {
           }));
           this.total = response.total || this.problems.length;
           console.log('处理后的题目列表:', this.problems);
+          
+          // 获取用户题目完成状态
+          await this.fetchUserProblemStatus();
+          
+          // 添加调试信息：检查题目状态
+          console.log('获取完用户状态后的题目列表:', this.problems.filter(p => p.status === 'Accepted').map(p => ({
+            id: p.id,
+            title: p.title, 
+            status: p.status
+          })));
         } else {
           throw new Error('获取题目列表失败');
         }
@@ -639,6 +647,101 @@ export default {
         }
       } finally {
         this.loading.problems = false;
+      }
+    },
+    // 获取用户题目完成状态
+    async fetchUserProblemStatus() {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const token = userInfo.token || store.getters.getAccessToken;
+        if (!token) {
+          console.log('用户未登录，跳过获取题目状态');
+          return;
+        }
+
+        // 提取所有题目ID - 确保都是有效数字
+        const problemIds = this.problems
+          .map(p => p.id)
+          .filter(id => !isNaN(id) && id !== null && id !== undefined);
+          
+        if (problemIds.length === 0) {
+          console.log('没有有效的题目ID，跳过获取状态');
+          return;
+        }
+        
+        console.log('获取题目状态，题目IDs:', problemIds);
+        
+        // 获取用户提交状态
+        const headers = { Authorization: `Bearer ${token}` };
+        try {
+          // 注意这里使用明确的完整API路径，避免路由混淆
+          console.log('请求API路径：/api/problems/user-status');
+          const response = await request.get('/api/problems/user-status', {
+            params: { problem_ids: problemIds.join(',') },
+            headers
+          });
+          
+          console.log('获取到的用户题目状态:', response);
+          
+          if (response && response.success && Array.isArray(response.data)) {
+            // 创建题目ID到状态的映射
+            const statusMap = {};
+            response.data.forEach(item => {
+              if (item && item.problem_id && item.status) {
+                statusMap[item.problem_id] = item.status;
+              }
+            });
+            
+            // 更新题目完成状态
+            if (Object.keys(statusMap).length > 0) {
+              this.problems = this.problems.map(problem => ({
+                ...problem,
+                status: statusMap[problem.id] || problem.status || 'Not Started'
+              }));
+              
+              console.log('更新后的题目状态:', this.problems.filter(p => p.status === 'Accepted').map(p => ({ 
+                id: p.id, 
+                title: p.title, 
+                status: p.status 
+              })));
+            } else {
+              console.log('没有获取到任何题目状态数据');
+            }
+          } else {
+            console.log('API响应格式不正确或没有数据:', response);
+          }
+        } catch (apiError) {
+          console.error('API请求失败:', apiError);
+          // 尝试备选方案：直接获取用户所有题目状态
+          try {
+            console.log('尝试备选方案获取用户题目状态，请求路径: /api/user/problem-status');
+            const acceptedResponse = await request.get('/api/user/problem-status', { headers });
+            
+            if (acceptedResponse && acceptedResponse.success && Array.isArray(acceptedResponse.data)) {
+              const statusMap = {};
+              acceptedResponse.data.forEach(item => {
+                if (item && item.problem_id) {
+                  statusMap[item.problem_id] = item.status;
+                }
+              });
+              
+              if (Object.keys(statusMap).length > 0) {
+                this.problems = this.problems.map(problem => ({
+                  ...problem,
+                  status: statusMap[problem.id] || problem.status || 'Not Started'
+                }));
+                
+                console.log('备选方案更新后的题目状态:', 
+                  this.problems.filter(p => p.status === 'Accepted').length, '道已通过');
+              }
+            }
+          } catch (fallbackError) {
+            console.error('备选方案获取用户题目状态失败:', fallbackError);
+          }
+        }
+      } catch (error) {
+        console.error('获取用户题目状态失败:', error);
+        // 错误时不更新题目状态，保持原状态
       }
     },
     async fetchTags() {
@@ -726,9 +829,16 @@ export default {
       }
 
       if (this.selectedStatus) {
-        filteredProblems = filteredProblems.filter(problem => 
-          problem.status === this.selectedStatus
-        );
+        // 状态筛选
+        console.log('筛选状态:', this.selectedStatus);
+        console.log('筛选前题目数:', filteredProblems.length);
+        
+        filteredProblems = filteredProblems.filter(problem => {
+          const result = problem.status === this.selectedStatus;
+          return result;
+        });
+        
+        console.log('筛选后题目数:', filteredProblems.length);
       }
 
       return filteredProblems;
@@ -1444,10 +1554,12 @@ export default {
 
 .status-tag {
   font-size: 12px;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
   margin-left: 8px;
   display: inline-block;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .status-tag.accepted {

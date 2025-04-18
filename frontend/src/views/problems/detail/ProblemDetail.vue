@@ -12,6 +12,7 @@
             <div class="title-row">
               <span class="problem-number">#{{ problem?.problem_number || '0001' }}</span>
               <h1>{{ problem?.title || '加载中...' }}</h1>
+              <span v-if="problem?.userStatus === 'Accepted'" class="status-tag accepted">已通过</span>
             </div>
             <div class="problem-stats">
               <span class="difficulty-tag" :class="problem?.difficulty?.toLowerCase()">
@@ -1639,9 +1640,9 @@ export default defineComponent({
 
 .title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  margin-top:8px;
+  margin-bottom: 8px;
 }
 
 .problem-number {
@@ -4874,5 +4875,17 @@ pre {
   flex-grow: 1; /* 使测试用例内容占据剩余空间 */
   display: flex;
   flex-direction: column;
+}
+
+.status-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.status-tag.accepted {
+  background-color: #4ecdc4;
+  color: white;
 }
 </style>
