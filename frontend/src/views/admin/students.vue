@@ -1301,4 +1301,9 @@ onMounted(fetchStudents)
   background-color: rgba(255, 59, 48, 0.1);
   color: #FF3B30;
 }
+
+/* 为班级列添加右边距 */
+.col-class {
+  margin-right: 20px; /* 调整此值以增加或减少间距 */
+}
 </style> 

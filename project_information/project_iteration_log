@@ -64,3 +64,38 @@
 - 模拟真实学校的班级和专业命名规则，创建有意义的测试数据
 - 完整记录所有添加的数据，便于后续参考和使用
 
+{ 2025.4.18 } 改动: 优化problems表和problem_categories表结构
+
+主要改动文件:
+
+1. - backend
+    |- database
+      |- schema
+        |- problem_categories.sql
+          |- description: 修改了problem_categories表结构，增加了更多描述性字段。
+        |- problem_category_relations.sql
+          |- description: 新增中间表存储问题和分类的多对多关系。
+        |- triggers.sql
+          |- description: 新增触发器，自动维护问题和分类的关联关系。
+
+主要改动逻辑:
+
+- 重构了problem_categories表，增加level、slug、icon等字段，更好地支持分类层次结构
+- 创建problem_category_relations中间表，实现问题和分类的多对多关系管理
+- 基于problems表的tags字段，提取出所有标签，作为分类添加到新表中
+- 创建触发器，当问题的tags字段变化时，自动更新关联表
+- 将原有表中的数据迁移到新表结构中，确保数据不丢失
+
+问题出现原因:
+
+- 原问题分类结构不够灵活，缺乏层次关系
+- 原系统中的标签和分类是分离的，导致功能重复和维护困难
+- 标签存储在problems表的tags字段中，格式为逗号分隔的字符串，不利于高效查询
+
+解决问题使用的简要方案:
+
+- 采用树形分类结构，通过parent_id建立层次关系
+- 使用中间表存储多对多关系，优化查询效率
+- 添加触发器自动维护关系，减少维护成本
+- 保留problems表的tags字段作为兼容层，但将实际分类管理转移到专门的表中
+

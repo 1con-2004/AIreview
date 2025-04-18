@@ -140,47 +140,107 @@
         <!-- 右侧分类栏 -->
         <div class="categories">
           <h3>题目分类</h3>
-          <!-- 添加搜索框 -->
-          <div class="tag-search">
+          
+          <!-- 添加分类搜索框 -->
+          <div class="category-search">
             <input 
               type="text" 
-              v-model="tagSearchQuery" 
-              placeholder="搜索标签..."
-              class="tag-search-input"
+              v-model="categorySearchQuery" 
+              placeholder="搜索分类..."
+              class="category-search-input"
             />
           </div>
-          <!-- 标签列表 -->
-          <div class="tag-list">
-            <button
-              v-for="tag in paginatedTags"
-              :key="tag"
-              :class="['category-tag', { active: selectedTags.includes(tag) }]"
-              @click="selectTag(tag)"
-            >
-              {{ tag }}
-            </button>
+          
+          <!-- 分类加载中状态 -->
+          <div class="category-loading" v-if="loading.categories">
+            <div class="loading-spinner"></div>
+            <span>正在加载分类...</span>
           </div>
-          <!-- 标签分页 -->
-          <div class="tag-pagination">
-            <button 
-              class="page-button" 
-              @click="prevTagPage" 
-              :disabled="tagCurrentPage === 1"
+          
+          <!-- 一级分类卡片列表 -->
+          <div class="category-cards" v-else>
+            <div 
+              v-for="category in filteredCategories" 
+              :key="category.id"
+              class="parent-category-card"
+              :class="{ 'active': expandedCategories[category.id] }"
+              @click="toggleCategory(category.id)"
             >
-              <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <span class="page-info">{{ tagCurrentPage }} / {{ totalTagPages }}</span>
-            <button 
-              class="page-button" 
-              @click="nextTagPage" 
-              :disabled="tagCurrentPage >= totalTagPages"
-            >
-              <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+              <div class="category-header">
+                <div class="category-icon" :class="category.iconType || 'image'">
+                  <template v-if="category.iconType === 'emoji'">
+                    {{ category.emoji || '📚' }}
+                  </template>
+                  <img 
+                    v-else
+                    :src="getCategoryIcon(category)"
+                    :alt="category.name"
+                    @error="handleIconError(category)"
+                  />
+                </div>
+                <div class="category-title">{{ category.name }}</div>
+                <div class="category-arrow" :class="{ 'expanded': expandedCategories[category.id] }">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              
+              <!-- 子分类展开部分 -->
+              <div 
+                class="sub-categories" 
+                v-if="expandedCategories[category.id]"
+                :class="{ 'expanded': expandedCategories[category.id] }"
+              >
+                <div 
+                  v-for="subCategory in category.children" 
+                  :key="subCategory.id"
+                  class="sub-category-card"
+                  :class="{ 'active': selectedCategories.includes(subCategory.id) }"
+                  @click.stop="selectSubCategory(subCategory.id)"
+                >
+                  {{ subCategory.name }}
+                  <span class="check-icon" v-if="selectedCategories.includes(subCategory.id)">✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 如果标签还需要保留显示，可以添加一个标签区域 -->
+          <div class="legacy-tags" v-if="false">
+            <h4>标签</h4>
+            <div class="tag-list">
+              <button
+                v-for="tag in paginatedTags"
+                :key="tag"
+                :class="['category-tag', { active: selectedTags.includes(tag) }]"
+                @click="selectTag(tag)"
+              >
+                {{ tag }}
+              </button>
+            </div>
+            <!-- 标签分页 -->
+            <div class="tag-pagination">
+              <button 
+                class="page-button" 
+                @click="prevTagPage" 
+                :disabled="tagCurrentPage === 1"
+              >
+                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <span class="page-info">{{ tagCurrentPage }} / {{ totalTagPages }}</span>
+              <button 
+                class="page-button" 
+                @click="nextTagPage" 
+                :disabled="tagCurrentPage >= totalTagPages"
+              >
+                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -216,6 +276,7 @@ export default {
         { name: '中等', code: '中等' },
         { name: '困难', code: '困难' }
       ],
+      categorySearchQuery: '',
       tagSearchQuery: '',
       tagCurrentPage: 1,
       tagsPerPage: 10,
@@ -226,9 +287,14 @@ export default {
       plansPerPage: 6,
       loading: {
         problems: false,
-        tags: false
+        tags: false,
+        categories: false
       },
       total: 0,
+      categories: [],
+      activeCategory: null,
+      expandedCategories: {},
+      selectedCategories: [],
     }
   },
   computed: {
@@ -241,8 +307,8 @@ export default {
     },
     // 过滤后的标签列表
     filteredTags() {
-      if (!this.tagSearchQuery) return this.tags;
-      const query = this.tagSearchQuery.toLowerCase();
+      if (!this.categorySearchQuery) return this.tags;
+      const query = this.categorySearchQuery.toLowerCase();
       return this.tags.filter(tag => 
         tag.toLowerCase().includes(query)
       );
@@ -262,6 +328,32 @@ export default {
     paginatedPlans() {
       const start = (this.currentPlanPage - 1) * this.plansPerPage;
       return this.plans.slice(start, start + this.plansPerPage);
+    },
+    // 过滤后的分类列表
+    filteredCategories() {
+      if (!this.categorySearchQuery) return this.categories;
+      
+      const query = this.categorySearchQuery.toLowerCase();
+      return this.categories.map(category => {
+        // 检查父分类名称是否匹配
+        const isParentMatch = category.name.toLowerCase().includes(query);
+        
+        // 过滤匹配的子分类
+        const matchedChildren = category.children.filter(child => 
+          child.name.toLowerCase().includes(query)
+        );
+        
+        // 如果父分类匹配或有匹配的子分类，则返回过滤后的分类
+        if (isParentMatch || matchedChildren.length > 0) {
+          return {
+            ...category,
+            children: isParentMatch ? category.children : matchedChildren
+          };
+        }
+        
+        // 如果既不匹配父分类也没有匹配的子分类，则返回null
+        return null;
+      }).filter(Boolean); // 过滤掉null值
     }
   },
   async created() {
@@ -282,6 +374,7 @@ export default {
     // 确保初始化完成后再获取数据
     await this.$nextTick();
     await this.fetchPlans();
+    await this.fetchCategories();
     this.fetchProblems();
     this.fetchTags();
     this.updateItemsPerPage();
@@ -319,6 +412,181 @@ export default {
         }
         this.plans = [];
       }
+    },
+    async fetchCategories() {
+      try {
+        this.loading.categories = true;
+        const token = store.getters.getAccessToken;
+        
+        // 使用新的API端点获取分类数据
+        const response = await request.get('/api/problems/all-categories', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('获取到的分类数据:', response);
+        
+        if (response && (response.data || response.code === 200)) {
+          // 处理分类数据
+          const categories = response.data?.categories || response.data || [];
+          const parentCategories = [];
+          const childrenMap = {};
+          
+          // 按级别分组
+          categories.forEach(category => {
+            if (category.level === 1) {
+              parentCategories.push({
+                id: category.id,
+                name: category.name,
+                description: category.description || '',
+                slug: category.slug || '',
+                icon: category.icon || 'default',
+                // 为每个一级分类设置不同的emoji
+                iconType: 'emoji',
+                emoji: this.getCategoryEmoji(category.slug || category.name),
+                children: []
+              });
+            } else if (category.level === 2 && category.parent_id) {
+              if (!childrenMap[category.parent_id]) {
+                childrenMap[category.parent_id] = [];
+              }
+              childrenMap[category.parent_id].push({
+                id: category.id,
+                name: category.name,
+                description: category.description || '',
+                parentId: category.parent_id,
+                slug: category.slug || ''
+              });
+            }
+          });
+          
+          // 将子分类添加到父分类中
+          parentCategories.forEach(parent => {
+            if (childrenMap[parent.id]) {
+              parent.children = childrenMap[parent.id];
+            }
+          });
+          
+          this.categories = parentCategories;
+          console.log('处理后的分类数据:', this.categories);
+        } else {
+          // 如果API返回格式不对，使用备用数据
+          console.error('API返回格式不正确，使用备用数据');
+          this.useFallbackCategories();
+        }
+      } catch (error) {
+        console.error('获取分类失败:', error);
+        if (error.response?.status === 401) {
+          await store.dispatch('logout');
+          this.$router.push('/login');
+          this.$message.error('登录已过期，请重新登录');
+        } else {
+          console.error('使用备用数据:', error.message);
+          this.useFallbackCategories();
+        }
+      } finally {
+        this.loading.categories = false;
+      }
+    },
+    // 根据分类名称或slug获取对应的emoji
+    getCategoryEmoji(category) {
+      // 分类emoji映射
+      const emojiMap = {
+        'data-structure': '📊',
+        'algorithm': '🧩',
+        'math': '🔢',
+        'basic': '💻',
+        'array': '📋',
+        'string': '🔤',
+        'tree': '🌳',
+        'linked-list': '🔗',
+        'hash-table': '🔍',
+        'dynamic-programming': '📈',
+        'greedy': '🏎️',
+        'backtracking': '🔄',
+        'sorting': '📊',
+        'recursion': '🔁',
+        'queue': '📦',
+        'stack': '📚'
+      };
+      
+      // 转换分类名为小写，作为key查找
+      const key = category.toLowerCase().replace(/\s+/g, '-');
+      
+      // 返回找到的emoji或默认emoji
+      return emojiMap[key] || '📘';
+    },
+    // 使用备用分类数据
+    useFallbackCategories() {
+      const fallbackCategories = [
+        {
+          id: 1,
+          name: '数据结构',
+          description: '与数据结构相关的算法题',
+          slug: 'data-structure',
+          icon: 'structure',
+          iconType: 'emoji',
+          emoji: '📊',
+          children: [
+            { id: 101, name: '数组', description: '数组相关的题目', parentId: 1, slug: 'array' },
+            { id: 102, name: '链表', description: '链表相关的题目', parentId: 1, slug: 'linked-list' },
+            { id: 103, name: '树', description: '树相关的题目', parentId: 1, slug: 'tree' },
+            { id: 104, name: '栈', description: '栈相关的题目', parentId: 1, slug: 'stack' },
+            { id: 105, name: '队列', description: '队列相关的题目', parentId: 1, slug: 'queue' },
+            { id: 106, name: '哈希表', description: '哈希表相关的题目', parentId: 1, slug: 'hash-table' }
+          ]
+        },
+        {
+          id: 2,
+          name: '算法技巧',
+          description: '常见算法技巧与思想',
+          slug: 'algorithm',
+          icon: 'algorithm',
+          iconType: 'emoji',
+          emoji: '🧩',
+          children: [
+            { id: 201, name: '动态规划', description: '动态规划相关的题目', parentId: 2, slug: 'dynamic-programming' },
+            { id: 202, name: '贪心算法', description: '贪心算法相关的题目', parentId: 2, slug: 'greedy' },
+            { id: 203, name: '回溯算法', description: '回溯算法相关的题目', parentId: 2, slug: 'backtracking' },
+            { id: 204, name: '分治算法', description: '分治算法相关的题目', parentId: 2, slug: 'divide-and-conquer' },
+            { id: 205, name: '排序算法', description: '排序算法相关的题目', parentId: 2, slug: 'sorting' }
+          ]
+        },
+        {
+          id: 3,
+          name: '数学',
+          description: '数学相关的问题',
+          slug: 'math',
+          icon: 'calculator',
+          iconType: 'emoji',
+          emoji: '🔢',
+          children: [
+            { id: 301, name: '基础数学', description: '基础数学题目', parentId: 3, slug: 'basic-math' },
+            { id: 302, name: '概率统计', description: '概率统计相关题目', parentId: 3, slug: 'probability' },
+            { id: 303, name: '线性代数', description: '线性代数相关题目', parentId: 3, slug: 'linear-algebra' },
+            { id: 304, name: '数论', description: '数论相关题目', parentId: 3, slug: 'number-theory' }
+          ]
+        },
+        {
+          id: 4,
+          name: '基础编程',
+          description: '基础编程能力考察',
+          slug: 'basic',
+          icon: 'code',
+          iconType: 'emoji',
+          emoji: '💻',
+          children: [
+            { id: 401, name: '字符串处理', description: '字符串处理相关题目', parentId: 4, slug: 'string' },
+            { id: 402, name: '位运算', description: '位运算相关题目', parentId: 4, slug: 'bit-manipulation' },
+            { id: 403, name: '模拟', description: '模拟实现相关题目', parentId: 4, slug: 'simulation' },
+            { id: 404, name: '正则表达式', description: '正则表达式相关题目', parentId: 4, slug: 'regex' }
+          ]
+        }
+      ];
+      
+      this.categories = fallbackCategories;
+      console.log('使用备用分类数据:', this.categories);
     },
     async fetchProblems() {
       try {
@@ -415,7 +683,20 @@ export default {
     filterProblems() {
       let filteredProblems = this.problems;
 
-      if (this.selectedTags.length > 0) {
+      // 使用新的分类过滤逻辑
+      if (this.selectedCategories.length > 0) {
+        filteredProblems = filteredProblems.filter(problem => {
+          // 检查问题的标签是否包含所选的分类
+          return this.selectedCategories.some(categoryId => {
+            // 在这里需要根据问题的标签和分类ID进行匹配
+            // 由于问题的tags字段是字符串数组，我们需要检查是否有匹配
+            // 这里假设问题的tags字段中包含分类的名称
+            const category = this.categories.flatMap(c => c.children).find(c => c.id === categoryId);
+            return category && problem.tags.includes(category.name);
+          });
+        });
+      } else if (this.selectedTags.length > 0) {
+        // 保留原有的标签过滤逻辑作为备用
         filteredProblems = filteredProblems.filter(problem => {
           return this.selectedTags.every(tag => problem.tags.includes(tag));
         });
@@ -462,9 +743,12 @@ export default {
     },
     resetFilters() {
       this.selectedTags = [];
+      this.selectedCategories = [];
       this.selectedDifficulty = '';
       this.searchQuery = '';
       this.currentPage = 1;
+      this.expandedCategories = {};
+      this.activeCategory = null;
     },
     nextPage() {
       if (this.currentPage < this.totalPages) {
@@ -512,6 +796,66 @@ export default {
         this.currentPlanPage--;
       }
     },
+    toggleCategory(categoryId) {
+      // 使用Vue的响应式对象更新方式
+      const newExpandedCategories = { ...this.expandedCategories };
+      newExpandedCategories[categoryId] = !newExpandedCategories[categoryId];
+      this.expandedCategories = newExpandedCategories;
+      
+      // 如果展开了分类，则设置为活跃分类
+      if (this.expandedCategories[categoryId]) {
+        this.activeCategory = categoryId;
+      } else if (this.activeCategory === categoryId) {
+        this.activeCategory = null;
+      }
+    },
+    selectSubCategory(categoryId) {
+      const index = this.selectedCategories.indexOf(categoryId);
+      if (index > -1) {
+        // 如果已选中，则移除
+        this.selectedCategories.splice(index, 1);
+      } else {
+        // 否则添加
+        this.selectedCategories.push(categoryId);
+      }
+      // 重置到第一页
+      this.currentPage = 1;
+    },
+    getCategoryIcon(category) {
+      // 图标映射表
+      const iconMap = {
+        'structure': '/imgs/categories/data-structure.png',
+        'algorithm': '/imgs/categories/algorithm.png',
+        'calculator': '/imgs/categories/math.png',
+        'code': '/imgs/categories/code.png',
+        'default': '/imgs/categories/default.png'
+      };
+      
+      if (category.icon) {
+        // 如果是完整URL路径，直接使用
+        if (category.icon.startsWith('http')) {
+          return category.icon;
+        }
+        
+        // 如果是已知图标，使用映射
+        if (iconMap[category.icon]) {
+          return iconMap[category.icon];
+        }
+        
+        // 尝试从/icons/路径获取
+        return `/icons/${category.icon}.svg`;
+      }
+      
+      // 默认图标
+      return '/imgs/categories/default.png';
+    },
+    // 处理图标加载错误
+    handleIconError(category) {
+      console.log('图标加载失败:', category.name);
+      // 设置为使用emoji类型
+      category.iconType = 'emoji';
+      category.emoji = '📚'; // 默认使用书籍emoji
+    },
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateItemsPerPage);
@@ -535,9 +879,30 @@ export default {
       },
       deep: true
     },
-    // 监听标签搜索，重置页码
-    tagSearchQuery() {
+    // 监听分类搜索，重置展开状态
+    categorySearchQuery() {
+      // 将分类搜索同步到标签搜索以保持兼容性
+      this.tagSearchQuery = this.categorySearchQuery;
       this.tagCurrentPage = 1;
+      
+      // 如果有搜索词，自动展开所有分类
+      if (this.categorySearchQuery) {
+        const newExpandedCategories = {};
+        this.filteredCategories.forEach(category => {
+          newExpandedCategories[category.id] = true;
+        });
+        this.expandedCategories = newExpandedCategories;
+      } else {
+        // 如果清空搜索词，折叠所有分类
+        this.expandedCategories = {};
+        this.activeCategory = null;
+      }
+    },
+    // 反向同步标签搜索和分类搜索
+    tagSearchQuery() {
+      if (this.categorySearchQuery !== this.tagSearchQuery) {
+        this.categorySearchQuery = this.tagSearchQuery;
+      }
     },
     selectedStatus() {
       this.currentPage = 1;
@@ -953,11 +1318,11 @@ export default {
 }
 
 /* 标签搜索框样式 */
-.tag-search {
+.category-search {
   margin-bottom: 16px;
 }
 
-.tag-search-input {
+.category-search-input {
   width: 100%;
   padding: 8px 12px;
   background-color: #2d2d3f;
@@ -968,13 +1333,13 @@ export default {
   transition: all 0.3s ease;
 }
 
-.tag-search-input:focus {
+.category-search-input:focus {
   outline: none;
   border-color: #4ecdc4;
   box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
 }
 
-.tag-search-input::placeholder {
+.category-search-input::placeholder {
   color: #a6accd;
 }
 
@@ -1040,6 +1405,7 @@ export default {
   .category-tag {
     width: calc(50% - 6px);
     padding: 12px 16px;
+    user-select: none;
   }
 }
 
@@ -1103,13 +1469,14 @@ export default {
   padding: 16px 20px;
   border-radius: 12px;
   text-align: left;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.3s ease;
   font-size: 15px;
   font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  user-select: none !important;
 }
 
 .category-tag:hover {
@@ -1233,5 +1600,178 @@ export default {
 
 .status-select .el-option:hover {
     background-color: #555; /* 悬停时的深色背景 */
+}
+
+/* 新增分类卡片样式 */
+.category-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.parent-category-card {
+  background-color: #1e1e2e;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  user-select: none !important;
+}
+
+.parent-category-card:hover {
+  transform: translateY(-2px);
+  border-color: #4ecdc4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.parent-category-card.active {
+  border-color: #4ecdc4;
+  background-color: #252536;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+}
+
+.category-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-icon.emoji {
+  font-size: 20px;
+  background-color: rgba(78, 205, 196, 0.1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+
+.category-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.category-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  user-select: none;
+}
+
+.category-arrow {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a6accd;
+  transition: transform 0.3s ease;
+}
+
+.category-arrow.expanded {
+  transform: rotate(180deg);
+  color: #4ecdc4;
+}
+
+.sub-categories {
+  background-color: #252536;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sub-categories.expanded {
+  padding: 8px 16px 16px;
+  max-height: 500px; /* 调整为合适的高度 */
+}
+
+.sub-category-card {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background-color: #2d2d3f;
+  border-radius: 8px;
+  color: #a6accd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.sub-category-card:hover {
+  background-color: rgba(78, 205, 196, 0.1);
+  color: #fff;
+  transform: translateX(5px);
+}
+
+.sub-category-card.active {
+  background-color: #4ecdc4;
+  color: white;
+}
+
+.check-icon {
+  font-weight: bold;
+}
+
+/* 加载状态样式 */
+.category-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 16px;
+  color: #a6accd;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(78, 205, 196, 0.2);
+  border-top-color: #4ecdc4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .sub-categories.expanded {
+    max-height: 300px;
+  }
+  
+  .sub-category-card {
+    padding: 10px 12px;
+    margin: 6px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .parent-category-card {
+    margin-bottom: 10px;
+  }
+  
+  .category-header {
+    padding: 12px;
+  }
+  
+  .sub-categories.expanded {
+    padding: 6px 12px 12px;
+  }
 }
 </style> 

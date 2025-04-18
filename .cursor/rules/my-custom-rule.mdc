@@ -58,7 +58,7 @@ return user_input_password == stored_password
 ```
 2. **数据库操作记录**：在对数据库进行修改等操作后，手动修改项目根目录文件夹project_information的子文件夹database_information文件夹中的AIreview_database_information文件。记录内容应包含操作涉及的 SQL 语句、对语句的解释、操作影响的表及字段信息。若出现错误及修改情况，需详细记录错误描述、正确解决方案。示例如下：
 ```
-- **操作时间**：2025.4.17
+- **操作时间**：2025.4.17(具体的时间你需要联网调用现在的时间,而不是固定的时间)
 
 - **操作描述**：执行插入数据操作
 
@@ -82,13 +82,13 @@ return user_input_password == stored_password
 
 - **正确解决方案**：将SQL语句修改为INSERT INTO users (username, email, password) VALUES ('new_user', 'new_user@example.com', 'hashed_password');，并重新执行。
 ```
-3. **问题解决及迭代记录**：在遇到特定问题并解决后，以及后续对同样问题的迭代解决过程中，在项目根目录文件夹project_information的子文件夹bug_fixed_information创建或修改对应的文件。记录格式如下：
+3. **问题解决及迭代记录**：在遇到特定问题并解决后，以及后续对同样问题的迭代解决过程中，在项目根目录文件夹project_information的子文件夹bug_fixed_information创建或修改对应的文件。记录格式如下：其中 时间你需要调用现在的时间,而不是用到示例的固定时间
 ```
 # jwt_bug_fixed_log
 
 1. [ ❎ ] 发现在jwt的登录部分存在令牌无法获取的问题
 
-2. { 2025.4.17.22:00PM } 修改了文件路径为`backend/src/authentication/jwt_utils.py`，添加了令牌认证机制。具体修改内容为在`generate_token`函数中，调整了获取用户信息的逻辑，确保能正确生成令牌。
+2. { 2025.4.17 } 修改了文件路径为`backend/src/authentication/jwt_utils.py`，添加了令牌认证机制。具体修改内容为在`generate_token`函数中，调整了获取用户信息的逻辑，确保能正确生成令牌。
 
 3. [ ❎ ] 对于令牌无法获取的问题解决方案，需要修改jwt的验证机制、令牌的获取方式。具体计划为：
 
@@ -100,7 +100,7 @@ return user_input_password == stored_password
 
 1. [ ✅ ] 发现在jwt的登录部分存在令牌无法获取的问题
 
-2. { 2025.4.18.10:00AM } 再次修改了`backend/src/authentication/jwt_utils.py`文件，进一步优化了令牌生成算法，提高了令牌生成的稳定性。
+2. { 2025.4.18 } 再次修改了`backend/src/authentication/jwt_utils.py`文件，进一步优化了令牌生成算法，提高了令牌生成的稳定性。
 
 3. [ ✅ ] 对于令牌无法获取的问题解决方案，修改jwt的验证机制、令牌的获取方式已完成。经过多轮测试，令牌获取成功率达到99%以上，已解决该问题。
 ```

@@ -228,6 +228,28 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// 获取所有题目分类（从problem_categories表）
+router.get('/all-categories', async (req, res) => {
+  try {
+    console.log('Getting problem categories from problem_categories table');
+    const [categories] = await db.query('SELECT * FROM problem_categories ORDER BY level, order_num');
+    
+    // 记录API调用
+    console.log('获取到题目分类数据:', categories.length, '条记录');
+    
+    res.json({
+      code: 200,
+      data: categories
+    });
+  } catch (error) {
+    console.error('Error getting problem categories from problem_categories table:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取题目分类失败'
+    });
+  }
+});
+
 // 获取所有标签
 router.get('/tags', async (req, res) => {
   try {
