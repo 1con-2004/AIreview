@@ -262,3 +262,50 @@
 - 导入所有需要支持的编程语言的Prism高亮模块。
 - 创建语言标识符映射函数，将各种常见的语言名称映射到Prism支持的标准标识符。
 
+{ 2024.5.14 } 改动: 修复AI分析功能认证问题
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- views
+        |- problems
+          |- detail
+            |- ProblemDetail.vue
+              |- description: 改进token获取逻辑，确保能正确获取和使用token，解决"请先登录"的提示问题。
+      |- main.js
+        |- description: 增强axios请求拦截器中的token处理能力，确保所有请求都能正确携带token。
+
+2. - backend
+    |- src
+      |- middleware
+        |- auth.js
+          |- description: 改进token验证逻辑，添加更多日志输出以便调试。
+        |- auth.middleware.js
+          |- description: 修复使用的JWT密钥配置，统一使用jwtConfig.SECRET_KEY。
+      |- controllers
+        |- auth.controller.js
+          |- description: 修复使用的JWT密钥配置，统一使用jwtConfig.SECRET_KEY。
+      |- api
+        |- ai
+          |- index.js
+            |- description: 增加详细的日志记录，方便排查认证问题。
+
+主要改动逻辑:
+
+- 统一了后端JWT令牌验证使用的密钥，确保所有验证使用相同的密钥配置。
+- 改进了前端token获取逻辑，增强获取token的可靠性。
+- 在前后端添加了更多日志记录以便更好地调试认证问题。
+- 改进了错误处理和提示信息，提供更友好的用户体验。
+
+问题出现原因:
+
+- 在项目中同时存在两种不同的JWT密钥配置方式，导致验证失败。
+- 前端token获取逻辑不够健壮，在某些情况下未能正确获取token。
+
+解决问题使用的简要方案:
+
+- 统一使用jwtConfig.SECRET_KEY作为JWT密钥配置。
+- 增强前端token获取逻辑，确保能从多个可能的位置获取token。
+- 完善日志记录，便于问题排查。
+

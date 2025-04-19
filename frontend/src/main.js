@@ -73,21 +73,46 @@ axios.defaults.headers.common['Content-Type'] = 'application/json'
 // 添加请求拦截器
 axios.interceptors.request.use(
   config => {
-    console.log('发送请求:', config.method.toUpperCase(), config.url, config.data);
+    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 发送请求: ${config.method.toUpperCase()} ${config.url}`);
     
-    // 从localStorage获取token并添加到请求头
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    if (userInfo.accessToken) {
-      config.headers['Authorization'] = `Bearer ${userInfo.accessToken}`;
-      console.log('添加认证令牌:', `Bearer ${userInfo.accessToken}`);
+    // 增强token获取逻辑
+    let accessToken = null;
+    
+    // 首先尝试从localStorage的userInfo中获取token
+    try {
+      const userInfoStr = localStorage.getItem('userInfo');
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        if (userInfo && userInfo.accessToken) {
+          accessToken = userInfo.accessToken;
+          console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从userInfo获取到token: ${accessToken.substring(0, 15)}...`);
+        }
+      }
+    } catch (e) {
+      console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 解析userInfo出错:`, e);
+    }
+    
+    // 如果userInfo中没有token，尝试直接从localStorage获取
+    if (!accessToken) {
+      accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从localStorage直接获取到token: ${accessToken.substring(0, 15)}...`);
+      }
+    }
+    
+    // 如果有token，添加到请求头
+    if (accessToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`;
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 添加认证令牌到请求头`);
     } else {
-      console.log('未找到认证令牌');
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 未找到认证令牌`);
     }
     
     return config;
   },
   error => {
-    console.error('请求错误:', error);
+    console.error(`[前端日志] [${new Date().toISOString()}] 请求错误:`, error);
     return Promise.reject(error);
   }
 );

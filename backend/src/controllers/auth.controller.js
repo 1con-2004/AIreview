@@ -39,10 +39,16 @@ exports.login = async (req, res) => {
       type: 'access'
     };
     
+    // 引入正确的JWT配置
+    const jwtConfig = require('../config/jwt');
+    
     const accessToken = jwt.sign(
       payload,
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      jwtConfig.SECRET_KEY,
+      { 
+        expiresIn: jwtConfig.ACCESS_TOKEN_EXPIRE,
+        ...jwtConfig.TOKEN_CONFIG
+      }
     );
     
     // 生成刷新令牌
@@ -53,8 +59,11 @@ exports.login = async (req, res) => {
     
     const refreshToken = jwt.sign(
       refreshPayload,
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+      jwtConfig.SECRET_KEY,
+      { 
+        expiresIn: jwtConfig.REFRESH_TOKEN_EXPIRE,
+        ...jwtConfig.TOKEN_CONFIG
+      }
     );
     
     // 存储刷新令牌

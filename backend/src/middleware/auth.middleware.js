@@ -1,3 +1,6 @@
+const jwt = require('jsonwebtoken');
+const jwtConfig = require('../config/jwt');
+
 exports.verifyToken = (req, res, next) => {
   // 从请求头获取令牌
   const token = getTokenFromHeader(req);
@@ -10,8 +13,8 @@ exports.verifyToken = (req, res, next) => {
   }
   
   try {
-    // 验证令牌
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // 验证令牌，使用统一的JWT密钥
+    const decoded = jwt.verify(token, jwtConfig.SECRET_KEY);
     
     // 检查令牌类型
     if (decoded.type !== 'access') {

@@ -6,10 +6,18 @@ const ZhipuAI = require('../../utils/zhipuAI');
 
 // 代码分析路由
 router.post('/analyze-code', authenticateToken, async (req, res) => {
+  const requestId = req.requestId || `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析开始=========`);
+  console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户ID: ${req.user?.id}, 用户名: ${req.user?.username}`);
+  
   try {
     const { code, language, problemId } = req.body;
     
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到分析请求 - 语言: ${language}, 题目ID: ${problemId}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 代码长度: ${code?.length || 0} 字符`);
+    
     if (!code || !language || !problemId) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 缺少必要参数`);
       return res.status(400).json({
         success: false,
         message: '缺少必要参数'
@@ -17,12 +25,14 @@ router.post('/analyze-code', authenticateToken, async (req, res) => {
     }
 
     // 获取题目信息
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 正在获取题目信息: ${problemId}`);
     const [problems] = await db.query(
       'SELECT title, description FROM problems WHERE problem_number = ?',
       [problemId]
     );
 
     if (!problems || problems.length === 0) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 题目不存在: ${problemId}`);
       return res.status(404).json({
         success: false,
         message: '题目不存在'
@@ -30,6 +40,7 @@ router.post('/analyze-code', authenticateToken, async (req, res) => {
     }
 
     const problem = problems[0];
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 成功获取题目: ${problem.title}`);
 
     // 修改提示信息,使用更宽松的格式要求
     const messages = [
@@ -67,7 +78,7 @@ ${code}
       }
     ];
 
-    console.log('正在调用智谱AI进行代码分析...');
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 正在调用智谱AI进行代码分析...`);
     const zhipuAI = new ZhipuAI();
     const aiResponse = await zhipuAI.chat(messages);
     
@@ -78,26 +89,39 @@ ${code}
       analysis = {
         codeAnalysis: aiResponse || '未获取到分析内容'
       };
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI响应解析成功, 内容长度: ${aiResponse?.length || 0}`);
     } catch (error) {
-      console.error('解析AI响应失败:', error);
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 解析AI响应失败:`, error);
       analysis = {
         codeAnalysis: '解析AI响应失败'
       };
     }
 
-    console.log('AI分析完成');
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析完成，准备返回结果`);
     
     res.json({
       success: true,
       data: analysis
     });
     
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析结束=========`);
   } catch (error) {
-    console.error('代码分析失败:', error);
+    console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 代码分析失败:`, error);
+    
+    // 记录详细错误信息
+    if (error.response) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] API响应错误:`, {
+        status: error.response.status,
+        data: error.response.data
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: '代码分析失败：' + error.message
     });
+    
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析异常结束=========`);
   }
 });
 

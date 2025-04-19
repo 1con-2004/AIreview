@@ -21,28 +21,11 @@ const authenticateToken = (req, res, next) => {
     });
   }
 
-  jwt.verify(token, jwtConfig.SECRET_KEY, (err, decoded) => {
-    if (err) {
-      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 令牌验证失败:`, err.message);
-      
-      if (err.name === 'TokenExpiredError') {
-        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌已过期`);
-        return res.status(401).json({
-          success: false,
-          message: '令牌已过期',
-          code: 'TOKEN_EXPIRED'
-        });
-      }
-      
-      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌无效: ${err.name}`);
-      return res.status(403).json({
-        success: false,
-        message: '令牌无效',
-        code: 'TOKEN_INVALID',
-        error: err.message
-      });
-    }
-
+  // 记录使用的密钥前10个字符，用于调试
+  console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 使用的密钥前缀: ${jwtConfig.SECRET_KEY.substring(0, 10)}...`);
+  
+  try {
+    const decoded = jwt.verify(token, jwtConfig.SECRET_KEY);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌验证成功，用户信息:`, decoded);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户ID: ${decoded.id}, 用户名: ${decoded.username}, 角色: ${decoded.role}`);
     
@@ -52,7 +35,37 @@ const authenticateToken = (req, res, next) => {
     
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========认证完成=========`);
     next();
-  });
+  } catch (err) {
+    console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 令牌验证失败:`, err.message);
+      
+    if (err.name === 'TokenExpiredError') {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌已过期`);
+      return res.status(401).json({
+        success: false,
+        message: '令牌已过期',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    
+    // 增加令牌无效的详细错误信息
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌无效: ${err.name}, 错误: ${err.message}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 令牌内容: ${token}`);
+    
+    try {
+      // 尝试解码令牌而不验证，以查看内容
+      const decoded = jwt.decode(token);
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 解码后的令牌内容:`, decoded);
+    } catch (decodeErr) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 无法解码令牌:`, decodeErr.message);
+    }
+    
+    return res.status(403).json({
+      success: false,
+      message: '令牌无效',
+      code: 'TOKEN_INVALID',
+      error: err.message
+    });
+  }
 };
 
 // 检查用户是否是管理员的中间件

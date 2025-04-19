@@ -1366,10 +1366,30 @@ export default defineComponent({
       aiAnalysisResult.value = null
 
       try {
-        const userInfoStr = localStorage.getItem('userInfo')
-        const token = userInfoStr ? JSON.parse(userInfoStr).token : null
+        // 改进获取token的方式，确保能找到正确的token
+        let accessToken = null
         
-        if (!token) {
+        // 首先从userInfo中获取token
+        const userInfoStr = localStorage.getItem('userInfo')
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr)
+            accessToken = userInfo.accessToken || userInfo.token 
+          } catch (e) {
+            console.error('解析userInfo失败:', e)
+          }
+        }
+        
+        // 如果userInfo中没有token，尝试直接从localStorage获取
+        if (!accessToken) {
+          accessToken = localStorage.getItem('accessToken')
+        }
+        
+        // 添加更多日志便于调试
+        console.log('获取到的accessToken:', accessToken ? `${accessToken.substring(0, 10)}...` : 'null')
+        
+        if (!accessToken) {
+          isAnalyzing.value = false
           ElMessage.error('请先登录')
           return
         }
@@ -1382,7 +1402,7 @@ export default defineComponent({
             problemId: route.params.id
           },
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${accessToken}` }
           }
         )
 
@@ -1413,7 +1433,19 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('AI分析失败:', error)
-        ElMessage.error(error.response?.data?.message || 'AI分析失败，请稍后重试')
+        // 添加更详细的错误处理
+        if (error.response) {
+          console.error('响应状态:', error.response.status)
+          console.error('响应数据:', error.response.data)
+          
+          if (error.response.status === 401) {
+            ElMessage.error('登录已过期，请重新登录')
+          } else {
+            ElMessage.error(error.response.data?.message || 'AI分析失败，请稍后重试')
+          }
+        } else {
+          ElMessage.error('AI分析失败，请稍后重试')
+        }
       } finally {
         isAnalyzing.value = false
       }
@@ -1464,11 +1496,22 @@ export default defineComponent({
     const handleAiAnalysis = async () => {
       try {
         isAnalyzing.value = true
+        
+        // 获取accessToken
+        const userInfoStr = localStorage.getItem('userInfo')
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
+        
+        if (!accessToken) {
+          ElMessage.error('请先登录')
+          return
+        }
+        
         const response = await analyzeCode({
           code: editor.value.getValue(),
           language: selectedLanguageForCode.value,
           problemId: route.params.id
-        })
+        }, accessToken)  // 传递accessToken到analyzeCode函数
 
         if (response.data.success) {
           const analysis = response.data.data.codeAnalysis
