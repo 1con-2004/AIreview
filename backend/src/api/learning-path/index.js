@@ -268,17 +268,17 @@ router.get('/directions', authenticateToken, async (req, res) => {
       const resources = [
         {
           title: `${tag}编程教学视频集锦`,
-          url: `https://search.bilibili.com/all?keyword=${encodeURIComponent(tag)}`,
+          url: `https://search.bilibili.com/all?keyword=编程${encodeURIComponent(tag)}`,
           source: "哔哩哔哩"
         },
         {
           title: `${tag}相关短视频教程`,
-          url: `https://www.douyin.com/search/${encodeURIComponent(tag)}`,
+          url: `https://www.douyin.com/search/编程${encodeURIComponent(tag)}`,
           source: "抖音"
         },
         {
           title: `${tag}学习资料大全`,
-          url: `https://so.csdn.net/so/search?q=${encodeURIComponent(tag)}`,
+          url: `https://so.csdn.net/so/search?q=编程${encodeURIComponent(tag)}`,
           source: "CSDN"
         }
       ];
