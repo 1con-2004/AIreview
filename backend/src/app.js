@@ -12,7 +12,6 @@ const communityRouter = require('./api/community');
 const judgeRouter = require('./api/judge');
 const userRouter = require('./api/user');
 const aiRouter = require('./api/ai');
-const learningPathRouter = require('./api/learning-path');
 const learningPlansRouter = require('./api/learning-plans');
 const statsRouter = require('./api/stats');
 const studentRouter = require('./api/admin/student');
@@ -108,7 +107,6 @@ app.use('/api/user/profile', require('./api/user/profile'));
 app.use('/api/user', userRouter);
 
 app.use('/api/ai', aiRouter);
-app.use('/api/learning-path', learningPathRouter);
 app.use('/api/learning-plans', learningPlansRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/admin/classes', classRouter);

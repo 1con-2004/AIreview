@@ -120,8 +120,8 @@
           }"
           :row-class-name="rowClassName"
         >
-          <el-table-column prop="problem_number" label="题目序号" width="120" align="center" />
-          <el-table-column prop="title" label="题目标题" align="left" />
+          <el-table-column prop="problem_number" label="题目序号" width="130" align="center" />
+          <el-table-column prop="title" label="题目标题" align="center" />
           <el-table-column prop="difficulty" label="难度" width="100" align="center">
             <template #default="scope">
               <el-tag
@@ -139,7 +139,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="完成状态" width="120" align="center">
+          <el-table-column prop="status" label="完成状态" width="130" align="center">
             <template #default="scope">
               <el-tag
                 :type="scope.row.status === 'Accepted' ? 'success' : 'info'"
@@ -149,7 +149,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="submission_count" label="提交次数" width="120" align="center" />
+          <el-table-column prop="submission_count" label="提交次数" width="130" align="center" />
         </el-table>
 
         <div class="pagination-container">
