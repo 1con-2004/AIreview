@@ -302,9 +302,76 @@
                 </div>
                 
                 <div v-else-if="isAnalyzing" class="analysis-loading">
-                  <div class="loading-spinner">
-                    <i class="el-icon-loading analyzing-icon"></i>
-                    <span>正在分析代码，请稍候...</span>
+                  <div class="loading-container">
+                    <div class="ai-brain-loading">
+                      <div class="brain-container">
+                        <div class="brain-icon">
+                          <div class="connections">
+                            <span></span><span></span><span></span><span></span>
+                            <span></span><span></span><span></span><span></span>
+                          </div>
+                          <svg viewBox="0 0 32 32" class="brain-svg">
+                            <path d="M16,24c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S16.6,24,16,24z"/>
+                            <path d="M18,12c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S18.6,12,18,12z"/>
+                            <path d="M23,13c-0.6,0-1,0.4-1,1s0.4,1,1,1s1-0.4,1-1S23.6,13,23,13z"/>
+                            <path d="M24.5,17c-0.8,0-1.5,0.7-1.5,1.5s0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5S25.3,17,24.5,17z"/>
+                            <path d="M9,14c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S8.4,14,9,14z"/>
+                            <path d="M7.5,18c0.8,0,1.5-0.7,1.5-1.5S8.3,15,7.5,15S6,15.7,6,16.5S6.7,18,7.5,18z"/>
+                            <path d="M12,12c0.6,0,1-0.4,1-1s-0.4-1-1-1s-1,0.4-1,1S11.4,12,12,12z"/>
+                            <path d="M30.17,18.36c0.33-2.77-0.99-5.5-3.33-6.88C26.65,10.6,26.3,9.67,25.74,8.9c-1.51-2.11-4.16-3.07-6.68-2.4
+                              c-0.72-0.78-1.73-1.31-2.87-1.45C15.42,5.03,14.65,5,13.88,5.14c-0.32,0.06-0.65,0.15-0.96,0.28c-0.18-0.31-0.41-0.59-0.68-0.83
+                              c-1.05-0.95-2.43-1.34-3.96-1.08c-0.95,0.16-1.83,0.63-2.52,1.33C3.26,5.43,2.2,7.4,2.1,9.51C1.19,10.36,0.62,11.53,0.5,12.8
+                              c-0.2,2.22,0.69,4.33,2.38,5.65c-0.05,1.4,0.28,2.76,0.93,3.96c1.12,2.05,3.12,3.43,5.35,3.7c0.39,0.05,0.78,0.07,1.16,0.07
+                              c1.62,0,3.15-0.46,4.45-1.34c1.24,0.59,2.65,0.91,4.12,0.91c0.21,0,0.42-0.01,0.63-0.02c2.43-0.16,4.69-1.15,6.35-2.8
+                              c0.19-0.18,0.36-0.38,0.53-0.58C27.87,22.29,29.74,20.53,30.17,18.36z M14.29,6.34c0.59-0.11,1.19-0.11,1.78-0.01
+                              c0.71,0.09,1.35,0.42,1.86,0.89c-0.1,0.03-0.19,0.06-0.29,0.1c-0.48,0.19-0.93,0.44-1.33,0.75c-0.21,0.16-0.24,0.47-0.08,0.68
+                              c0.09,0.12,0.23,0.18,0.38,0.18c0.1,0,0.21-0.03,0.3-0.1c0.32-0.24,0.67-0.44,1.05-0.59c0.33-0.13,0.68-0.23,1.04-0.28
+                              c0.11-0.02,0.22-0.03,0.33-0.04c0.51,0.06,0.99,0.23,1.43,0.48c-0.14,0.09-0.29,0.17-0.44,0.24c-0.48,0.22-0.94,0.5-1.35,0.85
+                              c-0.21,0.18-0.24,0.49-0.06,0.7c0.1,0.12,0.24,0.18,0.38,0.18c0.11,0,0.23-0.04,0.32-0.12c0.33-0.28,0.7-0.51,1.08-0.68
+                              c0.05-0.03,0.11-0.05,0.16-0.07c0.84,0.82,1.22,2.05,0.95,3.24c-0.78,0.25-1.5,0.66-2.11,1.2c-0.12,0.1-0.22,0.2-0.33,0.31
+                              c-0.22,0.23-0.43,0.46-0.6,0.72c-0.17,0.27-0.09,0.62,0.17,0.79c0.1,0.06,0.2,0.09,0.31,0.09c0.19,0,0.38-0.09,0.48-0.26
+                              c0.12-0.19,0.28-0.36,0.44-0.53c0.13-0.14,0.27-0.28,0.42-0.4c0.44-0.36,0.96-0.65,1.5-0.82c0.1-0.03,0.2-0.02,0.25,0.03
+                              c0.05,0.05,0.06,0.15,0.03,0.25c-0.17,0.54-0.45,1.05-0.82,1.5c-0.12,0.15-0.26,0.29-0.4,0.42c-0.16,0.16-0.34,0.31-0.53,0.44
+                              c-0.17,0.11-0.26,0.29-0.26,0.48c0,0.11,0.03,0.21,0.09,0.31c0.14,0.22,0.43,0.29,0.66,0.17c1.46-1.02,2.14-2.84,1.71-4.56
+                              c0.12-0.11,0.23-0.22,0.34-0.33c0.83-0.87,1.88-1.5,3.05-1.83c1.91,1.12,2.8,3.32,2.15,5.38c-0.58,1.82-2.16,3.04-3.97,3.09
+                              c-0.6,0.01-1.2-0.12-1.75-0.38c-0.15-0.07-0.33-0.06-0.47,0.03c-0.14,0.09-0.23,0.25-0.24,0.42c-0.05,0.79-0.26,1.52-0.6,2.18
+                              c-0.65,1.26-1.82,2.16-3.18,2.48c-0.16,0.04-0.32,0.07-0.48,0.09c-0.13,0.02-0.27,0.03-0.4,0.04c-0.13,0.01-0.25,0.01-0.38,0.01
+                              c-0.17,0-0.35-0.01-0.52-0.03c-0.16-0.02-0.32-0.04-0.48-0.07c-0.5-0.1-0.98-0.26-1.43-0.48c-0.02-0.01-0.05-0.02-0.07-0.03
+                              c-0.71-0.37-1.33-0.89-1.81-1.53c-0.56-0.74-0.91-1.62-0.99-2.58c-0.01-0.14-0.08-0.26-0.19-0.35c-0.11-0.09-0.26-0.13-0.4-0.1
+                              c-0.78,0.13-1.58,0.09-2.34-0.1c-0.75-0.19-1.43-0.55-1.99-1.04c-1.51-1.31-1.88-3.48-0.99-5.21c0.07-0.13,0.08-0.28,0.03-0.42
+                              C6.97,8.39,6.85,8.27,6.7,8.2C6.24,7.98,5.85,7.66,5.57,7.28c-0.37-0.51-0.54-1.1-0.51-1.73c0.05-1.11,0.8-2.1,1.86-2.45
+                              c0.58-0.19,1.19-0.19,1.75-0.02c0.81,0.25,1.45,0.87,1.71,1.68c0.05,0.15,0.16,0.27,0.31,0.32c0.15,0.05,0.31,0.03,0.44-0.05
+                              c0.22-0.14,0.46-0.25,0.71-0.33C13.08,6.5,13.63,6.39,14.29,6.34z M20.1,19.98c0.09-0.38,0.16-0.77,0.19-1.17
+                              c0.67,0.17,1.35,0.19,2.02,0.07c0.1-0.02,0.2-0.04,0.3-0.06c0.8-0.21,1.55-0.62,2.14-1.22c0.5-0.5,0.86-1.11,1.07-1.78
+                              c0.08-0.27,0.14-0.54,0.18-0.82c0.04-0.29,0.05-0.58,0.04-0.88c-0.01-0.12-0.03-0.24-0.05-0.36c-0.05-0.33-0.13-0.65-0.25-0.96
+                              c0.92,1.05,1.35,2.49,1.14,3.91c-0.25,1.72-1.45,3.16-3.03,3.8C22.61,22.04,21.09,21.4,20.1,19.98z M5.73,13.81
+                              c0.22,0.19,0.26,0.53,0.06,0.76c-0.95,1.07-0.99,2.69-0.09,3.8c0.03,0.03,0.06,0.06,0.09,0.09c0.07,0.04,0.14,0.07,0.23,0.07
+                              c0.12,0,0.23-0.05,0.32-0.14c0.17-0.19,0.16-0.48-0.03-0.65c-0.03-0.03-0.07-0.06-0.1-0.09c-0.66-0.81-0.62-1.98,0.07-2.77
+                              c0.19-0.22,0.17-0.56-0.05-0.76c-0.11-0.1-0.25-0.14-0.39-0.14C5.97,13.97,5.83,14.02,5.73,13.81z M11.96,22.95
+                              c-0.91,0.73-2.03,1.11-3.18,1.11c-0.29,0-0.58-0.02-0.87-0.07c-1.86-0.22-3.52-1.34-4.46-3.01c-0.46-0.84-0.72-1.77-0.77-2.73
+                              c-0.01-0.09,0-0.18,0-0.27c0.12,0.12,0.25,0.24,0.38,0.35c0.44,0.38,0.94,0.68,1.48,0.91c0.67,0.28,1.39,0.43,2.14,0.43
+                              c0.11,0,0.23-0.01,0.34-0.01c0.14-0.01,0.28-0.02,0.42-0.03c0.09-0.01,0.19-0.02,0.28-0.03c0.11-0.02,0.22-0.03,0.33-0.05
+                              c0.11-0.02,0.21-0.05,0.32-0.07c0.2-0.05,0.39-0.11,0.57-0.18c0.41-0.14,0.8-0.33,1.17-0.56c1.75-1.09,2.82-3.03,2.75-5.06
+                              c0.61,0.35,1.12,0.87,1.47,1.53c0.39,0.72,0.51,1.53,0.37,2.33c-0.14,0.78-0.51,1.47-1.05,1.99c-0.28,0.28-0.62,0.51-1,0.67
+                              c-0.53,0.22-1.12,0.26-1.68,0.1c-0.25-0.07-0.51,0.07-0.58,0.32c-0.07,0.25,0.07,0.51,0.32,0.58c0.28,0.08,0.56,0.12,0.85,0.12
+                              c0.42,0,0.84-0.08,1.24-0.24c0.51-0.21,0.96-0.54,1.33-0.91c0.42,0.55,0.95,1.02,1.57,1.36c0.1,0.06,0.2,0.11,0.31,0.16
+                              C13.95,21.59,12.9,22.39,11.96,22.95z M26.36,21.38c-1.47,1.44-3.43,2.31-5.52,2.45c-0.19,0.01-0.38,0.02-0.56,0.02
+                              c-1.37,0-2.7-0.32-3.89-0.93c-0.02-0.01-0.04-0.02-0.06-0.03c-0.3-0.16-0.58-0.34-0.85-0.54c-0.34-0.25-0.66-0.53-0.95-0.83
+                              c-0.1-0.11-0.2-0.22-0.3-0.33c0.37-0.33,0.69-0.72,0.93-1.16c0.05-0.08,0.09-0.17,0.13-0.26c1.37,1.51,3.48,2.01,5.35,1.22
+                              c1.93-0.81,3.26-2.72,3.34-4.85c0.03-0.77-0.08-1.51-0.32-2.2c0.86,0.23,1.67,0.67,2.34,1.32c0.61,0.58,1.07,1.29,1.36,2.09
+                              c0.42,1.19,0.39,2.48-0.1,3.64C26.99,20.45,26.71,20.93,26.36,21.38z"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="loading-text">
+                      <div class="text">AI正在分析代码</div>
+                      <div class="dots">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -399,6 +466,7 @@
               class="ai-analyze-button" 
               @click="getAiAnalysis"
               :disabled="!code.trim() || isAnalyzing"
+              
             >
               <i :class="[
                 isAnalyzing ? 'el-icon-loading analyzing-icon' : 'el-icon-magic-stick'
@@ -459,14 +527,24 @@
             
             <!-- 测试用例面板 -->
             <div v-if="activeConsoleTab === 'testCase'" class="tab-panel">
-              <textarea 
-                v-model="customInput"
-                placeholder="输入测试用例..."
-                class="custom-input-textarea"
-                style="border: 1px solid #4ecdc4; background-color: rgba(78, 205, 196, 0.1); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: border-color 0.3s;"
-                @focus="(event) => { event.target.style.borderColor='#4caf50'; event.target.style.boxShadow='0 0 5px rgba(76, 175, 80, 0.5)'; }"
-                @blur="(event) => { event.target.style.borderColor='#4ecdc4'; event.target.style.boxShadow='none'; }"
-              ></textarea>
+              <div class="input-with-line-numbers">
+                <div class="line-numbers">
+                  <div v-for="n in (customInput.split('\n').length || 1)" :key="n" class="line-number">
+                    {{ n }}
+                  </div>
+                </div>
+                <textarea 
+                  v-model="customInput"
+                  placeholder="输入测试用例..."
+                  class="custom-input-textarea"
+                  style="border: 1px solid #4ecdc4; background-color: rgba(78, 205, 196, 0.1); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: border-color 0.3s;"
+                  @focus="(event) => { event.target.style.borderColor='#4caf50'; event.target.style.boxShadow='0 0 5px rgba(76, 175, 80, 0.5)'; }"
+                  @blur="(event) => { event.target.style.borderColor='#4ecdc4'; event.target.style.boxShadow='none'; }"
+                  @input="updateLineNumbers"
+                  @scroll="syncScroll"
+                  ref="customInputTextarea"
+                ></textarea>
+              </div>
             </div>
 
             <!-- 程序输出面板 -->
@@ -1168,6 +1246,7 @@ export default defineComponent({
       runStatus.value = ''
       consoleOutput.value = ''
       compilerOutput.value = '' // 清空编译器输出
+      isConsoleCollapsed.value = false // 确保控制台展开
 
       try {
         const userInfoStr = localStorage.getItem('userInfo')
@@ -1191,20 +1270,57 @@ export default defineComponent({
           }
         )
 
-        if (response.data.success) {
+        // 检查是否存在编译警告或错误
+        const hasCompilerIssues = response.data.data.compilerOutput && 
+                                (response.data.data.compilerOutput.includes('warning') || 
+                                 response.data.data.compilerOutput.includes('error'));
+
+        if (response.data.success && !hasCompilerIssues) {
+          // 真正成功的情况：后端返回成功且没有编译警告或错误
           runStatus.value = 'success'
           consoleOutput.value = response.data.data.output
           compilerOutput.value = response.data.data.compilerOutput
+          
+          // 运行成功后自动聚焦到程序输出面板
+          activeConsoleTab.value = 'output'
+          
+          // 显示成功提示
+          ElMessage({
+            message: '代码已成功编译,已跳转到程序输出,请自行查看运行结果',
+            type: 'success',
+            duration: 3000
+          })
         } else {
+          // 有编译警告或错误的情况，即使后端返回成功也视为有问题
           runStatus.value = 'error'
-          consoleOutput.value = ''
+          consoleOutput.value = response.data.data.output || ''
           compilerOutput.value = response.data.data.compilerOutput || response.data.message
+          
+          // 运行失败后自动聚焦到编译器输出面板
+          activeConsoleTab.value = 'compiler'
+          
+          // 显示错误提示
+          ElMessage({
+            message: '该代码存在语法错误,无法正常编译,已跳转到编译器输出,根据输出检查代码存在的问题',
+            type: 'error',
+            duration: 3000
+          })
         }
       } catch (error) {
         console.error('运行代码失败:', error)
         runStatus.value = 'error'
         consoleOutput.value = ''
         compilerOutput.value = error.response?.data?.data?.compilerOutput || error.response?.data?.message || '运行失败，请稍后重试'
+        
+        // 运行出错后自动聚焦到编译器输出面板
+        activeConsoleTab.value = 'compiler'
+        
+        // 显示错误提示
+        ElMessage({
+          message: '该代码存在语法错误,无法正常编译,已跳转到编译器输出,根据输出检查代码存在的问题',
+          type: 'error',
+          duration: 3000
+        })
       } finally {
         isRunning.value = false
       }
@@ -1394,6 +1510,9 @@ export default defineComponent({
           return
         }
 
+        // 立即切换到左侧AI分析标签页
+        activeTab.value = 'aiAnalysis'
+
         const response = await axios.post(
           'http://localhost:3000/api/ai/analyze-code',
           {
@@ -1423,9 +1542,6 @@ export default defineComponent({
             improvements: improvements,
             performance: extractPerformance(analysis)
           }
-          
-          // 切换到AI分析标签页
-          activeTab.value = 'aiAnalysis'
           
           ElMessage.success('代码分析完成')
         } else {
@@ -1645,6 +1761,21 @@ export default defineComponent({
       return `language-${langKey}`
     }
 
+    // 行号相关方法
+    const updateLineNumbers = () => {
+      nextTick(() => {
+        // 如果需要其他操作，可以在这里添加
+      })
+    }
+
+    // 同步滚动
+    const syncScroll = (e) => {
+      const lineNumbers = document.querySelector('.line-numbers')
+      if (lineNumbers) {
+        lineNumbers.scrollTop = e.target.scrollTop
+      }
+    }
+
     return {
       problem,
       activeTab,
@@ -1732,6 +1863,8 @@ export default defineComponent({
       isExpanded,
       handleBackendResponse,
       getLanguageClass,
+      updateLineNumbers,
+      syncScroll,
     }
   }
 })
@@ -5025,5 +5158,378 @@ pre {
 .status-tag.accepted {
   background-color: #4ecdc4;
   color: white;
+}
+
+.analysis-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #1e1e2e;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-brain-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.brain-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.brain-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.connections {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.connections span {
+  width: 10px;
+  height: 10px;
+  background-color: #4ecdc4;
+  border-radius: 50%;
+  margin: 0 5px;
+}
+
+.brain-svg {
+  width: 100px;
+  height: 100px;
+}
+
+.loading-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  color: #a6accd;
+}
+
+.text {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.dots {
+  display: flex;
+  justify-content: space-between;
+  width: 30px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #a6accd;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 增强AI分析加载动画效果 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  width: 100%;
+}
+
+.ai-brain-loading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+}
+
+.brain-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.brain-icon {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connections {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.connections span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background-color: #4ecdc4;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(78, 205, 196, 0.8);
+}
+
+.connections span:nth-child(1) {
+  top: 10%;
+  left: 20%;
+  animation: connect 3s ease-in-out infinite, glow 2s ease-in-out infinite;
+}
+
+.connections span:nth-child(2) {
+  top: 20%;
+  right: 15%;
+  animation: connect 2.5s ease-in-out infinite, glow 1.8s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+.connections span:nth-child(3) {
+  bottom: 30%;
+  left: 15%;
+  animation: connect 2.8s ease-in-out infinite, glow 1.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.connections span:nth-child(4) {
+  bottom: 20%;
+  right: 20%;
+  animation: connect 3.2s ease-in-out infinite, glow 2.2s ease-in-out infinite;
+  animation-delay: 0.7s;
+}
+
+.connections span:nth-child(5) {
+  top: 40%;
+  left: 10%;
+  animation: connect 2.6s ease-in-out infinite, glow 1.7s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.connections span:nth-child(6) {
+  top: 35%;
+  right: 10%;
+  animation: connect 2.9s ease-in-out infinite, glow 1.9s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+.connections span:nth-child(7) {
+  bottom: 40%;
+  left: 25%;
+  animation: connect 3.1s ease-in-out infinite, glow 2.1s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+.connections span:nth-child(8) {
+  bottom: 35%;
+  right: 25%;
+  animation: connect 2.7s ease-in-out infinite, glow 2s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+.brain-svg {
+  width: 100px;
+  height: 100px;
+  z-index: 2;
+  position: relative;
+  fill: #7c4dff;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 8px rgba(124, 77, 255, 0.6));
+  animation: colorShift 4s ease-in-out infinite;
+}
+
+.loading-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #e6edf3;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  animation: fadeInOut 2s ease-in-out infinite;
+}
+
+.dots {
+  display: flex;
+  justify-content: space-between;
+  width: 40px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #4ecdc4;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(78, 205, 196, 0.6);
+}
+
+.dots .dot:nth-child(1) {
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+.dots .dot:nth-child(2) {
+  animation: bounce 1.4s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.dots .dot:nth-child(3) {
+  animation: bounce 1.4s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+@keyframes connect {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(78, 205, 196, 0.6);
+    background-color: rgba(78, 205, 196, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(78, 205, 196, 1);
+    background-color: rgba(78, 205, 196, 1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes colorShift {
+  0%, 100% {
+    fill: #7c4dff;
+    filter: drop-shadow(0 0 8px rgba(124, 77, 255, 0.6));
+  }
+  33% {
+    fill: #4ecdc4;
+    filter: drop-shadow(0 0 8px rgba(78, 205, 196, 0.6));
+  }
+  66% {
+    fill: #7c4dff;
+    filter: drop-shadow(0 0 8px rgba(124, 77, 255, 0.6));
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* 输入框行号样式 */
+.input-with-line-numbers {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  background-color: #282836;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.line-numbers {
+  padding: 12px 10px;
+  background: #1e1e2e;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  color: #7c7c9c;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.line-number {
+  line-height: 1.6;
+  padding: 0 4px;
+}
+
+.custom-input-textarea {
+  flex: 1;
+  height: 100%;
+  min-height: 220px;
+  background-color: #282836;
+  border: none;
+  border-radius: 0;
+  color: #e6edf3;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.custom-input-textarea:focus {
+  outline: none;
+  border: none;
+  box-shadow: none !important;
 }
 </style>
