@@ -16,26 +16,33 @@ const zhipuAI = new ZhipuAI();
 router.get('/weakness', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const requestId = `weakness-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const forceRefresh = req.query.refresh === 'true';
   
-  console.log(`[${requestId}] 获取用户弱点分析，用户ID: ${userId}`);
+  console.log(`[${requestId}] 获取用户弱点分析，用户ID: ${userId}, 强制刷新: ${forceRefresh}`);
   
   try {
-    // 首先检查用户是否有已存在的弱点分析数据
-    const [existingAnalysis] = await pool.query(
-      'SELECT * FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC LIMIT 3',
-      [userId]
-    );
-    
-    if (existingAnalysis.length > 0) {
-      console.log(`[${requestId}] 找到${existingAnalysis.length}条已存在的弱点分析数据`);
-      return res.json({
-        success: true,
-        data: existingAnalysis
-      });
+    // 如果不是强制刷新, 首先检查用户是否有已存在的弱点分析数据
+    if (!forceRefresh) {
+      const [existingAnalysis] = await pool.query(
+        'SELECT * FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC LIMIT 3',
+        [userId]
+      );
+      
+      if (existingAnalysis.length > 0) {
+        console.log(`[${requestId}] 找到${existingAnalysis.length}条已存在的弱点分析数据`);
+        return res.json({
+          success: true,
+          data: existingAnalysis
+        });
+      }
+    } else {
+      // 强制刷新时, 删除旧的弱点分析数据
+      console.log(`[${requestId}] 强制刷新模式, 删除旧的弱点分析数据`);
+      await pool.query('DELETE FROM learning_path_weakness_analysis WHERE user_id = ?', [userId]);
     }
     
-    // 如果没有已存在的数据，则计算用户不熟悉的标签
-    console.log(`[${requestId}] 未找到现有弱点分析数据，开始计算用户不熟悉的标签`);
+    // 如果没有已存在的数据或需要强制刷新，则计算用户不熟悉的标签
+    console.log(`[${requestId}] 未找到现有弱点分析数据或需要刷新, 开始计算用户不熟悉的标签`);
     
     // 1. 获取用户提交记录并计算各标签的通过率
     const [submissions] = await pool.query(`
@@ -95,10 +102,18 @@ router.get('/weakness', authenticateToken, async (req, res) => {
     const analysisPromises = weakTags.map(async weakTag => {
       console.log(`[${requestId}] 为标签 ${weakTag.tag} 生成学习思路`);
       
-      // 使用智谱AI生成思路
+      // 使用智谱AI生成思路，避免使用emoji
       const prompt = `我是一名编程学习助手。用户在"${weakTag.tag}"这个标签的题目上通过率较低（${Math.round(weakTag.passRate * 100)}%）。
-      请以教学导师的语气，针对"${weakTag.tag}"这个算法或编程概念，用200字左右简要概括核心思路、关键点、常见解题技巧等。
-      内容需要：简洁明了、易于理解、重点突出，不要使用冗长的理论解释。`;
+      请以教学导师的语气，针对"${weakTag.tag}"这个算法或编程概念，用200-300字左右简要概括核心思路、关键点、常见解题技巧等。
+      
+      内容要求：
+      1. 简洁明了、易于理解、重点突出，不要使用冗长的理论解释
+      2. 请使用emoji表情符号增加生动性和吸引力
+      3. 适当使用换行符号来分隔不同的思想点和段落，确保格式美观
+      4. 可以用短的要点列表来概括关键点，让信息更容易吸收
+      5. 确保内容对编程初学者也能理解
+      
+      请直接返回格式优美的内容，不需要任何解释或前言。`;
       
       try {
         const aiResponse = await zhipuAI.chat([
@@ -122,8 +137,8 @@ router.get('/weakness', authenticateToken, async (req, res) => {
         };
       } catch (error) {
         console.error(`[${requestId}] 为标签 ${weakTag.tag} 生成思路失败:`, error);
-        // 出错时返回一个默认解释
-        const defaultIdea = `"${weakTag.tag}"是编程中的重要概念，掌握它可以帮助你提高解题能力。建议多做与此相关的练习题，理解其核心思想和应用场景。`;
+        // 出错时返回一个默认解释，不使用emoji和复杂格式
+        const defaultIdea = `"${weakTag.tag}"是编程中的重要概念\n\n掌握它可以帮助你提高解题能力和代码质量。\n\n核心要点：\n- 理解基本原理和实现方式\n- 掌握常见应用场景\n- 学习典型解题策略\n\n常见误区：\n- 不理解基础概念\n- 缺乏系统练习\n\n建议多做与此相关的练习题，理解其核心思想和应用场景！`;
         
         const [result] = await pool.query(
           'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
@@ -167,144 +182,154 @@ router.get('/weakness', authenticateToken, async (req, res) => {
 router.get('/directions', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const requestId = `directions-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const forceRefresh = req.query.refresh === 'true';
   
-  console.log(`[${requestId}] 获取用户学习方向建议，用户ID: ${userId}`);
+  console.log(`[${requestId}] 获取用户学习方向建议，用户ID: ${userId}, 强制刷新: ${forceRefresh}`);
   
+  // 开始事务，避免死锁
+  let connection;
   try {
-    // 首先检查是否有已存在的学习方向数据
-    const [existingDirections] = await pool.query(
-      'SELECT * FROM learning_path_directions WHERE user_id = ? ORDER BY created_at DESC LIMIT 9',
-      [userId]
-    );
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
     
-    if (existingDirections.length > 0) {
-      console.log(`[${requestId}] 找到${existingDirections.length}条已存在的学习方向数据`);
-      return res.json({
-        success: true,
-        data: existingDirections
-      });
+    // 如果不是强制刷新, 首先检查是否有已存在的学习方向数据
+    if (!forceRefresh) {
+      const [existingDirections] = await connection.query(
+        'SELECT * FROM learning_path_directions WHERE user_id = ? ORDER BY created_at DESC LIMIT 9',
+        [userId]
+      );
+      
+      if (existingDirections.length > 0) {
+        console.log(`[${requestId}] 找到${existingDirections.length}条已存在的学习方向数据`);
+        await connection.commit();
+        connection.release();
+        return res.json({
+          success: true,
+          data: existingDirections
+        });
+      }
+    } else {
+      // 强制刷新时, 删除旧的学习方向数据
+      console.log(`[${requestId}] 强制刷新模式, 删除旧的学习方向数据`);
+      await connection.query('DELETE FROM learning_path_directions WHERE user_id = ?', [userId]);
     }
     
-    // 如果没有已存在数据，先获取用户的弱点标签
-    console.log(`[${requestId}] 未找到现有学习方向数据，开始生成新的学习方向`);
+    // 获取标签数据，从问题表直接获取常用标签
+    const [tags] = await connection.query(`
+      SELECT tag 
+      FROM (
+        SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(tags, ',', n.n), ',', -1)) as tag
+        FROM problems
+        JOIN (
+          SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
+          SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
+        ) n
+        WHERE n.n <= 1 + LENGTH(tags) - LENGTH(REPLACE(tags, ',', ''))
+        GROUP BY tag
+      ) t
+      WHERE tag != ''
+      ORDER BY RAND()
+      LIMIT 3
+    `);
     
-    const [weaknessTags] = await pool.query(
-      'SELECT tag FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC',
-      [userId]
-    );
-    
-    if (weaknessTags.length === 0) {
-      console.log(`[${requestId}] 未找到用户弱点标签，无法生成学习方向`);
-      return res.json({
-        success: true,
-        data: []
-      });
+    if (tags.length === 0) {
+      console.log(`[${requestId}] 未找到可用标签，使用默认标签`);
+      tags.push({ tag: '数组' }, { tag: '排序' }, { tag: '字符串' });
     }
     
-    console.log(`[${requestId}] 找到${weaknessTags.length}个弱点标签用于生成学习方向`);
+    console.log(`[${requestId}] 找到${tags.length}个标签用于生成学习方向`);
     
-    // 为每个弱点标签生成学习资源
-    const directionsPromises = weaknessTags.map(async weaknessTag => {
-      const tag = weaknessTag.tag;
+    // 为每个标签生成学习资源，使用固定的URL模板
+    const allDirections = [];
+    
+    for (const tagObj of tags) {
+      const tag = tagObj.tag;
       console.log(`[${requestId}] 为标签 ${tag} 生成学习资源`);
       
-      // 使用智谱AI生成学习资源链接
-      const prompt = `我是一名编程学习助手。用户需要学习"${tag}"相关的知识。
-      请推荐3个学习该主题的网络资源，必须从以下三个来源各选一个：CSDN、LeetCode、知乎。
+      // 检查标签是否在弱点分析表中存在，若不存在则先创建
+      const [existingTag] = await connection.query(
+        'SELECT tag FROM learning_path_weakness_analysis WHERE tag = ? AND user_id = ? LIMIT 1',
+        [tag, userId]
+      );
       
-      对于每个资源，请提供：
-      1. 资源标题（简洁明了，30字以内）
-      2. 资源URL（必须是真实存在的链接，格式为完整URL，包含https://）
-      3. 资源来源（CSDN、LeetCode或知乎）
-      
-      请以JSON格式返回，格式如下：
-      [
-        {"title": "资源1标题", "url": "https://资源1链接", "source": "来源网站"},
-        {"title": "资源2标题", "url": "https://资源2链接", "source": "来源网站"},
-        {"title": "资源3标题", "url": "https://资源3链接", "source": "来源网站"}
-      ]`;
-      
-      try {
-        const aiResponse = await zhipuAI.chat([
-          { role: "user", content: prompt }
-        ]);
+      if (existingTag.length === 0) {
+        console.log(`[${requestId}] 标签 ${tag} 在弱点分析表中不存在，添加一条记录`);
         
-        console.log(`[${requestId}] 智谱AI返回标签 ${tag} 的学习资源`);
+        // 添加一条默认的弱点分析记录
+        const defaultIdea = `学习 "${tag}" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪`;
         
-        // 尝试解析JSON响应
-        let resources;
-        try {
-          resources = JSON.parse(aiResponse);
-          
-          if (!Array.isArray(resources)) {
-            throw new Error('返回的资源不是数组格式');
-          }
-        } catch (parseError) {
-          console.error(`[${requestId}] 解析AI返回的资源失败:`, parseError);
-          console.log(`[${requestId}] 原始响应:`, aiResponse);
-          
-          // 使用默认资源
-          resources = [
-            {
-              title: `${tag}编程基础知识详解`,
-              url: `https://blog.csdn.net/topics/search?keyword=${encodeURIComponent(tag)}`,
-              source: "CSDN"
-            },
-            {
-              title: `${tag}相关题目解析`,
-              url: `https://leetcode.cn/tag/${encodeURIComponent(tag)}/`,
-              source: "LeetCode"
-            },
-            {
-              title: `${tag}学习路径指南`,
-              url: `https://www.zhihu.com/search?q=${encodeURIComponent(tag)}`,
-              source: "知乎"
-            }
-          ];
-        }
-        
-        // 将资源保存到数据库并返回
-        const savePromises = resources.map(async resource => {
-          try {
-            const [result] = await pool.query(
-              'INSERT INTO learning_path_directions (user_id, tag, url, title, source) VALUES (?, ?, ?, ?, ?)',
-              [userId, tag, resource.url, resource.title, resource.source]
-            );
-            
-            return {
-              id: result.insertId,
-              user_id: userId,
-              tag: tag,
-              url: resource.url,
-              title: resource.title,
-              source: resource.source,
-              created_at: new Date()
-            };
-          } catch (saveError) {
-            console.error(`[${requestId}] 保存资源到数据库失败:`, saveError);
-            return null;
-          }
-        });
-        
-        return await Promise.all(savePromises);
-      } catch (error) {
-        console.error(`[${requestId}] 为标签 ${tag} 生成学习资源失败:`, error);
-        return [];
+        await connection.query(
+          'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
+          [userId, tag, defaultIdea]
+        );
       }
-    });
+      
+      // 使用固定URL格式生成三个平台的URL
+      const resources = [
+        {
+          title: `${tag}编程教学视频集锦`,
+          url: `https://search.bilibili.com/all?keyword=${encodeURIComponent(tag)}`,
+          source: "哔哩哔哩"
+        },
+        {
+          title: `${tag}相关短视频教程`,
+          url: `https://www.douyin.com/search/${encodeURIComponent(tag)}`,
+          source: "抖音"
+        },
+        {
+          title: `${tag}学习资料大全`,
+          url: `https://so.csdn.net/so/search?q=${encodeURIComponent(tag)}`,
+          source: "CSDN"
+        }
+      ];
+      
+      // 将资源保存到数据库并返回
+      for (const resource of resources) {
+        try {
+          const [result] = await connection.query(
+            'INSERT INTO learning_path_directions (user_id, tag, url, title, source) VALUES (?, ?, ?, ?, ?)',
+            [userId, tag, resource.url, resource.title, resource.source]
+          );
+          
+          allDirections.push({
+            id: result.insertId,
+            user_id: userId,
+            tag: tag,
+            url: resource.url,
+            title: resource.title,
+            source: resource.source,
+            created_at: new Date()
+          });
+        } catch (saveError) {
+          console.error(`[${requestId}] 保存资源到数据库失败:`, saveError);
+          // 继续处理其他资源
+        }
+      }
+    }
     
-    // 等待所有学习方向生成完成并合并结果
-    const allDirections = await Promise.all(directionsPromises);
-    const flattenedDirections = allDirections.flat().filter(item => item !== null);
+    console.log(`[${requestId}] 所有学习方向生成完成，共 ${allDirections.length} 个`);
     
-    console.log(`[${requestId}] 所有学习方向生成完成，共 ${flattenedDirections.length} 个`);
+    // 提交事务
+    await connection.commit();
+    connection.release();
     
     res.json({
       success: true,
-      data: flattenedDirections
+      data: allDirections
     });
   } catch (error) {
     console.error(`[${requestId}] 获取学习方向失败:`, error);
+    
+    // 回滚事务
+    if (connection) {
+      try {
+        await connection.rollback();
+        connection.release();
+      } catch (rollbackError) {
+        console.error(`[${requestId}] 事务回滚失败:`, rollbackError);
+      }
+    }
+    
     res.status(500).json({
       success: false,
       message: '获取学习方向失败',
@@ -322,110 +347,163 @@ router.get('/directions', authenticateToken, async (req, res) => {
 router.get('/recommend', authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const requestId = `recommend-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const forceRefresh = req.query.refresh === 'true';
   
-  console.log(`[${requestId}] 获取用户题目推荐，用户ID: ${userId}`);
+  console.log(`[${requestId}] 获取用户题目推荐，用户ID: ${userId}, 强制刷新: ${forceRefresh}`);
   
+  // 开始事务，避免死锁
+  let connection;
   try {
-    // 首先检查是否有已存在的推荐题目
-    const [existingRecommendations] = await pool.query(
-      'SELECT * FROM learning_path_recommend WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
-      [userId]
-    );
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
     
-    if (existingRecommendations.length > 0) {
-      console.log(`[${requestId}] 找到${existingRecommendations.length}条已存在的推荐题目`);
-      return res.json({
-        success: true,
-        data: existingRecommendations
-      });
+    // 如果不是强制刷新, 首先检查是否有已存在的推荐题目
+    if (!forceRefresh) {
+      const [existingRecommendations] = await connection.query(`
+        SELECT r.*, 
+               IFNULL(r.title, p.title) as title,
+               p.difficulty
+        FROM learning_path_recommend r
+        LEFT JOIN problems p ON r.problem_number = p.problem_number
+        WHERE r.user_id = ? 
+        ORDER BY r.created_at DESC 
+        LIMIT 5
+      `, [userId]);
+      
+      if (existingRecommendations.length > 0) {
+        console.log(`[${requestId}] 找到${existingRecommendations.length}条已存在的推荐题目`);
+        await connection.commit();
+        connection.release();
+        return res.json({
+          success: true,
+          data: existingRecommendations
+        });
+      }
+    } else {
+      // 强制刷新时, 删除旧的推荐题目数据
+      console.log(`[${requestId}] 强制刷新模式, 删除旧的推荐题目数据`);
+      await connection.query('DELETE FROM learning_path_recommend WHERE user_id = ?', [userId]);
     }
     
-    // 如果没有已存在数据，先获取用户的弱点标签
-    console.log(`[${requestId}] 未找到现有推荐题目，开始生成新的推荐`);
+    // 获取弱点标签相关的题目
+    const allRecommendations = [];
     
-    const [weaknessTags] = await pool.query(
-      'SELECT tag FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC',
+    // 从用户弱点分析或随机选择标签
+    let tags = [];
+    
+    // 先尝试获取用户的弱点分析标签
+    const [weaknessTags] = await connection.query(
+      'SELECT tag FROM learning_path_weakness_analysis WHERE user_id = ? LIMIT 3',
       [userId]
     );
     
-    if (weaknessTags.length === 0) {
-      console.log(`[${requestId}] 未找到用户弱点标签，无法生成题目推荐`);
-      return res.json({
-        success: true,
-        data: []
-      });
-    }
-    
-    console.log(`[${requestId}] 找到${weaknessTags.length}个弱点标签用于生成题目推荐`);
-    
-    // 获取用户已经做过的题目
-    const [solvedProblems] = await pool.query(
-      `SELECT DISTINCT problem_number 
-       FROM submissions 
-       WHERE user_id = ? AND status = 'Accepted'`,
-      [userId]
-    );
-    
-    const solvedSet = new Set(solvedProblems.map(p => p.problem_number));
-    console.log(`[${requestId}] 用户已解决${solvedSet.size}道题目`);
-    
-    // 为每个弱点标签查找相关题目
-    const recommendProblems = [];
-    const recommendedSet = new Set(); // 用于去重
-    
-    for (const weaknessTag of weaknessTags) {
-      const tag = weaknessTag.tag;
-      console.log(`[${requestId}] 为标签 ${tag} 查找相关题目`);
+    if (weaknessTags.length > 0) {
+      tags = weaknessTags;
+      console.log(`[${requestId}] 找到${tags.length}个用户弱点标签用于推荐题目`);
+    } else {
+      // 如果没有弱点分析，使用热门标签
+      const [popularTags] = await connection.query(`
+        SELECT tag 
+        FROM (
+          SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(tags, ',', n.n), ',', -1)) as tag
+          FROM problems
+          JOIN (
+            SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
+            SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
+          ) n
+          WHERE n.n <= 1 + LENGTH(tags) - LENGTH(REPLACE(tags, ',', ''))
+          GROUP BY tag
+        ) t
+        WHERE tag != ''
+        ORDER BY RAND()
+        LIMIT 3
+      `);
       
-      // 查找包含该标签且用户未解决的题目
-      const [problems] = await pool.query(
-        `SELECT id, problem_number, title, difficulty, tags
-         FROM problems
-         WHERE tags LIKE ? AND difficulty != '困难'
-         ORDER BY RAND()
-         LIMIT 10`,
-        [`%${tag}%`]
-      );
+      tags = popularTags;
+      console.log(`[${requestId}] 未找到用户弱点标签，使用${tags.length}个随机标签`);
       
-      console.log(`[${requestId}] 找到${problems.length}道与标签 ${tag} 相关的题目`);
-      
-      // 过滤出用户未解决的题目并限制数量
-      let count = 0;
-      for (const problem of problems) {
-        if (!solvedSet.has(problem.problem_number) && !recommendedSet.has(problem.problem_number) && count < 2) {
-          try {
-            const [result] = await pool.query(
-              'INSERT INTO learning_path_recommend (user_id, tag, problem_number) VALUES (?, ?, ?)',
-              [userId, tag, problem.problem_number]
-            );
-            
-            recommendProblems.push({
-              id: result.insertId,
-              user_id: userId,
-              tag: tag,
-              problem_number: problem.problem_number,
-              created_at: new Date()
-            });
-            
-            recommendedSet.add(problem.problem_number);
-            count++;
-          } catch (insertError) {
-            console.error(`[${requestId}] 保存推荐题目失败:`, insertError);
-          }
-        }
+      // 为这些标签创建弱点分析记录
+      for (const tagObj of tags) {
+        console.log(`[${requestId}] 标签 ${tagObj.tag} 在弱点分析表中不存在，添加一条记录`);
         
-        if (count >= 2) break; // 每个标签最多推荐2道题
+        // 添加一条默认的弱点分析记录
+        const defaultIdea = `学习 "${tagObj.tag}" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪`;
+        
+        await connection.query(
+          'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
+          [userId, tagObj.tag, defaultIdea]
+        );
       }
     }
     
-    console.log(`[${requestId}] 生成了${recommendProblems.length}道推荐题目`);
+    // 为每个标签获取相关题目
+    for (const tagObj of tags) {
+      const tag = tagObj.tag;
+      console.log(`[${requestId}] 为标签 ${tag} 获取推荐题目`);
+      
+      // 获取含有该标签的题目，并根据通过率排序（从低到高）
+      const [problems] = await connection.query(`
+        SELECT p.problem_number, p.title, p.difficulty, p.tags
+        FROM problems p 
+        WHERE p.tags LIKE ?
+        ORDER BY p.acceptance_rate
+        LIMIT 3
+      `, [`%${tag}%`]);
+      
+      if (problems.length === 0) {
+        console.log(`[${requestId}] 未找到标签 ${tag} 相关的题目`);
+        continue;
+      }
+      
+      console.log(`[${requestId}] 找到${problems.length}个标签 ${tag} 相关的题目`);
+      
+      // 将题目保存到数据库并返回
+      for (const problem of problems) {
+        try {
+          const [result] = await connection.query(
+            'INSERT INTO learning_path_recommend (user_id, tag, problem_number, title) VALUES (?, ?, ?, ?)',
+            [userId, tag, problem.problem_number, problem.title]
+          );
+          
+          allRecommendations.push({
+            id: result.insertId,
+            user_id: userId,
+            tag: tag,
+            problem_number: problem.problem_number,
+            title: problem.title,
+            difficulty: problem.difficulty,
+            created_at: new Date()
+          });
+        } catch (saveError) {
+          console.error(`[${requestId}] 保存推荐题目到数据库失败:`, saveError);
+          // 继续处理其他题目
+        }
+      }
+    }
+    
+    console.log(`[${requestId}] 生成了${allRecommendations.length}道推荐题目`);
+    
+    // 提交事务
+    await connection.commit();
+    connection.release();
     
     res.json({
       success: true,
-      data: recommendProblems
+      data: allRecommendations
     });
   } catch (error) {
     console.error(`[${requestId}] 获取题目推荐失败:`, error);
+    
+    // 回滚事务
+    if (connection) {
+      try {
+        await connection.rollback();
+        connection.release();
+      } catch (rollbackError) {
+        console.error(`[${requestId}] 事务回滚失败:`, rollbackError);
+      }
+    }
+    
     res.status(500).json({
       success: false,
       message: '获取题目推荐失败',
