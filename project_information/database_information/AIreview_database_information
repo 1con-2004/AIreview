@@ -445,3 +445,38 @@ WHERE s1.user_id = ?
   - 子查询首先找出每个题目的最新提交时间
   - 然后连接回submissions表获取该时间点的具体提交状态
   - 这样确保我们获取的是每个题目的最新状态
+
+- **操作时间**：2025.4.19 10:05:59 CST
+
+- **操作描述**：修复Java判题类名识别问题
+
+- **相关表及字段信息**：
+
+  - `submissions`表：存储用户提交的代码和判题结果
+    - `id`：主键，自增长整数
+    - `user_id`：外键，引用users表的id字段
+    - `problem_id`：外键，引用problems表的id字段
+    - `problem_number`：题目编号
+    - `code`：用户提交的代码
+    - `language`：编程语言
+    - `runtime`：代码运行时间（毫秒）
+    - `memory`：代码内存使用量（MB）
+    - `error_message`：错误信息
+    - `status`：提交状态（如Accepted, Runtime Error等）
+    - `created_at`：创建时间
+    - `completed_at`：完成时间
+
+- **修复说明**：
+
+  修复了Java代码判题时类名识别的错误。之前的问题是，系统会将用户提交的Java代码保存为临时文件（如`temp_1745028165148.java`），然后在判题容器中编译和运行。但原代码错误地使用了临时文件名作为Java类名，而不是从代码中提取实际的类名。这导致了`ClassNotFoundException`错误。
+
+  通过修改后端服务中的`runJava`方法，系统现在能够正确地从Java代码中提取类名（如`Main`或`Solution`），而不是使用临时文件名。这解决了之前submissions表中频繁出现的`Runtime Error`错误，特别是那些错误信息中包含"Could not find or load main class temp_xxx"的记录。
+
+- **数据影响**：
+
+  此修复不会对已有数据进行修改，但会影响今后所有的Java代码提交判题结果。修复后，预期的系统行为是：
+  
+  1. 当用户提交正确的Java代码时，系统能够正确识别类名并执行代码
+  2. 正确判断代码的运行结果，而不会因为类名识别问题导致错误的`Runtime Error`状态
+  
+  此修复仅影响Java语言的判题过程，不影响其他编程语言。

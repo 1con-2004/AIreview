@@ -1,7 +1,7 @@
-const { Sandbox } = require('./sandbox');
+const fs = require('fs').promises;
 const path = require('path');
-const fs = require('fs/promises');
 const testCaseService = require('../testCase');
+const { Sandbox, createSandbox } = require('./sandbox');
 
 // 定义判题结果常量
 const JudgeResult = {
@@ -16,7 +16,7 @@ const JudgeResult = {
 
 class Executor {
   constructor() {
-    this.sandbox = new Sandbox();
+    this.sandbox = null;
     this.JudgeResult = JudgeResult; // 在构造函数中添加对JudgeResult的引用
   }
 
@@ -38,10 +38,15 @@ class Executor {
       const normalizedLanguage = submission.language.toLowerCase();
       console.log('标准化后的语言:', normalizedLanguage);
       
+      // 支持C++的不同写法
+      const standardLanguage = normalizedLanguage === 'c++' ? 'cpp' : normalizedLanguage;
+      
+      // 创建沙箱环境
+      this.sandbox = await createSandbox(normalizedLanguage);
       await this.sandbox.init();
       
-      if (normalizedLanguage === 'c' || normalizedLanguage === 'cpp') {
-        const compileResult = await this.sandbox.compile(submission.code, normalizedLanguage);
+      if (standardLanguage === 'c' || standardLanguage === 'cpp') {
+        const compileResult = await this.sandbox.compile(submission.code, standardLanguage);
         if (compileResult.error) {
           console.error('编译错误:', compileResult.error);
           return {
@@ -126,12 +131,16 @@ class Executor {
       const normalizedLanguage = language.toLowerCase();
       console.log('标准化后的语言:', normalizedLanguage);
       
+      // 支持C++的不同写法
+      const standardLanguage = normalizedLanguage === 'c++' ? 'cpp' : normalizedLanguage;
+      
       // 初始化沙箱
+      this.sandbox = await createSandbox(normalizedLanguage);
       await this.sandbox.init();
       
       // 编译代码（如果需要）
-      if (normalizedLanguage === 'c' || normalizedLanguage === 'cpp') {
-        const compileResult = await this.sandbox.compile(code, normalizedLanguage);
+      if (standardLanguage === 'c' || standardLanguage === 'cpp') {
+        const compileResult = await this.sandbox.compile(code, standardLanguage);
         if (compileResult.error) {
           console.error('编译错误:', compileResult.error);
           return {

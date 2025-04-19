@@ -52,7 +52,7 @@
       <router-link to="/home" class="nav-item" @click="fixUserInfoBeforeNav">首页</router-link>
       <router-link to="/problems" class="nav-item" @click="fixUserInfoBeforeNav">题库与练习</router-link>
       <router-link to="/classroom" class="nav-item" @click="fixUserInfoBeforeNav">课堂辅助</router-link>
-      <router-link to="/ai-center" class="nav-item" @click="fixUserInfoBeforeNav">AI中心</router-link>
+      <router-link to="/personal-center" class="nav-item" @click="fixUserInfoBeforeNav">个人中心</router-link>
     </div>
     <div class="nav-right">
       <template v-if="isLoggedIn">

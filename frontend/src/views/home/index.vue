@@ -89,10 +89,10 @@
           </div>
         </router-link>
         
-        <router-link to="/ai-center" class="feature-card">
+        <router-link to="/personal-center" class="feature-card">
           <div class="card-content">
-            <h2>AI中心</h2>
-            <p>智能AI助手，帮助解决编程难题，提供个性化学习建议。</p>
+            <h2>个人中心</h2>
+            <p>管理个人资料，查看学习进度，获取个性化学习建议。</p>
             <div class="feature-image familiar">
               <div class="geometric-shape"></div>
             </div>

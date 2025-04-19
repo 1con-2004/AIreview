@@ -8,30 +8,28 @@ const util = require('util');
 const execAsync = util.promisify(exec);
 
 class Sandbox {
-  constructor() {
+  constructor(containerId, workDir, language) {
+    this.containerId = containerId;
+    this.workDir = workDir;
     this.tempDir = path.join(__dirname, '../../temp');
-    this.workDir = path.join(this.tempDir, uuidv4());
+    this.language = language;
   }
 
   async init() {
     try {
       // 确保临时目录存在
       await fs.mkdir(this.tempDir, { recursive: true });
+      
+      // 确保workDir存在，如果不存在则创建一个新的
+      if (!this.workDir) {
+        this.workDir = path.join(this.tempDir, uuidv4());
+        console.log('创建新的工作目录:', this.workDir);
+      }
+      
       await fs.mkdir(this.workDir, { recursive: true });
       
-      // 创建并启动 Docker 容器
-      this.containerId = `judge-${uuidv4()}`;
-      const cmd = `docker run -d --network none --cpus=1 --memory=512m --name=${this.containerId} -w /app gcc:latest tail -f /dev/null`;
-      
-      await execCommand(cmd);
-      console.log('Docker容器创建成功:', this.containerId);
-      
-      // 等待容器启动完成
-      await sleep(1000);
-      
-      // 创建工作目录
-      await execCommand(`docker exec ${this.containerId} mkdir -p /app`);
-      console.log('容器工作目录创建成功');
+      // 容器已由constructor创建，不需要重复创建
+      console.log('使用已创建的容器:', this.containerId);
       
       return this;
     } catch (error) {
@@ -198,14 +196,17 @@ class Sandbox {
       // 标准化语言名称
       const normalizedLanguage = language.toLowerCase();
       console.log('标准化后的语言:', normalizedLanguage);
+      
+      // 将c++标准化为cpp
+      const standardLanguage = normalizedLanguage === 'c++' ? 'cpp' : normalizedLanguage;
 
       // 预处理代码
-      let processedCode = this.preprocessCode(code, normalizedLanguage);
+      let processedCode = this.preprocessCode(code, standardLanguage);
 
       let result;
-      if (normalizedLanguage === 'c' || normalizedLanguage === 'cpp') {
+      if (standardLanguage === 'c' || standardLanguage === 'cpp') {
         // 编译并运行
-        const compileResult = await this.compile(processedCode, normalizedLanguage);
+        const compileResult = await this.compile(processedCode, standardLanguage);
         if (compileResult.error) {
           return compileResult;
         }
@@ -248,7 +249,7 @@ class Sandbox {
             error: error.stderr || '程序执行时发生错误'
           };
         }
-      } else if (normalizedLanguage === 'java') {
+      } else if (standardLanguage === 'java') {
         // 创建Java源文件和输入文件
         const javaFile = path.join(this.tempDir, `temp_${Date.now()}.java`);
         const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
@@ -299,7 +300,7 @@ class Sandbox {
             error: error.message || '执行Java代码失败'
           };
         }
-      } else if (normalizedLanguage === 'python') {
+      } else if (standardLanguage === 'python') {
         // 创建Python源文件和输入文件
         const pythonFile = path.join(this.tempDir, `temp_${Date.now()}.py`);
         const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
@@ -384,12 +385,22 @@ class Sandbox {
         };
       }
       
-      // 获取主类名
-      const className = fileName.replace('.java', '');
+      // 获取Java文件内容
+      const fileContent = await fs.readFile(javaFile, 'utf8');
       
-      // 在容器中运行Java代码
+      // 尝试从文件内容中提取类名
+      let className = 'Solution'; // 默认使用Solution类名（与preprocessJavaCode方法中的默认类名一致）
+      const classMatch = fileContent.match(/\bclass\s+(\w+)\s*\{/);
+      if (classMatch && classMatch[1]) {
+        className = classMatch[1];
+        console.log(`从代码中提取到类名: ${className}`);
+      } else {
+        console.log(`未找到类定义，使用默认类名: ${className}`);
+      }
+      
+      // 在容器中运行Java代码 - 使用cat命令读取输入文件并通过管道传递给java程序
       console.log(`运行Java类: ${className}`);
-      const runCommand = `docker exec ${this.containerId} java -cp /app ${className} < ${containerInputPath}`;
+      const runCommand = `docker exec ${this.containerId} bash -c "cat ${containerInputPath} | java -cp /app ${className}"`;
       
       const startTime = process.hrtime();
       const result = await execCommand(runCommand);
@@ -417,126 +428,30 @@ class Sandbox {
 
   // 预处理用户代码，添加必要的数据结构和框架代码
   preprocessCode(code, language) {
-    // 检测代码可能引用的常见数据结构
-    const commonStructures = {
-      'TreeNode': {
-        regex: /\bTreeNode\b/,
-        defRegex: {
-          'c': /struct\s+TreeNode\s*\{/,
-          'cpp': /\bstruct\s+TreeNode\s*\{|\bclass\s+TreeNode\s*\{/,
-          'python': /class\s+TreeNode\s*:/,
-          'java': /class\s+TreeNode\s*\{/
-        },
-        implementations: {
-          'c': `
-// 二叉树节点结构定义
-struct TreeNode {
-    int val;
-    struct TreeNode *left;
-    struct TreeNode *right;
-};`,
-          'cpp': `
-// 二叉树节点结构定义
-struct TreeNode {
-    int val;
-    TreeNode *left;
-    TreeNode *right;
-    TreeNode() : val(0), left(nullptr), right(nullptr) {}
-    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
-    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
-};`,
-          'python': `
-# 二叉树节点类定义
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right`,
-          'java': `
-// 二叉树节点类定义
-class TreeNode {
-    int val;
-    TreeNode left;
-    TreeNode right;
+    // 已经标准化了语言名称为小写
+    const standardLanguage = language === 'c++' ? 'cpp' : language;
     
-    TreeNode() {}
+    // 通用的结构定义
+    const commonStructures = {};
     
-    TreeNode(int val) {
-        this.val = val;
+    // 处理空代码
+    if (!code || code.trim() === '') {
+      return '';
     }
     
-    TreeNode(int val, TreeNode left, TreeNode right) {
-        this.val = val;
-        this.left = left;
-        this.right = right;
+    // 根据不同的语言处理代码
+    switch (standardLanguage) {
+      case 'c': 
+        return this.preprocessCCode(code, commonStructures);
+      case 'cpp':
+        return this.preprocessCppCode(code, commonStructures);
+      case 'python':
+        return this.preprocessPythonCode(code, commonStructures);
+      case 'java':
+        return this.preprocessJavaCode(code, commonStructures);
+      default:
+        return code;
     }
-}`
-        }
-      },
-      'ListNode': {
-        regex: /\bListNode\b/,
-        defRegex: {
-          'c': /struct\s+ListNode\s*\{/,
-          'cpp': /\bstruct\s+ListNode\s*\{|\bclass\s+ListNode\s*\{/,
-          'python': /class\s+ListNode\s*:/,
-          'java': /class\s+ListNode\s*\{/
-        },
-        implementations: {
-          'c': `
-// 链表节点结构定义
-struct ListNode {
-    int val;
-    struct ListNode *next;
-};`,
-          'cpp': `
-// 链表节点结构定义
-struct ListNode {
-    int val;
-    ListNode *next;
-    ListNode() : val(0), next(nullptr) {}
-    ListNode(int x) : val(x), next(nullptr) {}
-    ListNode(int x, ListNode *next) : val(x), next(next) {}
-};`,
-          'python': `
-# 链表节点类定义
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next`,
-          'java': `
-// 链表节点类定义
-class ListNode {
-    int val;
-    ListNode next;
-    
-    ListNode() {}
-    
-    ListNode(int val) {
-        this.val = val;
-    }
-    
-    ListNode(int val, ListNode next) {
-        this.val = val;
-        this.next = next;
-    }
-}`
-        }
-      }
-    };
-
-    // 语言特定的处理
-    if (language === 'c') {
-      return this.preprocessCCode(code, commonStructures);
-    } else if (language === 'cpp') {
-      return this.preprocessCppCode(code, commonStructures);
-    } else if (language === 'python') {
-      return this.preprocessPythonCode(code, commonStructures);
-    } else if (language === 'java') {
-      return this.preprocessJavaCode(code, commonStructures);
-    }
-
-    // 默认情况下返回原始代码
-    return code;
   }
 
   // 预处理C代码
@@ -634,14 +549,14 @@ int main() {
       }
     }
     
-    // 如果没有main块，添加一个简单的main块
+    // 如果没有main块，添加一个简单的main块，但不输出额外文本
     let postamble = "";
     if (!hasMainBlock) {
       postamble = `
 
 # 主函数 - 仅为满足执行要求
 if __name__ == "__main__":
-    print("代码成功运行！")`;
+    pass`;
     }
     
     // 组合成完整代码
@@ -654,18 +569,7 @@ if __name__ == "__main__":
     const hasClass = /\bclass\s+\w+\s*\{/.test(code);
     const hasMain = /public\s+static\s+void\s+main\s*\(\s*String\s*\[\]\s*\w*\s*\)/.test(code);
     
-    // 提取方法名来确定主类名
-    let className = 'Solution';
-    const methodMatch = code.match(/\b(public|private|protected)?\s+\w+\s+(\w+)\s*\(/);
-    if (methodMatch && methodMatch[2]) {
-      // 如果没有类定义但有方法定义，以第一个方法名为基础生成类名
-      if (!hasClass) {
-        const methodName = methodMatch[2];
-        className = methodName.charAt(0).toUpperCase() + methodName.slice(1) + 'Solution';
-      }
-    }
-    
-    // 如果已经有完整的类定义，则不进行预处理
+    // 如果已经有完整的类定义和main方法，则不进行预处理
     if (hasClass && hasMain) return code;
     
     // 准备添加的前置代码
@@ -683,7 +587,9 @@ if __name__ == "__main__":
     
     // 如果没有类定义，添加类包装
     if (!hasClass) {
-      processedCode = `public class ${className} {
+      // 使用自动生成的临时文件名作为类名，确保匹配
+      const className = `Solution`;
+      processedCode = `class ${className} {
     ${processedCode.replace(/^/gm, '    ')}
 }`;
     }
@@ -698,7 +604,7 @@ if __name__ == "__main__":
     
     // 主函数 - 仅为满足编译要求
     public static void main(String[] args) {
-        System.out.println("代码成功编译！");
+        // 这里不需要输出任何内容
     }
 ` + processedCode.substring(lastBraceIndex);
       }
@@ -719,6 +625,7 @@ async function createSandbox(language) {
   const images = {
     'c': 'gcc:latest',
     'cpp': 'gcc:latest',
+    'c++': 'gcc:latest',  // 添加c++映射
     'python': 'python:3.9-slim',
     'java': 'openjdk:11'
   };
@@ -727,6 +634,9 @@ async function createSandbox(language) {
   if (!images[normalizedLanguage]) {
     throw new Error(`不支持的编程语言: ${language}`);
   }
+  
+  // 将c++标准化为cpp
+  const standardLanguage = normalizedLanguage === 'c++' ? 'cpp' : normalizedLanguage;
   
   const image = images[normalizedLanguage];
   console.log('使用Docker镜像:', image);
@@ -745,7 +655,7 @@ async function createSandbox(language) {
     await execCommand(`docker exec ${containerName} mkdir -p /app`);
     console.log('容器工作目录创建成功');
     
-    return new Sandbox(containerName, workDir);
+    return new Sandbox(containerName, workDir, standardLanguage);
   } catch (error) {
     console.error('创建沙箱环境失败:', error);
     throw error;
@@ -760,5 +670,6 @@ async function createTempDirectory() {
 }
 
 module.exports = {
-  Sandbox
+  Sandbox,
+  createSandbox
 };

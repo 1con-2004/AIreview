@@ -30,9 +30,9 @@ alwaysApply: true
 
 1. structure_information 文件夹：此文件夹中的 frontend 文件 [frontend](mdc:project_information/structure_information/frontend) 详细阐述前端文件之间的依赖关系；backend 文件 [backend](mdc:project_information/structure_information/backend) 则对后端文件之间的依赖关系进行说明，清晰呈现项目文件的关联脉络。​
 
-2. database_information 文件夹：其中的 AIreview_database_information 文件 [AIreview_database_information](mdc:project_information/database_information/AIreview_database_information) ，详细解释数据库每个表的功能、表与表之间的依赖关系，以及各表在不同页面中的引用情况，帮助深入理解数据库架构与应用。​
+2. api_information 文件夹：通过 backend_api_relations [backend_api_relations](mdc:project_information/api_information/backend_api_relations) 文件，阐明后端 api 之间的关系，助力掌握后端接口的调用逻辑与协作方式。​
 
-3. api_information 文件夹：通过 backend_api_relations [backend_api_relations](mdc:project_information/api_information/backend_api_relations) 文件，阐明后端 api 之间的关系，助力掌握后端接口的调用逻辑与协作方式。​
+3. database_information 文件夹 : 对于数据库的mei'g
 
 4. bug_fixed_information 文件夹：针对某些复杂问题，经过深入分析后给出解决性方案及改进总结，每个特定问题对应一个文件。当遇到问题时，可先在此文件夹中查找是否有相关文件已涵盖该问题的解决方案等，便于快速解决问题与积累经验。
 

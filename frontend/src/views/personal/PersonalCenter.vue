@@ -1,11 +1,11 @@
 <template>
-  <div class="ai-center">
+  <div class="personal-center">
     <nav-bar></nav-bar>
     <div class="development-notice">
       <div class="notice-content">
-        <i class="fas fa-robot notice-icon"></i>
+        <i class="fas fa-user notice-icon"></i>
         <h2>功能开发中</h2>
-        <p>AI 智能辅助功能正在开发中，敬请期待...</p>
+        <p>个人中心功能正在开发中，敬请期待...</p>
         <router-link to="/home" class="back-home-btn">
           <i class="fas fa-home"></i>
           返回主页
@@ -20,7 +20,7 @@ import NavBar from '@/components/NavBar.vue'
 </script>
 
 <style scoped>
-.ai-center {
+.personal-center {
   min-height: 100vh;
   background-color: #0d1117;
 }
@@ -89,4 +89,4 @@ import NavBar from '@/components/NavBar.vue'
 .back-home-btn i {
   font-size: 1.1rem;
 }
-</style>
+</style> 

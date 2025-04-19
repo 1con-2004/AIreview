@@ -70,9 +70,9 @@ const routes = [
     component: () => import('../views/login/register.vue')
   },
   {
-    path: '/ai-center',
-    name: 'AICenter',
-    component: () => import('@/views/ai/AICenter.vue'),
+    path: '/personal-center',
+    name: 'PersonalCenter',
+    component: () => import('@/views/personal/PersonalCenter.vue'),
     meta: { requiresAuth: true }
   },
   {
