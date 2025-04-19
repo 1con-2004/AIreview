@@ -209,7 +209,7 @@ export default {
         // 直接使用传入的用户名作为参数，确保获取正确的用户资料
         const username = props.username
         
-        const response = await fetch(`http://localhost:3000/api/user/profile/${username}`, {
+        const response = await fetch(`http://localhost:3000/api/user/user-profile/${username}`, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
@@ -252,7 +252,7 @@ export default {
         if (field === 'birth_date' && value) {
           processedValue = value // 已经是 YYYY-MM-DD 格式
         }
-        const response = await fetch('http://localhost:3000/api/user/profile', {
+        const response = await fetch('http://localhost:3000/api/user/user-profile', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

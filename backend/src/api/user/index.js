@@ -206,7 +206,7 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
 });
 
 // 获取用户资料
-router.get('/profile/:username', async (req, res) => {
+router.get('/user-profile/:username', async (req, res) => {
   try {
     const { username } = req.params;
     // 添加详细日志
@@ -263,7 +263,7 @@ router.get('/profile/:username', async (req, res) => {
 });
 
 // 更新用户资料
-router.patch('/profile', authenticateToken, async (req, res) => {
+router.patch('/user-profile', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const updates = req.body;

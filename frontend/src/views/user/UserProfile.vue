@@ -204,7 +204,7 @@ export default {
         const targetUsername = route.params.username
         console.log('正在获取用户资料:', targetUsername)
         
-        const response = await fetch(`http://localhost:3000/api/user/profile/${targetUsername}`, {
+        const response = await fetch(`http://localhost:3000/api/user/user-profile/${targetUsername}`, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
@@ -269,7 +269,7 @@ export default {
         if (field === 'birth_date' && value) {
           processedValue = new Date(value).toISOString().split('T')[0];
         }
-        const response = await fetch('http://localhost:3000/api/user/profile', {
+        const response = await fetch('http://localhost:3000/api/user/user-profile', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
