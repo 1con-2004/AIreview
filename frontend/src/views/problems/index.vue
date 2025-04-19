@@ -789,11 +789,9 @@ export default {
       // 使用新的分类过滤逻辑
       if (this.selectedCategories.length > 0) {
         filteredProblems = filteredProblems.filter(problem => {
-          // 检查问题的标签是否包含所选的分类
-          return this.selectedCategories.some(categoryId => {
+          // 修改为"与"操作，确保问题包含所有已选分类
+          return this.selectedCategories.every(categoryId => {
             // 在这里需要根据问题的标签和分类ID进行匹配
-            // 由于问题的tags字段是字符串数组，我们需要检查是否有匹配
-            // 这里假设问题的tags字段中包含分类的名称
             const category = this.categories.flatMap(c => c.children).find(c => c.id === categoryId);
             return category && problem.tags.includes(category.name);
           });
@@ -1885,5 +1883,25 @@ export default {
   .sub-categories.expanded {
     padding: 6px 12px 12px;
   }
+}
+
+.code-keyword {
+  color: #ff79c6;
+}
+
+.code-string {
+  color: #f1fa8c;
+}
+
+.code-function {
+  color: #50fa7b;
+}
+
+.code-number {
+  color: #bd93f9;
+}
+
+.code-comment {
+  color: #6272a4;
 }
 </style> 
