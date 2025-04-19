@@ -63,6 +63,80 @@
         </div>
       </div>
 
+      <!-- 学习路径区域 -->
+      <div class="learning-path-section" v-loading="learningPathLoading">
+        <h2 class="section-title">个性化学习路径</h2>
+        
+        <!-- 弱点分析板块 -->
+        <div class="learning-path-weakness" v-if="weaknessAnalysis.length > 0">
+          <h3 class="block-title">
+            <i class="fas fa-crosshairs"></i>
+            弱点分析
+          </h3>
+          <div class="card-container">
+            <div class="weakness-card" v-for="(item, index) in weaknessAnalysis" :key="index">
+              <div class="card-header">
+                <div class="tag-badge">{{ item.tag }}</div>
+              </div>
+              <div class="card-content">
+                <p>{{ item.idea }}</p>
+              </div>
+            </div>
+            <div class="empty-weakness" v-if="weaknessAnalysis.length === 0">
+              <i class="fas fa-award"></i>
+              <p>你的知识已经掌握的很好啦！</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 学习方向板块 -->
+        <div class="learning-path-directions">
+          <h3 class="block-title">
+            <i class="fas fa-compass"></i>
+            学习方向
+          </h3>
+          <div class="directions-container">
+            <div class="direction-card" v-for="(item, index) in learningDirections" :key="index">
+              <div class="direction-source">{{ item.source }}</div>
+              <div class="direction-title">{{ item.title }}</div>
+              <el-button type="primary" size="small" @click="openUrl(item.url)">
+                <i class="fas fa-external-link-alt"></i>
+                学习
+              </el-button>
+            </div>
+            <div class="empty-directions" v-if="learningDirections.length === 0">
+              <i class="fas fa-book-reader"></i>
+              <p>暂无学习资源推荐</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 题目推荐板块 -->
+        <div class="learning-path-recommend">
+          <h3 class="block-title">
+            <i class="fas fa-map-signs"></i>
+            题目推荐
+          </h3>
+          <div class="recommend-container">
+            <div class="path-route">
+              <div class="route-point" v-for="(item, index) in recommendProblems" :key="index"
+                   @click="navigateToProblem(item.problem_number)">
+                <div class="point-number">{{ index + 1 }}</div>
+                <div class="point-content">
+                  <div class="problem-number">{{ item.problem_number }}</div>
+                  <div class="problem-tag">{{ item.tag }}</div>
+                </div>
+                <div class="route-line" v-if="index < recommendProblems.length - 1"></div>
+              </div>
+              <div class="empty-recommend" v-if="recommendProblems.length === 0">
+                <i class="fas fa-clipboard-check"></i>
+                <p>暂无题目推荐</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 统计图表区域 -->
       <div class="charts-container">
         <div class="charts-row">
@@ -196,6 +270,12 @@ const errorTypeData = ref(null);
 const knowledgeData = ref(null);
 const solvingTimeData = ref(null);
 
+// 学习路径数据
+const learningPathLoading = ref(false);
+const weaknessAnalysis = ref([]);
+const learningDirections = ref([]);
+const recommendProblems = ref([]);
+
 // 存储图表实例的引用
 const charts = ref({
   completionChart: null,
@@ -214,6 +294,7 @@ const checkIsStudent = async () => {
     if (isStudent.value) {
       await fetchUserData();
       await fetchProblemList();
+      await fetchLearningPath();
     }
   } catch (error) {
     console.error('检查用户是否为学生失败:', error);
@@ -221,6 +302,40 @@ const checkIsStudent = async () => {
     isStudent.value = false;
   } finally {
     loading.value = false;
+  }
+};
+
+// 获取学习路径数据
+const fetchLearningPath = async () => {
+  learningPathLoading.value = true;
+  try {
+    // 并行请求所有学习路径数据
+    const [weaknessRes, directionsRes, recommendRes] = await Promise.all([
+      axios.get('/api/learning-path/weakness'),
+      axios.get('/api/learning-path/directions'),
+      axios.get('/api/learning-path/recommend')
+    ]);
+
+    weaknessAnalysis.value = weaknessRes.data.data || [];
+    learningDirections.value = directionsRes.data.data || [];
+    recommendProblems.value = recommendRes.data.data || [];
+  } catch (error) {
+    console.error('获取学习路径数据失败:', error);
+    ElMessage.error('获取学习路径数据失败，请稍后再试');
+  } finally {
+    learningPathLoading.value = false;
+  }
+};
+
+// 打开外部学习资源
+const openUrl = (url) => {
+  window.open(url, '_blank');
+};
+
+// 导航到题目页面
+const navigateToProblem = (problemNumber) => {
+  if (problemNumber) {
+    this.$router.push(`/problems/${problemNumber}`);
   }
 };
 
@@ -727,6 +842,230 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
+.learning-path-section {
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e6edf3;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.block-title {
+  font-size: 18px;
+  color: #a6accd;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.block-title i {
+  margin-right: 8px;
+  color: #409EFF;
+}
+
+.card-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.weakness-card {
+  min-width: 300px;
+  background: #252734;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.weakness-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+.card-header {
+  margin-bottom: 12px;
+}
+
+.tag-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card-content {
+  color: #a6accd;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.empty-weakness {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  width: 100%;
+  color: #a6accd;
+}
+
+.empty-weakness i {
+  font-size: 48px;
+  color: #67C23A;
+  margin-bottom: 16px;
+}
+
+.directions-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.direction-card {
+  background: #252734;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.direction-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+.direction-source {
+  font-size: 12px;
+  color: #67C23A;
+  margin-bottom: 8px;
+}
+
+.direction-title {
+  font-size: 16px;
+  color: #e6edf3;
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.empty-directions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  color: #a6accd;
+}
+
+.empty-directions i {
+  font-size: 48px;
+  color: #E6A23C;
+  margin-bottom: 16px;
+}
+
+.recommend-container {
+  margin-bottom: 24px;
+}
+
+.path-route {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  padding: 16px;
+  background: #252734;
+  border-radius: 8px;
+}
+
+.route-point {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.route-point:hover {
+  background: rgba(64, 158, 255, 0.1);
+}
+
+.point-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #409EFF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 16px;
+  z-index: 1;
+}
+
+.point-content {
+  flex-grow: 1;
+}
+
+.problem-number {
+  font-size: 16px;
+  color: #e6edf3;
+  font-weight: 500;
+}
+
+.problem-tag {
+  font-size: 14px;
+  color: #a6accd;
+  margin-top: 4px;
+}
+
+.route-line {
+  position: absolute;
+  left: 28px;
+  top: 44px;
+  width: 2px;
+  height: calc(100% - 16px);
+  background: rgba(64, 158, 255, 0.5);
+  z-index: 0;
+}
+
+.empty-recommend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #a6accd;
+}
+
+.empty-recommend i {
+  font-size: 48px;
+  color: #F56C6C;
+  margin-bottom: 16px;
+}
+
 .charts-container {
   margin: 24px 0;
 }
@@ -773,20 +1112,6 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #e6edf3;
-  margin-top: 0;
-  margin-bottom: 24px;
-}
-
-.pagination-container {
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
-}
-
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -822,6 +1147,19 @@ onUnmounted(() => {
   
   .completion-stats {
     margin-left: 0;
+  }
+
+  .directions-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-container {
+    flex-direction: column;
+  }
+  
+  .weakness-card {
+    width: auto;
+    min-width: 0;
   }
 }
 
@@ -862,5 +1200,12 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 分页容器 */
+.pagination-container {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
 }
 </style> 

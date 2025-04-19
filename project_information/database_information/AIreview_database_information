@@ -357,6 +357,40 @@ AIreview系统使用MySQL数据库，包含多个表来支持在线编程学习�
 | sample_size | int | 否 | | 样本大小 |
 | calculated_at | timestamp | 否 | | 计算时间 |
 
+### 学习路径相关表
+
+#### 1. learning_path_weakness_analysis表
+- 描述：存储用户学习弱点分析数据
+- 关键字段：
+  - id：自增主键
+  - user_id：用户ID，外键关联users表
+  - tag：标签名，代表用户薄弱的知识点
+  - idea：标签对应的思路和建议（由智谱AI生成）
+  - created_at：创建时间
+  - updated_at：更新时间
+
+#### 2. learning_path_directions表
+- 描述：存储学习方向推荐和资源链接
+- 关键字段：
+  - id：自增主键
+  - user_id：用户ID，外键关联users表
+  - tag：标签名，外键关联learning_path_weakness_analysis表
+  - url：资源链接
+  - title：资源标题
+  - source：资源来源网站（CSDN、LeetCode、知乎）
+  - created_at：创建时间
+  - updated_at：更新时间
+
+#### 3. learning_path_recommend表
+- 描述：存储基于弱点标签的题目推荐
+- 关键字段：
+  - id：自增主键
+  - user_id：用户ID，外键关联users表
+  - tag：标签名，外键关联learning_path_weakness_analysis表
+  - problem_number：题目编号
+  - created_at：创建时间
+  - updated_at：更新时间
+
 ## 视图结构
 
 系统包含以下视图用于提供统计和分析数据：
@@ -480,3 +514,74 @@ WHERE s1.user_id = ?
   2. 正确判断代码的运行结果，而不会因为类名识别问题导致错误的`Runtime Error`状态
   
   此修复仅影响Java语言的判题过程，不影响其他编程语言。
+
+- **操作时间**：2025.4.17
+
+- **操作描述**：创建学习路径相关数据表
+
+- **SQL语句**：
+```sql
+CREATE TABLE learning_path_weakness_analysis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    tag VARCHAR(50) NOT NULL,
+    idea TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+ALTER TABLE learning_path_weakness_analysis ADD INDEX idx_tag (tag);
+
+CREATE TABLE learning_path_directions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    tag VARCHAR(50) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    source VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (tag) REFERENCES learning_path_weakness_analysis(tag) ON DELETE CASCADE
+);
+
+CREATE TABLE learning_path_recommend (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    tag VARCHAR(50) NOT NULL,
+    problem_number VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (tag) REFERENCES learning_path_weakness_analysis(tag) ON DELETE CASCADE
+);
+```
+
+- **解释**：
+  - `learning_path_weakness_analysis`表：存储用户不擅长的标签及对应的思路和建议
+  - `learning_path_directions`表：存储与用户弱点标签相关的学习资源链接
+  - `learning_path_recommend`表：存储与用户弱点标签相关的推荐题目
+  - 为`tag`字段添加索引，以便外键引用
+  - 设置级联删除，当弱点分析记录被删除时，相关的学习方向和题目推荐也会被删除
+
+- **表及字段信息**：
+  - `learning_path_weakness_analysis`表
+    - `id`：自增主键，唯一标识每条弱点分析记录
+    - `user_id`：关联users表的用户ID
+    - `tag`：表示用户不擅长的标签/知识点
+    - `idea`：针对该标签的学习思路，由智谱AI生成
+    
+  - `learning_path_directions`表
+    - `id`：自增主键，唯一标识每条学习方向记录
+    - `user_id`：关联users表的用户ID
+    - `tag`：关联弱点分析表的标签
+    - `url`：学习资源链接
+    - `title`：学习资源标题
+    - `source`：资源来源网站（如CSDN、LeetCode、知乎）
+    
+  - `learning_path_recommend`表
+    - `id`：自增主键，唯一标识每条题目推荐记录
+    - `user_id`：关联users表的用户ID
+    - `tag`：关联弱点分析表的标签
+    - `problem_number`：推荐题目的编号

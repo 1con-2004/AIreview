@@ -19,6 +19,7 @@ const classRouter = require('./api/admin/class');
 const testCaseRouter = require('./routes/testCase');
 const authRoutes = require('./routes/auth');
 const statisticsRoutes = require('./routes/statistics');
+const learningPathRoutes = require('./api/learning-path');
 
 // 添加请求日志中间件
 app.use((req, res, next) => {
@@ -114,6 +115,7 @@ app.use('/api', studentRouter);
 app.use('/api/testcases', testCaseRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/statistics', statisticsRoutes);
+app.use('/api/learning-path', learningPathRoutes);
 
 // 添加调试日志，记录所有注册的路由
 console.log('注册的路由列表:');
