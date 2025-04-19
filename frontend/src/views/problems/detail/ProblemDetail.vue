@@ -154,7 +154,7 @@
                         {{ justCopied ? '已复制' : '复制代码' }}
                       </button>
                     </div>
-                    <pre class="code-block"><code class="language-javascript">{{ impl.code }}</code></pre>
+                    <pre class="code-block"><code :class="getLanguageClass(impl.language)">{{ impl.code }}</code></pre>
                   </div>
 
                   <div v-else class="language-selection">
@@ -280,7 +280,7 @@
                   <div class="code-section">
                     <h4>提交代码</h4>
                     <div class="code-container">
-                      <pre><code v-html="highlightCode(selectedSubmission.code, selectedSubmission.language)"></code></pre>
+                      <pre><code :class="getLanguageClass(selectedSubmission.language)">{{ selectedSubmission.code }}</code></pre>
                       <button class="copy-button" @click="copyCode" :title="copyStatus">
                         <i :class="copied ? 'el-icon-check' : 'el-icon-document-copy'"></i>
                         复制
@@ -337,7 +337,7 @@
                         <div class="error-card-content">
                           <div class="error-message">{{ error.message }}</div>
                           <div v-if="error.code" class="code-block">
-                            <pre><code v-html="highlightCode(error.code, selectedLanguageForCode.value)"></code></pre>
+                            <pre><code :class="getLanguageClass(selectedLanguageForCode.value)">{{ error.code }}</code></pre>
                           </div>
                         </div>
                       </div>
@@ -506,6 +506,11 @@ import Prism from 'prismjs'
 import 'prismjs/themes/prism-tomorrow.css'
 // 添加C语言语法支持
 import 'prismjs/components/prism-c'
+// 添加其他语言支持
+import 'prismjs/components/prism-cpp'
+import 'prismjs/components/prism-java'
+import 'prismjs/components/prism-python'
+import 'prismjs/components/prism-javascript'
 import { Dialog } from 'element-plus'
 import InputTextarea from 'primevue/textarea'
 import { getProblemExamples } from '@/api/testCase'
@@ -654,6 +659,11 @@ export default defineComponent({
               const directResponse = await axios.get(`http://localhost:3000/api/judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
               if (directResponse.data && directResponse.data.length > 0) {
                 submissions.value = directResponse.data
+                
+                // 添加: 获取提交记录后应用代码高亮
+                nextTick(() => {
+                  Prism.highlightAll()
+                })
                 return
               }
             } catch (directError) {
@@ -664,6 +674,11 @@ export default defineComponent({
         
         if (response.data && response.data.code === 200) {
           submissions.value = response.data.data
+          
+          // 添加: 获取提交记录后应用代码高亮
+          nextTick(() => {
+            Prism.highlightAll()
+          })
         }
       } catch (error) {
         console.error('获取提交记录失败:', error)
@@ -741,6 +756,13 @@ export default defineComponent({
         fetchSubmissions();
         // 如果切换到提交记录标签，重置筛选条件
         resetFilters();
+      }
+      
+      // 添加: 当切换到解决方案或提交记录标签时，确保代码语法高亮生效
+      if (newTab === 'solution' || newTab === 'submissions') {
+        nextTick(() => {
+          Prism.highlightAll()
+        })
       }
     })
 
@@ -1003,6 +1025,11 @@ export default defineComponent({
     const showSubmissionDetail = (submission) => {
       selectedSubmission.value = submission
       dialogVisible.value = true
+      
+      // 添加: 显示提交详情后，应用代码高亮
+      nextTick(() => {
+        Prism.highlightAll()
+      })
     }
 
     const currentPage = ref(1)
@@ -1228,6 +1255,11 @@ export default defineComponent({
           fetchSubmissions()
           // 切换到提交记录标签
           activeTab.value = 'submissions'
+          
+          // 添加: 提交代码后，对页面中的代码块重新应用语法高亮
+          nextTick(() => {
+            Prism.highlightAll()
+          })
         } else {
           ElMessage.error(response.data.message || '提交失败')
         }
@@ -1393,11 +1425,31 @@ export default defineComponent({
       // 使用正则表达式匹配反引号中的代码
       return text.replace(/`([^`]+)`/g, (match, code) => {
         try {
+          // 标准化语言标识符
+          let langKey = selectedLanguageForCode.value.toLowerCase()
+          
+          // 处理特殊情况
+          const langMap = {
+            'c++': 'cpp',
+            'c#': 'csharp', 
+            'js': 'javascript',
+            'py': 'python'
+          }
+          
+          if (langMap[langKey]) {
+            langKey = langMap[langKey]
+          }
+          
+          // 确保Prism中有此语言的定义
+          if (!Prism.languages[langKey]) {
+            langKey = 'c' // 默认使用C语言高亮
+          }
+          
           // 使用Prism.js高亮代码
           const highlighted = Prism.highlight(
             code,
-            Prism.languages[selectedLanguageForCode.value.toLowerCase()] || Prism.languages.c,
-            selectedLanguageForCode.value.toLowerCase()
+            Prism.languages[langKey],
+            langKey
           )
           // 返回带有样式的HTML
           return `<code class="inline-code">${highlighted}</code>`
@@ -1451,7 +1503,28 @@ export default defineComponent({
     const highlightCode = (code, language) => {
       if (!code) return ''
       try {
-        return Prism.highlight(code, Prism.languages[language.toLowerCase()] || Prism.languages.c, language.toLowerCase())
+        // 标准化语言标识符
+        let langKey = language.toLowerCase()
+        
+        // 处理特殊情况，如C++转换为cpp
+        const langMap = {
+          'c++': 'cpp',
+          'c#': 'csharp',
+          'js': 'javascript',
+          'py': 'python'
+        }
+        
+        if (langMap[langKey]) {
+          langKey = langMap[langKey]
+        }
+        
+        // 确保Prism中有此语言的定义
+        if (!Prism.languages[langKey]) {
+          console.warn(`Prism不支持语言: ${langKey}, 将使用默认高亮`)
+          langKey = 'c' // 默认使用C语言高亮
+        }
+        
+        return Prism.highlight(code, Prism.languages[langKey], langKey)
       } catch (err) {
         console.error('代码高亮失败:', err)
         return code
@@ -1507,6 +1580,27 @@ export default defineComponent({
         console.log("编译未成功，状态:", response); // 打印状态以确认
       }
     };
+
+    // 获取语言的标准化类名
+    const getLanguageClass = (language) => {
+      if (!language) return 'language-c'
+      
+      let langKey = language.toLowerCase()
+      
+      // 处理特殊情况，如C++转换为cpp
+      const langMap = {
+        'c++': 'cpp',
+        'c#': 'csharp',
+        'js': 'javascript',
+        'py': 'python'
+      }
+      
+      if (langMap[langKey]) {
+        langKey = langMap[langKey]
+      }
+      
+      return `language-${langKey}`
+    }
 
     return {
       problem,
@@ -1594,6 +1688,7 @@ export default defineComponent({
       copyExampleOutput,
       isExpanded,
       handleBackendResponse,
+      getLanguageClass,
     }
   }
 })

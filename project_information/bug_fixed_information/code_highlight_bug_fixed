@@ -1,0 +1,236 @@
+# 代码高亮失效问题修复记录
+
+## 问题描述
+1. [ ✅ ] 当用户提交代码后，答案显示部分的代码高亮会失效
+2. [ ✅ ] 只有当用户手动切换代码语言或刷新页面，答案的代码高亮才会恢复
+3. [ ✅ ] 该问题影响了用户的使用体验，阅读答案和提交记录的代码时不易辨识语法结构
+4. [ ✅ ] Python、Java、C++等语言的代码高亮无法正常工作，只有C语言正常高亮
+
+## 问题原因分析
+经排查，问题主要出在以下几个方面：
+
+1. 提交代码后，代码会自动切换到"提交记录"标签页，但没有触发代码高亮重新应用
+2. 解决方案代码块使用了固定的语言类名"language-javascript"，不会根据实际代码语言变化
+3. Vue组件在数据更新和DOM渲染后，没有重新调用语法高亮库Prism.js的高亮函数
+4. Prism.js库只导入了C语言的语法支持，缺少其他语言的支持文件
+5. 缺少对语言标识符的标准化处理，例如将"C++"转换为Prism识别的"cpp"
+
+## 修复步骤
+
+### 第一阶段修复 { 2023.11.13 }：解决代码高亮失效
+
+修改了文件路径为`frontend/src/views/problems/detail/ProblemDetail.vue`，添加了以下几处代码：
+
+1. 在提交代码成功后添加调用高亮库的代码：
+```js
+if (response.data.success) {
+  ElMessage.success('提交成功')
+  // 更新提交记录
+  fetchSubmissions()
+  // 切换到提交记录标签
+  activeTab.value = 'submissions'
+  
+  // 添加: 提交代码后，对页面中的代码块重新应用语法高亮
+  nextTick(() => {
+    Prism.highlightAll()
+  })
+}
+```
+
+2. 在标签页切换时应用代码高亮：
+```js
+// 监听标签页变化
+watch(activeTab, (newTab) => {
+  if (newTab === 'submissions') {
+    fetchSubmissions();
+    // 如果切换到提交记录标签，重置筛选条件
+    resetFilters();
+  }
+  
+  // 添加: 当切换到解决方案或提交记录标签时，确保代码语法高亮生效
+  if (newTab === 'solution' || newTab === 'submissions') {
+    nextTick(() => {
+      Prism.highlightAll()
+    })
+  }
+})
+```
+
+3. 修改解决方案代码块，使用动态语言类名：
+```html
+<pre class="code-block"><code :class="`language-${impl.language.toLowerCase()}`">{{ impl.code }}</code></pre>
+```
+
+4. 在显示提交详情时应用代码高亮：
+```js
+const showSubmissionDetail = (submission) => {
+  selectedSubmission.value = submission
+  dialogVisible.value = true
+  
+  // 添加: 显示提交详情后，应用代码高亮
+  nextTick(() => {
+    Prism.highlightAll()
+  })
+}
+```
+
+5. 在获取提交记录后应用代码高亮：
+```js
+if (response.data && response.data.code === 200) {
+  submissions.value = response.data.data
+  
+  // 添加: 获取提交记录后应用代码高亮
+  nextTick(() => {
+    Prism.highlightAll()
+  })
+}
+```
+
+### 第二阶段修复 { 2023.11.13 }：添加对所有语言的支持
+
+1. 添加更多语言支持的导入：
+```js
+// 新增高亮库引入
+import Prism from 'prismjs'
+import 'prismjs/themes/prism-tomorrow.css'
+// 添加C语言语法支持
+import 'prismjs/components/prism-c'
+// 添加其他语言支持
+import 'prismjs/components/prism-cpp'
+import 'prismjs/components/prism-java'
+import 'prismjs/components/prism-python'
+import 'prismjs/components/prism-javascript'
+```
+
+2. 添加语言标识符标准化处理函数：
+```js
+// 获取语言的标准化类名
+const getLanguageClass = (language) => {
+  if (!language) return 'language-c'
+  
+  let langKey = language.toLowerCase()
+  
+  // 处理特殊情况，如C++转换为cpp
+  const langMap = {
+    'c++': 'cpp',
+    'c#': 'csharp',
+    'js': 'javascript',
+    'py': 'python'
+  }
+  
+  if (langMap[langKey]) {
+    langKey = langMap[langKey]
+  }
+  
+  return `language-${langKey}`
+}
+```
+
+3. 修改代码高亮函数，改进语言处理逻辑：
+```js
+// 代码高亮函数
+const highlightCode = (code, language) => {
+  if (!code) return ''
+  try {
+    // 标准化语言标识符
+    let langKey = language.toLowerCase()
+    
+    // 处理特殊情况，如C++转换为cpp
+    const langMap = {
+      'c++': 'cpp',
+      'c#': 'csharp',
+      'js': 'javascript',
+      'py': 'python'
+    }
+    
+    if (langMap[langKey]) {
+      langKey = langMap[langKey]
+    }
+    
+    // 确保Prism中有此语言的定义
+    if (!Prism.languages[langKey]) {
+      console.warn(`Prism不支持语言: ${langKey}, 将使用默认高亮`)
+      langKey = 'c' // 默认使用C语言高亮
+    }
+    
+    return Prism.highlight(code, Prism.languages[langKey], langKey)
+  } catch (err) {
+    console.error('代码高亮失败:', err)
+    return code
+  }
+}
+```
+
+4. 更新解决方案代码块，使用标准化语言类名：
+```html
+<pre class="code-block"><code :class="getLanguageClass(impl.language)">{{ impl.code }}</code></pre>
+```
+
+5. 更新提交详情代码展示：
+```html
+<pre><code :class="getLanguageClass(selectedSubmission.language)">{{ selectedSubmission.code }}</code></pre>
+```
+
+6. 更新内联代码高亮函数：
+```js
+const highlightInlineCode = (text) => {
+  if (!text) return ''
+  // 使用正则表达式匹配反引号中的代码
+  return text.replace(/`([^`]+)`/g, (match, code) => {
+    try {
+      // 标准化语言标识符
+      let langKey = selectedLanguageForCode.value.toLowerCase()
+      
+      // 处理特殊情况
+      const langMap = {
+        'c++': 'cpp',
+        'c#': 'csharp', 
+        'js': 'javascript',
+        'py': 'python'
+      }
+      
+      if (langMap[langKey]) {
+        langKey = langMap[langKey]
+      }
+      
+      // 确保Prism中有此语言的定义
+      if (!Prism.languages[langKey]) {
+        langKey = 'c' // 默认使用C语言高亮
+      }
+      
+      // 使用Prism.js高亮代码
+      const highlighted = Prism.highlight(
+        code,
+        Prism.languages[langKey],
+        langKey
+      )
+      // 返回带有样式的HTML
+      return `<code class="inline-code">${highlighted}</code>`
+    } catch (error) {
+      console.error('代码高亮失败:', error)
+      return `<code class="inline-code">${code}</code>`
+    }
+  })
+}
+```
+
+7. 更新AI分析中错误代码的展示：
+```html
+<pre><code :class="getLanguageClass(selectedLanguageForCode.value)">{{ error.code }}</code></pre>
+```
+
+## 修复效果
+1. 提交代码后，答案和提交记录中的代码会自动应用语法高亮
+2. 切换标签页时，代码高亮会自动重新应用
+3. 解决方案代码块会根据代码的实际语言应用正确的高亮规则
+4. 支持所有常用编程语言（C、C++、Java、Python、JavaScript）的代码高亮
+5. 对特殊语言标识符进行了标准化处理，如将"C++"映射为"cpp"
+6. 提供了优雅的降级处理，当遇到不支持的语言时使用默认的C语言高亮
+
+## 注意事项
+1. 使用Prism.js高亮库时，应确保在DOM更新完成后再调用高亮函数
+2. Vue中可使用nextTick确保DOM更新完成
+3. 代码语言类名应动态绑定，确保使用正确的语言规则应用高亮
+4. 在获取、更新或显示代码的关键点都应考虑重新应用高亮
+5. 使用Prism.js时，需要手动导入每种要支持的语言的语法文件
+6. 对不同的语言标识符进行标准化处理，确保正确映射到Prism.js支持的语言标识符 
