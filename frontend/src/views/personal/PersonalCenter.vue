@@ -1,7 +1,7 @@
 <template>
   <div class="personal-center">
     <nav-bar></nav-bar>
-    
+
     <!-- 学生信息验证失败的提示 -->
     <div v-if="!loading && !isStudent" class="student-notice">
       <div class="notice-content">
@@ -67,10 +67,10 @@
       <div class="learning-path-section" v-loading="learningPathLoading">
         <div class="section-header">
           <h2 class="section-title">个性化学习路径</h2>
-          <el-button 
-            type="primary" 
-            size="small" 
-            :icon="RefreshRight" 
+          <el-button
+            type="primary"
+            size="small"
+            :icon="RefreshRight"
             @click="refreshLearningPath"
             :loading="refreshLoading"
             class="refresh-btn"
@@ -78,7 +78,7 @@
             刷新学习路径
           </el-button>
         </div>
-        
+
         <!-- 弱点分析板块 -->
         <div class="learning-path-weakness" v-if="weaknessAnalysis.length > 0">
           <h3 class="block-title">
@@ -100,7 +100,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 学习方向板块 -->
         <div class="learning-path-directions">
           <h3 class="block-title">
@@ -149,7 +149,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 题目推荐板块 -->
         <div class="learning-path-recommend">
           <h3 class="block-title">
@@ -165,7 +165,7 @@
                   <div class="problem-title">{{ item.title || '未命名题目' }}</div>
                   <div class="problem-number">题目 #{{ item.problem_number }}</div>
                   <div class="problem-difficulty" v-if="item.difficulty">
-                    <el-tag 
+                    <el-tag
                       :type="item.difficulty === '简单' ? 'success' : item.difficulty === '中等' ? 'warning' : 'danger'"
                       size="small"
                       effect="dark"
@@ -174,8 +174,8 @@
                     </el-tag>
                   </div>
                 </div>
-                <div 
-                  class="route-line" 
+                <div
+                  class="route-line"
                   v-if="index < recommendProblems.length - 1"
                   :style="{ background: `linear-gradient(to bottom, ${getPointColor(index)}, ${getPointColor(index+1)})` }"
                 ></div>
@@ -203,7 +203,7 @@
               <div id="errorTypePieChart" class="chart"></div>
             </div>
           </div>
-          
+
           <!-- 右侧图表 -->
           <div class="chart-column">
             <div class="chart-card">
@@ -300,37 +300,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onUnmounted } from 'vue';
-import NavBar from '@/components/NavBar.vue';
-import axios from 'axios';
-import { ElMessage } from 'element-plus';
-import * as echarts from 'echarts';
-import { useRouter } from 'vue-router';
-import { RefreshRight } from '@element-plus/icons-vue';
+import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import NavBar from '@/components/NavBar.vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
+import { useRouter } from 'vue-router'
+import { RefreshRight } from '@element-plus/icons-vue'
 
-const router = useRouter();
+const router = useRouter()
 
 // 数据状态
-const loading = ref(true);
-const isStudent = ref(false);
-const studentInfo = ref({});
-const message = ref('');
-const problemLoading = ref(false);
-const problemList = ref([]);
-const totalProblemsCount = ref(0);
-const problemCurrentPage = ref(1);
+const loading = ref(true)
+const isStudent = ref(false)
+const studentInfo = ref({})
+const message = ref('')
+const problemLoading = ref(false)
+const problemList = ref([])
+const totalProblemsCount = ref(0)
+const problemCurrentPage = ref(1)
 
 // 图表数据状态
-const completionData = ref(null);
-const errorTypeData = ref(null);
-const knowledgeData = ref(null);
-const solvingTimeData = ref(null);
+const completionData = ref(null)
+const errorTypeData = ref(null)
+const knowledgeData = ref(null)
+const solvingTimeData = ref(null)
 
 // 学习路径数据
-const learningPathLoading = ref(false);
-const weaknessAnalysis = ref([]);
-const learningDirections = ref([]);
-const recommendProblems = ref([]);
+const learningPathLoading = ref(false)
+const weaknessAnalysis = ref([])
+const learningDirections = ref([])
+const recommendProblems = ref([])
 
 // 存储图表实例的引用
 const charts = ref({
@@ -338,107 +338,107 @@ const charts = ref({
   errorTypeChart: null,
   knowledgeChart: null,
   solvingTimeChart: null
-});
+})
 
 // 刷新学习路径加载状态
-const refreshLoading = ref(false);
+const refreshLoading = ref(false)
 
 // 检查用户是否为学生
 const checkIsStudent = async () => {
   try {
-    const response = await axios.get('/api/user/profile/check-student');
-    isStudent.value = response.data.isStudent;
-    studentInfo.value = response.data.studentInfo || {};
-    
+    const response = await axios.get('/api/user/profile/check-student')
+    isStudent.value = response.data.isStudent
+    studentInfo.value = response.data.studentInfo || {}
+
     if (isStudent.value) {
-      await fetchUserData();
-      await fetchProblemList();
-      await fetchLearningPath();
+      await fetchUserData()
+      await fetchProblemList()
+      await fetchLearningPath()
     }
   } catch (error) {
-    console.error('检查用户是否为学生失败:', error);
-    message.value = error.response?.data?.message || '检查用户身份失败，请稍后再试';
-    isStudent.value = false;
+    console.error('检查用户是否为学生失败:', error)
+    message.value = error.response?.data?.message || '检查用户身份失败，请稍后再试'
+    isStudent.value = false
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 获取学习路径数据
 const fetchLearningPath = async (forceRefresh = false) => {
-  learningPathLoading.value = true;
+  learningPathLoading.value = true
   try {
     // 并行请求所有学习路径数据
     const [weaknessRes, directionsRes, recommendRes] = await Promise.all([
       axios.get('/api/learning-path/weakness', { params: { refresh: forceRefresh } }),
       axios.get('/api/learning-path/directions', { params: { refresh: forceRefresh } }),
       axios.get('/api/learning-path/recommend', { params: { refresh: forceRefresh } })
-    ]);
+    ])
 
-    weaknessAnalysis.value = weaknessRes.data.data || [];
-    
+    weaknessAnalysis.value = weaknessRes.data.data || []
+
     // 处理学习方向数据，按标签分组
-    const directions = directionsRes.data.data || [];
-    const groupedDirections = {};
-    
+    const directions = directionsRes.data.data || []
+    const groupedDirections = {}
+
     directions.forEach(item => {
       // 根据tag分组
       if (!groupedDirections[item.tag]) {
-        groupedDirections[item.tag] = [];
+        groupedDirections[item.tag] = []
       }
-      
+
       // 添加前缀
       if (item.source === '抖音') {
-        item.url = item.url.includes('/search/') 
-          ? item.url.replace('/search/', '/search/编程') 
-          : item.url;
+        item.url = item.url.includes('/search/')
+          ? item.url.replace('/search/', '/search/编程')
+          : item.url
       } else if (item.source === '哔哩哔哩') {
-        item.url = item.url.includes('/search?') 
-          ? item.url.replace('/search?keyword=', '/search?keyword=编程') 
-          : item.url;
+        item.url = item.url.includes('/search?')
+          ? item.url.replace('/search?keyword=', '/search?keyword=编程')
+          : item.url
       } else if (item.source === 'CSDN') {
-        item.url = item.url.includes('/so/search/') 
-          ? item.url.replace('/so/search/s.do?q=', '/so/search/s.do?q=编程') 
-          : item.url;
+        item.url = item.url.includes('/so/search/')
+          ? item.url.replace('/so/search/s.do?q=', '/so/search/s.do?q=编程')
+          : item.url
       }
-      
-      groupedDirections[item.tag].push(item);
-    });
-    
+
+      groupedDirections[item.tag].push(item)
+    })
+
     // 转换为数组格式
     learningDirections.value = Object.entries(groupedDirections).map(([tag, items]) => ({
       tag,
       items
-    }));
-    
-    recommendProblems.value = recommendRes.data.data || [];
+    }))
+
+    recommendProblems.value = recommendRes.data.data || []
   } catch (error) {
-    console.error('获取学习路径数据失败:', error);
-    ElMessage.error('获取学习路径数据失败，请稍后再试');
+    console.error('获取学习路径数据失败:', error)
+    ElMessage.error('获取学习路径数据失败，请稍后再试')
   } finally {
-    learningPathLoading.value = false;
-    refreshLoading.value = false;
+    learningPathLoading.value = false
+    refreshLoading.value = false
   }
-};
+}
 
 // 刷新学习路径
 const refreshLearningPath = async () => {
-  refreshLoading.value = true;
-  await fetchLearningPath(true);
-  ElMessage.success('学习路径已刷新');
-};
+  refreshLoading.value = true
+  await fetchLearningPath(true)
+  ElMessage.success('学习路径已刷新')
+}
 
 // 打开外部学习资源
 const openUrl = (url) => {
-  window.open(url, '_blank');
-};
+  window.open(url, '_blank')
+}
 
 // 导航到题目页面
 const navigateToProblem = (problemNumber) => {
   if (problemNumber) {
-    router.push(`/problems/detail/${problemNumber}`);
+    router.push(`/problems/detail/${problemNumber}`)
   }
-};
+}
 
 // 获取用户统计数据
 const fetchUserData = async () => {
@@ -449,71 +449,71 @@ const fetchUserData = async () => {
       axios.get('/api/user/profile/knowledge'),
       axios.get('/api/user/profile/error-types'),
       axios.get('/api/user/profile/solving-time')
-    ]);
+    ])
 
-    completionData.value = completionResponse.data.data;
-    knowledgeData.value = knowledgeResponse.data.data;
-    errorTypeData.value = errorTypeResponse.data.data;
-    solvingTimeData.value = solvingTimeResponse.data.data;
+    completionData.value = completionResponse.data.data
+    knowledgeData.value = knowledgeResponse.data.data
+    errorTypeData.value = errorTypeResponse.data.data
+    solvingTimeData.value = solvingTimeResponse.data.data
 
     // 初始化图表
     nextTick(() => {
-      initCharts();
-    });
+      initCharts()
+    })
   } catch (error) {
-    console.error('获取用户统计数据失败:', error);
-    ElMessage.error('获取统计数据失败，请稍后再试');
+    console.error('获取用户统计数据失败:', error)
+    ElMessage.error('获取统计数据失败，请稍后再试')
   }
-};
+}
 
 // 获取题目列表
 const fetchProblemList = async () => {
-  problemLoading.value = true;
+  problemLoading.value = true
   try {
     const response = await axios.get('/api/user/profile/problems', {
       params: {
         page: problemCurrentPage.value,
         pageSize: 10
       }
-    });
-    
-    problemList.value = response.data.data || [];
-    totalProblemsCount.value = response.data.total || 0;
+    })
+
+    problemList.value = response.data.data || []
+    totalProblemsCount.value = response.data.total || 0
   } catch (error) {
-    console.error('获取题目列表失败:', error);
-    ElMessage.error('获取题目列表失败，请稍后再试');
+    console.error('获取题目列表失败:', error)
+    ElMessage.error('获取题目列表失败，请稍后再试')
   } finally {
-    problemLoading.value = false;
+    problemLoading.value = false
   }
-};
+}
 
 // 初始化图表
 const initCharts = () => {
   // 销毁之前的图表实例
   Object.values(charts.value).forEach(chart => {
     if (chart) {
-      chart.dispose();
+      chart.dispose()
     }
-  });
+  })
 
   // 确保 DOM 元素存在后再初始化图表
-  const completionElement = document.getElementById('completionPieChart');
-  const errorTypeElement = document.getElementById('errorTypePieChart');
-  const knowledgeElement = document.getElementById('knowledgeRadarChart');
-  const solvingTimeElement = document.getElementById('solvingTimeBoxChart');
+  const completionElement = document.getElementById('completionPieChart')
+  const errorTypeElement = document.getElementById('errorTypePieChart')
+  const knowledgeElement = document.getElementById('knowledgeRadarChart')
+  const solvingTimeElement = document.getElementById('solvingTimeBoxChart')
 
   // 只在 DOM 元素存在时初始化图表
   if (completionElement) {
-    charts.value.completionChart = echarts.init(completionElement);
+    charts.value.completionChart = echarts.init(completionElement)
   }
   if (errorTypeElement) {
-    charts.value.errorTypeChart = echarts.init(errorTypeElement);
+    charts.value.errorTypeChart = echarts.init(errorTypeElement)
   }
   if (knowledgeElement) {
-    charts.value.knowledgeChart = echarts.init(knowledgeElement);
+    charts.value.knowledgeChart = echarts.init(knowledgeElement)
   }
   if (solvingTimeElement) {
-    charts.value.solvingTimeChart = echarts.init(solvingTimeElement);
+    charts.value.solvingTimeChart = echarts.init(solvingTimeElement)
   }
 
   // 设置题目完成情况饼图
@@ -522,14 +522,14 @@ const initCharts = () => {
       { name: '已完成', value: completionData.value.completed_problems || 0 },
       { name: '未尝试', value: completionData.value.not_attempted_problems || 0 },
       { name: '失败', value: completionData.value.failed_problems || 0 }
-    ];
+    ]
 
-    const colorPalette = ['#67C23A', '#409EFF', '#F56C6C'];
+    const colorPalette = ['#67C23A', '#409EFF', '#F56C6C']
 
     charts.value.completionChart.setOption({
       backgroundColor: 'transparent',
       color: colorPalette,
-      tooltip: { 
+      tooltip: {
         trigger: 'item',
         formatter: '{a} <br/>{b}: {c} ({d}%)',
         backgroundColor: 'rgba(50, 50, 50, 0.9)',
@@ -538,8 +538,8 @@ const initCharts = () => {
           color: '#fff'
         }
       },
-      legend: { 
-        orient: 'vertical', 
+      legend: {
+        orient: 'vertical',
         left: 'left',
         textStyle: {
           color: '#e6edf3'
@@ -561,7 +561,7 @@ const initCharts = () => {
           }
         }
       }]
-    });
+    })
   }
 
   // 设置错误类型分析饼图
@@ -569,14 +569,14 @@ const initCharts = () => {
     const errorData = (errorTypeData.value || []).map(item => ({
       name: item.error_type || '未知错误',
       value: item.count || 0
-    }));
+    }))
 
-    const colorPalette = ['#F56C6C', '#E6A23C', '#409EFF', '#67C23A', '#909399', '#FFEB3B'];
+    const colorPalette = ['#F56C6C', '#E6A23C', '#409EFF', '#67C23A', '#909399', '#FFEB3B']
 
     charts.value.errorTypeChart.setOption({
       backgroundColor: 'transparent',
       color: colorPalette,
-      tooltip: { 
+      tooltip: {
         trigger: 'item',
         formatter: '{a} <br/>{b}: {c} ({d}%)',
         backgroundColor: 'rgba(50, 50, 50, 0.9)',
@@ -585,15 +585,15 @@ const initCharts = () => {
           color: '#fff'
         }
       },
-      legend: { 
-        orient: 'vertical', 
+      legend: {
+        orient: 'vertical',
         left: 'left',
         textStyle: {
           color: '#e6edf3'
         },
-        formatter: function(name) {
+        formatter: function (name) {
           // 如果名称太长，截断并加上省略号
-          return name.length > 8 ? name.substring(0, 8) + '...' : name;
+          return name.length > 8 ? name.substring(0, 8) + '...' : name
         }
       },
       series: [{
@@ -612,38 +612,38 @@ const initCharts = () => {
           }
         }
       }]
-    });
+    })
   }
 
   // 设置知识点掌握情况雷达图
   if (knowledgeData.value && charts.value.knowledgeChart) {
-    let data = knowledgeData.value || [];
-    
+    let data = knowledgeData.value || []
+
     // 确保有数据，否则提供默认数据
     if (data.length === 0) {
       data = [
         { knowledge_point: '暂无数据', mastery_percentage: 0 }
-      ];
+      ]
     }
-    
+
     const indicators = data.map(item => ({
       name: item.knowledge_point || '未知知识点',
       max: 100
-    }));
-    
-    const values = data.map(item => item.mastery_percentage || 0);
+    }))
+
+    const values = data.map(item => item.mastery_percentage || 0)
 
     // 防止雷达图在无数据时出错，确保至少有3个指标点
     if (indicators.length < 3) {
       while (indicators.length < 3) {
-        indicators.push({ name: `示例${indicators.length + 1}`, max: 100 });
-        values.push(0);
+        indicators.push({ name: `示例${indicators.length + 1}`, max: 100 })
+        values.push(0)
       }
     }
 
     charts.value.knowledgeChart.setOption({
       backgroundColor: 'transparent',
-      tooltip: { 
+      tooltip: {
         trigger: 'axis',
         backgroundColor: 'rgba(50, 50, 50, 0.9)',
         borderColor: '#555',
@@ -659,11 +659,11 @@ const initCharts = () => {
         splitNumber: 5,
         axisName: {
           color: '#e6edf3',
-          formatter: function(value) {
-            if(value.length > 6) {
-              return value.substring(0, 6) + '...';
+          formatter: function (value) {
+            if (value.length > 6) {
+              return value.substring(0, 6) + '...'
             }
-            return value;
+            return value
           }
         },
         splitArea: {
@@ -708,26 +708,28 @@ const initCharts = () => {
           }
         }]
       }]
-    });
+    })
   }
 
   // 设置解题用时分析柱状图 - 完全按照statistics.vue的实现方式
   if (solvingTimeData.value && charts.value.solvingTimeChart) {
-    const data = solvingTimeData.value || [];
-    
+    const data = solvingTimeData.value || []
+
     // 确保有数据，否则提供默认数据
-    const chartData = data.length > 0 ? data : [
-      { difficulty: '简单', avg_time: 0 },
-      { difficulty: '中等', avg_time: 0 },
-      { difficulty: '困难', avg_time: 0 }
-    ];
-    
+    const chartData = data.length > 0
+      ? data
+      : [
+          { difficulty: '简单', avg_time: 0 },
+          { difficulty: '中等', avg_time: 0 },
+          { difficulty: '困难', avg_time: 0 }
+        ]
+
     charts.value.solvingTimeChart.setOption({
       backgroundColor: 'transparent',
-      tooltip: { 
+      tooltip: {
         trigger: 'axis',
-        axisPointer: { 
-          type: 'shadow' 
+        axisPointer: {
+          type: 'shadow'
         },
         backgroundColor: 'rgba(50, 50, 50, 0.9)',
         borderColor: '#555',
@@ -753,8 +755,8 @@ const initCharts = () => {
           color: '#e6edf3'
         }
       },
-      yAxis: { 
-        type: 'value', 
+      yAxis: {
+        type: 'value',
         name: '解题时间（分钟）',
         nameTextStyle: {
           color: '#e6edf3'
@@ -779,13 +781,13 @@ const initCharts = () => {
           type: 'bar',
           barWidth: '60%',
           itemStyle: {
-            color: function(params) {
+            color: function (params) {
               const colors = {
-                '简单': '#67C23A',
-                '中等': '#E6A23C',
-                '困难': '#F56C6C'
-              };
-              return colors[params.name] || '#409EFF';
+                简单: '#67C23A',
+                中等: '#E6A23C',
+                困难: '#F56C6C'
+              }
+              return colors[params.name] || '#409EFF'
             }
           },
           data: chartData.map(item => item.avg_time),
@@ -797,76 +799,76 @@ const initCharts = () => {
           }
         }
       ]
-    });
+    })
   }
-};
+}
 
 // 事件处理函数
 const handleResize = () => {
   Object.values(charts.value).forEach(chart => {
     if (chart && typeof chart.resize === 'function') {
       try {
-        chart.resize();
+        chart.resize()
       } catch (error) {
-        console.warn('图表重置大小时发生错误:', error);
+        console.warn('图表重置大小时发生错误:', error)
       }
     }
-  });
-};
+  })
+}
 
 // 处理题目列表分页变化
 const handleProblemPageChange = (page) => {
-  problemCurrentPage.value = page;
-  fetchProblemList();
-};
+  problemCurrentPage.value = page
+  fetchProblemList()
+}
 
 // 生命周期钩子
 onMounted(() => {
-  checkIsStudent();
-  window.addEventListener('resize', handleResize);
-});
+  checkIsStudent()
+  window.addEventListener('resize', handleResize)
+})
 
 // 表格行样式
 const rowClassName = ({ rowIndex }) => {
-  return rowIndex % 2 === 0 ? 'dark-row' : 'darker-row';
-};
+  return rowIndex % 2 === 0 ? 'dark-row' : 'darker-row'
+}
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
+  window.removeEventListener('resize', handleResize)
   Object.values(charts.value).forEach(chart => {
     if (chart) {
-      chart.dispose();
+      chart.dispose()
     }
-  });
-});
+  })
+})
 
 // 格式化内容，支持换行符和基本Markdown风格
 const formatContent = (content) => {
-  if (!content) return '';
-  
+  if (!content) return ''
+
   // 处理换行符
-  let formatted = content.replace(/\n/g, '<br>');
-  
+  let formatted = content.replace(/\n/g, '<br>')
+
   // 处理markdown风格的粗体
-  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
   // 处理markdown风格的列表
-  formatted = formatted.replace(/- (.*?)(<br>|$)/g, '<li>$1</li>');
-  
+  formatted = formatted.replace(/- (.*?)(<br>|$)/g, '<li>$1</li>')
+
   // 如果有列表项，添加ul标签
   if (formatted.includes('<li>')) {
-    formatted = formatted.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    formatted = formatted.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>')
   }
-  
-  return formatted;
-};
+
+  return formatted
+}
 
 // 根据索引获取不同颜色
 const getPointColor = (index) => {
-  const colors = ['#2196F3', '#FF5722', '#4CAF50', '#9C27B0', '#FF9800', '#03A9F4', '#E91E63'];
-  return colors[index % colors.length];
-};
+  const colors = ['#2196F3', '#FF5722', '#4CAF50', '#9C27B0', '#FF9800', '#03A9F4', '#E91E63']
+  return colors[index % colors.length]
+}
 </script>
 
 <style scoped>
@@ -1377,25 +1379,25 @@ const getPointColor = (index) => {
   .charts-row {
     flex-direction: column;
   }
-  
+
   .profile-header {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .profile-avatar {
     margin-right: 0;
     margin-bottom: 20px;
   }
-  
+
   .profile-info {
     margin-bottom: 20px;
   }
-  
+
   .info-items {
     grid-template-columns: 1fr;
   }
-  
+
   .completion-stats {
     margin-left: 0;
   }
@@ -1403,11 +1405,11 @@ const getPointColor = (index) => {
   .direction-card {
     max-width: 100%;
   }
-  
+
   .card-container {
     flex-direction: column;
   }
-  
+
   .weakness-card {
     width: auto;
     min-width: 0;
@@ -1420,7 +1422,7 @@ const getPointColor = (index) => {
   --el-table-text-color: #e6edf3;
   --el-table-header-text-color: #e6edf3;
   --el-table-row-hover-background-color: #2d3748;
-  
+
   border-radius: 8px;
   overflow: hidden;
   border: var(--el-table-border);
@@ -1465,4 +1467,4 @@ const getPointColor = (index) => {
   align-items: center;
   gap: 5px;
 }
-</style> 
+</style>

@@ -13,10 +13,10 @@
         <h1>
           {{ communityData.name }}
           <span class="community-type">
-            {{ 
-              communityData.type === 'official' ? '官方社区' : 
+            {{
+              communityData.type === 'official' ? '官方社区' :
               communityData.type === 'college' ? '学院社区' :
-              '班级社区' 
+              '班级社区'
             }}
           </span>
         </h1>
@@ -104,7 +104,7 @@ import { ElMessage } from 'element-plus'
 
 export default {
   name: 'CommunityDetail',
-  data() {
+  data () {
     return {
       communityData: {},
       posts: [],
@@ -121,7 +121,7 @@ export default {
   },
   methods: {
     formatDate,
-    async fetchCommunityData() {
+    async fetchCommunityData () {
       try {
         const { id } = this.$route.params
         const response = await axios.get(`http://localhost:3000/api/communities/${id}`)
@@ -131,7 +131,7 @@ export default {
         ElMessage.error('获取社区信息失败')
       }
     },
-    async fetchPosts() {
+    async fetchPosts () {
       try {
         const { id } = this.$route.params
         const response = await axios.get(`http://localhost:3000/api/communities/${id}/posts`, {
@@ -147,7 +147,7 @@ export default {
         ElMessage.error('获取帖子失败')
       }
     },
-    async fetchFeaturedPosts() {
+    async fetchFeaturedPosts () {
       try {
         const { id } = this.$route.params
         const response = await axios.get(`http://localhost:3000/api/communities/${id}/featured-posts`)
@@ -157,7 +157,7 @@ export default {
         ElMessage.error('获取热门帖子失败')
       }
     },
-    async fetchMembers() {
+    async fetchMembers () {
       try {
         const { id } = this.$route.params
         const response = await axios.get(`http://localhost:3000/api/communities/${id}/members`)
@@ -168,17 +168,17 @@ export default {
         ElMessage.error('获取成员列表失败')
       }
     },
-    handlePageChange(page) {
+    handlePageChange (page) {
       this.currentPage = page
       this.fetchPosts()
     },
-    createPost() {
+    createPost () {
       this.$router.push(`/community/${this.$route.params.id}/create-post`)
     },
-    goBack() {
+    goBack () {
       this.$router.go(-1)
     },
-    async handleJoin() {
+    async handleJoin () {
       try {
         const { id } = this.$route.params
         await axios.post(`http://localhost:3000/api/communities/${id}/join`)
@@ -190,7 +190,7 @@ export default {
         ElMessage.error('加入社区失败：' + (error.response?.data?.message || error.message))
       }
     },
-    async handleLeave() {
+    async handleLeave () {
       try {
         const { id } = this.$route.params
         await axios.post(`http://localhost:3000/api/communities/${id}/leave`)
@@ -202,7 +202,7 @@ export default {
         ElMessage.error('退出社区失败：' + (error.response?.data?.message || error.message))
       }
     },
-    async checkJoinStatus() {
+    async checkJoinStatus () {
       try {
         const { id } = this.$route.params
         const response = await axios.get(`http://localhost:3000/api/communities/${id}/join-status`)
@@ -212,7 +212,7 @@ export default {
       }
     }
   },
-  created() {
+  created () {
     this.fetchCommunityData()
     this.fetchPosts()
     this.fetchFeaturedPosts()
@@ -248,7 +248,7 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   border: 1px solid #3d3d4f;
-  
+
   &:hover {
     background-color: #3d3d4f;
     color: #4ecdc4;
@@ -280,7 +280,7 @@ export default {
 
 .community-info {
   flex: 1;
-  
+
   h1 {
     color: #e0e0e0;
     margin: 0 0 8px 0;
@@ -622,4 +622,4 @@ h2 {
     font-size: 16px;
   }
 }
-</style> 
+</style>

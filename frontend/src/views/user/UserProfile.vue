@@ -14,7 +14,7 @@
                   <div class="avatar-overlay" @click="triggerFileInput" v-if="isCurrentUser">
                     <i class="pi pi-camera"></i>
                   </div>
-                  <input 
+                  <input
                     type="file"
                     ref="fileInput"
                     style="display: none"
@@ -23,7 +23,7 @@
                   >
                 </div>
               </div>
-              
+
               <div class="profile-info">
                 <!-- 账号(不可修改) -->
                 <div class="field">
@@ -35,15 +35,15 @@
                 <div class="field">
                   <label>昵称</label>
                   <div class="p-inputgroup">
-                    <InputText 
-                      v-model="editForm.display_name" 
+                    <InputText
+                      v-model="editForm.display_name"
                       :disabled="!isCurrentUser"
                       class="w-full"
                       placeholder="设置昵称"
                     />
-                    <Button 
+                    <Button
                       v-if="isCurrentUser && isFieldChanged('display_name')"
-                      icon="pi pi-check" 
+                      icon="pi pi-check"
                       @click="handleFieldUpdate('display_name', editForm.display_name)"
                     />
                   </div>
@@ -62,9 +62,9 @@
                       placeholder="选择性别"
                       class="w-full"
                     />
-                    <Button 
+                    <Button
                       v-if="isCurrentUser && isFieldChanged('gender')"
-                      icon="pi pi-check" 
+                      icon="pi pi-check"
                       @click="handleFieldUpdate('gender', editForm.gender)"
                     />
                   </div>
@@ -74,16 +74,16 @@
                 <div class="field">
                   <label>生日</label>
                   <div class="p-inputgroup">
-                    <Calendar 
-                      v-model="editForm.birth_date" 
+                    <Calendar
+                      v-model="editForm.birth_date"
                       :disabled="!isCurrentUser"
                       dateFormat="yy-mm-dd"
                       :showIcon="true"
                       class="w-full"
                     />
-                    <Button 
+                    <Button
                       v-if="isCurrentUser && isFieldChanged('birth_date')"
-                      icon="pi pi-check" 
+                      icon="pi pi-check"
                       @click="handleFieldUpdate('birth_date', editForm.birth_date)"
                     />
                   </div>
@@ -93,15 +93,15 @@
                 <div class="field">
                   <label>现居地</label>
                   <div class="p-inputgroup">
-                    <InputText 
-                      v-model="editForm.location" 
+                    <InputText
+                      v-model="editForm.location"
                       :disabled="!isCurrentUser"
                       class="w-full"
                       placeholder="设置现居地"
                     />
-                    <Button 
+                    <Button
                       v-if="isCurrentUser && isFieldChanged('location')"
-                      icon="pi pi-check" 
+                      icon="pi pi-check"
                       @click="handleFieldUpdate('location', editForm.location)"
                     />
                   </div>
@@ -111,16 +111,16 @@
                 <div class="field">
                   <label>个人介绍</label>
                   <div class="p-inputgroup">
-                    <Textarea 
-                      v-model="editForm.bio" 
+                    <Textarea
+                      v-model="editForm.bio"
                       :disabled="!isCurrentUser"
-                      rows="4" 
+                      rows="4"
                       class="w-full"
                       placeholder="添加个人介绍..."
                     />
-                    <Button 
+                    <Button
                       v-if="isCurrentUser && isFieldChanged('bio')"
-                      icon="pi pi-check" 
+                      icon="pi pi-check"
                       @click="handleFieldUpdate('bio', editForm.bio)"
                     />
                   </div>
@@ -167,15 +167,15 @@ export default {
   components: {
     NavBar
   },
-  setup() {
+  setup () {
     const toast = useToast()
     const route = useRoute()
     const defaultAvatar = ref('/default-avatar.png')
     const getFullAvatarUrl = (url) => {
-      if (!url) return defaultAvatar.value;
-      if (url.startsWith('http')) return url;
-      const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-      return `http://localhost:3000${cleanUrl}`;
+      if (!url) return defaultAvatar.value
+      if (url.startsWith('http')) return url
+      const cleanUrl = url.startsWith('/') ? url : `/${url}`
+      return `http://localhost:3000${cleanUrl}`
     }
     const userProfile = ref({})
     const stats = ref({})
@@ -199,11 +199,11 @@ export default {
     const fetchUserProfile = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        
+
         // 直接使用路由参数中的用户名，不做自动切换
         const targetUsername = route.params.username
         console.log('正在获取用户资料:', targetUsername)
-        
+
         const response = await fetch(`http://localhost:3000/api/user/user-profile/${targetUsername}`, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
@@ -231,10 +231,10 @@ export default {
     const fetchUserStats = async () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        
+
         // 直接使用路由参数中的用户名
         const targetUsername = route.params.username
-        
+
         const response = await fetch(`http://localhost:3000/api/user/stats/${targetUsername}`, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
@@ -265,9 +265,9 @@ export default {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         // 处理日期格式
-        let processedValue = value;
+        let processedValue = value
         if (field === 'birth_date' && value) {
-          processedValue = new Date(value).toISOString().split('T')[0];
+          processedValue = new Date(value).toISOString().split('T')[0]
         }
         const response = await fetch('http://localhost:3000/api/user/user-profile', {
           method: 'PATCH',
@@ -298,46 +298,46 @@ export default {
     const handleAvatarUpload = async (event) => {
       // 确保当前用户才能上传头像
       if (!isCurrentUser.value) {
-        toast.add({ severity: 'error', summary: '错误', detail: '只能修改自己的头像' });
-        return;
+        toast.add({ severity: 'error', summary: '错误', detail: '只能修改自己的头像' })
+        return
       }
 
-      const file = event.target.files[0];
-      if (!file) return;
+      const file = event.target.files[0]
+      if (!file) return
 
-      const formData = new FormData();
-      formData.append('avatar', file);
+      const formData = new FormData()
+      formData.append('avatar', file)
 
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         const response = await fetch('http://localhost:3000/api/user/avatar', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           },
           body: formData
-        });
+        })
 
-        const data = await response.json();
+        const data = await response.json()
         if (response.ok) {
-          userProfile.value.avatar_url = data.avatar_url;
+          userProfile.value.avatar_url = data.avatar_url
           // 更新localStorage中的用户信息
-          const currentUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-          currentUserInfo.avatar_url = data.avatar_url;
-          localStorage.setItem('userInfo', JSON.stringify(currentUserInfo));
-          
+          const currentUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+          currentUserInfo.avatar_url = data.avatar_url
+          localStorage.setItem('userInfo', JSON.stringify(currentUserInfo))
+
           // 触发全局事件，通知导航栏更新头像
-          window.dispatchEvent(new Event('userAvatarUpdated'));
-          
-          toast.add({ severity: 'success', summary: '成功', detail: '头像上传成功' });
+          window.dispatchEvent(new Event('userAvatarUpdated'))
+
+          toast.add({ severity: 'success', summary: '成功', detail: '头像上传成功' })
         } else {
-          toast.add({ severity: 'error', summary: '错误', detail: data.message || '头像上传失败' });
+          toast.add({ severity: 'error', summary: '错误', detail: data.message || '头像上传失败' })
         }
       } catch (error) {
-        console.error('头像上传失败:', error);
-        toast.add({ severity: 'error', summary: '错误', detail: '头像上传失败' });
+        console.error('头像上传失败:', error)
+        toast.add({ severity: 'error', summary: '错误', detail: '头像上传失败' })
       }
-    };
+    }
 
     onMounted(() => {
       fetchUserProfile()
@@ -498,4 +498,4 @@ export default {
     padding: 20px;
   }
 }
-</style> 
+</style>

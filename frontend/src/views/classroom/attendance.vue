@@ -90,4 +90,4 @@ import NavBar from '@/components/NavBar.vue'
 .back-btn i {
   font-size: 1.1rem;
 }
-</style> 
+</style>

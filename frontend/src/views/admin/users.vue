@@ -11,9 +11,9 @@
           <el-radio-button label="teacher">教师用户 ({{ roleCount.teacher || 0 }})</el-radio-button>
           <el-radio-button label="admin">管理员 ({{ roleCount.admin || 0 }})</el-radio-button>
         </el-radio-group>
-        <el-button 
+        <el-button
           v-if="isAdminOrTeacher"
-          type="primary" 
+          type="primary"
           class="add-user-btn"
           @click="handleAdd"
         >
@@ -21,7 +21,7 @@
           添加用户
         </el-button>
       </div>
-      
+
       <!-- 搜索框 -->
       <div class="search-box">
         <el-input
@@ -36,25 +36,25 @@
 
     <!-- 用户列表 -->
     <div class="user-list">
-      <el-table 
-        :data="filteredUsers" 
+      <el-table
+        :data="filteredUsers"
         style="width: 100%"
         @sort-change="handleSortChange"
         :default-sort="{ prop: 'createdAt', order: 'descending' }"
       >
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
-            <el-avatar 
-              :size="40" 
+            <el-avatar
+              :size="40"
               :src="getAvatarUrl(row.avatar)"
             >
               {{ row.username.charAt(0).toUpperCase() }}
             </el-avatar>
           </template>
         </el-table-column>
-        <el-table-column 
-          prop="username" 
-          label="用户名" 
+        <el-table-column
+          prop="username"
+          label="用户名"
           sortable
           align="center"
           width="150"
@@ -64,21 +64,21 @@
             <span class="sort-icon"></span>
           </template>
         </el-table-column>
-        <el-table-column 
-          prop="displayName" 
-          label="显示名称" 
+        <el-table-column
+          prop="displayName"
+          label="显示名称"
           align="center"
           width="150"
         />
-        <el-table-column 
-          prop="email" 
-          label="邮箱" 
+        <el-table-column
+          prop="email"
+          label="邮箱"
           align="center"
           min-width="200"
         />
-        <el-table-column 
-          prop="role" 
-          label="角色" 
+        <el-table-column
+          prop="role"
+          label="角色"
           sortable
           align="center"
           width="120"
@@ -93,9 +93,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column 
-          prop="createdAt" 
-          label="注册时间" 
+        <el-table-column
+          prop="createdAt"
+          label="注册时间"
           sortable
           align="center"
           width="180"
@@ -108,8 +108,8 @@
             {{ formatDateTime(row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column 
-          label="操作" 
+        <el-table-column
+          label="操作"
           width="200"
           align="center"
           fixed="right"
@@ -117,10 +117,10 @@
           <template #default="{ row }">
             <div class="operation-buttons">
               <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-              <el-button 
-                v-if="isAdmin && row.role !== 'admin'" 
-                type="danger" 
-                size="small" 
+              <el-button
+                v-if="isAdmin && row.role !== 'admin'"
+                type="danger"
+                size="small"
                 @click="handleDelete(row)"
               >删除</el-button>
             </div>
@@ -160,43 +160,43 @@
       <el-form-item label="用户名" prop="username">
         <el-input v-model="addForm.username" placeholder="请输入用户名" />
       </el-form-item>
-      
+
       <el-form-item label="显示名称" prop="displayName">
         <el-input v-model="addForm.displayName" placeholder="请输入显示名称" />
       </el-form-item>
-      
+
       <el-form-item label="密码" prop="password">
-        <el-input 
-          v-model="addForm.password" 
-          type="password" 
+        <el-input
+          v-model="addForm.password"
+          type="password"
           placeholder="请输入密码"
           show-password
         />
       </el-form-item>
-      
+
       <el-form-item label="邮箱" prop="email">
         <el-input v-model="addForm.email" placeholder="请输入邮箱" />
       </el-form-item>
-      
+
       <el-form-item label="角色" prop="role">
         <el-select v-model="addForm.role" placeholder="请选择角色">
           <el-option label="普通用户" value="normal" />
           <el-option label="会员用户" value="vip" />
           <el-option label="超级会员" value="super_vip" />
-          <el-option 
-            v-if="isAdmin" 
-            label="教师用户" 
+          <el-option
+            v-if="isAdmin"
+            label="教师用户"
             value="teacher"
           />
-          <el-option 
-            v-if="isAdmin" 
-            label="管理员" 
+          <el-option
+            v-if="isAdmin"
+            label="管理员"
             value="admin"
           />
         </el-select>
       </el-form-item>
     </el-form>
-    
+
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="addDialogVisible = false">取消</el-button>
@@ -224,15 +224,15 @@
       <el-form-item label="用户名">
         <el-input v-model="editForm.username" disabled />
       </el-form-item>
-      
+
       <el-form-item label="显示名称" prop="displayName">
         <el-input v-model="editForm.displayName" placeholder="请输入显示名称" />
       </el-form-item>
-      
+
       <el-form-item label="邮箱" prop="email">
         <el-input v-model="editForm.email" placeholder="请输入邮箱" />
       </el-form-item>
-      
+
       <el-form-item label="角色" prop="role" v-if="isAdmin">
         <el-select v-model="editForm.role" placeholder="请选择角色">
           <el-option label="普通用户" value="normal" />
@@ -242,7 +242,7 @@
           <el-option label="管理员" value="admin" />
         </el-select>
       </el-form-item>
-      
+
       <el-form-item label="账号状态">
         <div class="status-switch">
           <el-switch
@@ -256,7 +256,7 @@
         </div>
       </el-form-item>
     </el-form>
-    
+
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="editDialogVisible = false">取消</el-button>
@@ -281,7 +281,7 @@ const API_BASE_URL = 'http://localhost:3000'
 const getAvatarUrl = (avatar) => {
   if (!avatar) return 'http://localhost:3000/uploads/avatars/default-avatar.png'
   if (avatar.startsWith('http')) return avatar
-  
+
   // 处理数据库中存储的路径，确保使用正确的URL格式
   // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
   // 需要转换为 http://localhost:3000/uploads/avatars/filename.jpeg
@@ -290,7 +290,7 @@ const getAvatarUrl = (avatar) => {
     const fileName = avatar.split('/').pop()
     return `${API_BASE_URL}/uploads/avatars/${fileName}`
   }
-  
+
   // 处理其他情况
   return `${API_BASE_URL}${avatar}`
 }
@@ -346,25 +346,25 @@ const sortOrder = ref('descending') // 默认降序
 // 过滤后的用户列表
 const filteredUsers = computed(() => {
   let result = users.value
-  
+
   // 按角色过滤
   if (currentRole.value !== 'all') {
     result = result.filter(user => user.role === currentRole.value)
   }
-  
+
   // 按搜索词过滤
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    result = result.filter(user => 
+    result = result.filter(user =>
       user.username.toLowerCase().includes(query) ||
       user.displayName.toLowerCase().includes(query)
     )
   }
-  
+
   // 排序
   result = [...result].sort((a, b) => {
     const order = sortOrder.value === 'ascending' ? 1 : -1
-    
+
     switch (sortBy.value) {
       case 'username':
         return order * a.username.localeCompare(b.username)
@@ -377,7 +377,7 @@ const filteredUsers = computed(() => {
         return 0
     }
   })
-  
+
   return result
 })
 
@@ -389,9 +389,9 @@ const fetchUsers = async () => {
       pageSize: pageSize.value,
       role: currentRole.value,
       search: searchQuery.value
-    });
+    })
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     const response = await axios.get('/api/user/admin/list', {
       params: {
         page: currentPage.value,
@@ -400,64 +400,64 @@ const fetchUsers = async () => {
         search: searchQuery.value
       },
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
-    });
+    })
 
-    console.log('获取用户列表响应:', response.data);
+    console.log('获取用户列表响应:', response.data)
 
     if (response.data.code === 200) {
-      users.value = response.data.data.list;
-      totalUsers.value = response.data.data.total;
+      users.value = response.data.data.list
+      totalUsers.value = response.data.data.total
     } else {
-      throw new Error(response.data.message || '获取用户列表失败');
+      throw new Error(response.data.message || '获取用户列表失败')
     }
   } catch (error) {
-    console.error('获取用户列表错误:', error);
-    ElMessage.error(error.message || '获取用户列表失败');
+    console.error('获取用户列表错误:', error)
+    ElMessage.error(error.message || '获取用户列表失败')
   }
 }
 
 // 获取角色统计
 const fetchRoleStats = async () => {
   try {
-    console.log('开始获取角色统计');
-    const token = localStorage.getItem('token');
+    console.log('开始获取角色统计')
+    const token = localStorage.getItem('token')
     const response = await axios.get('/api/user/admin/role-stats', {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
-    });
-    
-    console.log('角色统计响应:', response.data);
+    })
+
+    console.log('角色统计响应:', response.data)
 
     if (response.data.code === 200) {
-      roleCount.value = response.data.data.stats;
-      totalUsers.value = response.data.data.total;
+      roleCount.value = response.data.data.stats
+      totalUsers.value = response.data.data.total
     } else {
-      throw new Error(response.data.message || '获取角色统计失败');
+      throw new Error(response.data.message || '获取角色统计失败')
     }
   } catch (error) {
-    console.error('获取角色统计错误:', error);
-    ElMessage.error(error.message || '获取角色统计失败');
+    console.error('获取角色统计错误:', error)
+    ElMessage.error(error.message || '获取角色统计失败')
   }
 }
 
 // 监听筛选条件变化
 watch([currentRole, searchQuery], () => {
-  currentPage.value = 1; // 重置页码
-  fetchUsers();
-});
+  currentPage.value = 1 // 重置页码
+  fetchUsers()
+})
 
 // 分页处理
 const handleSizeChange = (val) => {
-  pageSize.value = val;
-  fetchUsers();
+  pageSize.value = val
+  fetchUsers()
 }
 
 const handleCurrentChange = (val) => {
-  currentPage.value = val;
-  fetchUsers();
+  currentPage.value = val
+  fetchUsers()
 }
 
 // 编辑相关的响应式变量
@@ -508,7 +508,7 @@ const handleEdit = (user) => {
     ElMessage.warning('您没有编辑权限')
     return
   }
-  
+
   currentEditUser.value = user
   editForm.value = {
     username: user.username,
@@ -523,22 +523,22 @@ const handleEdit = (user) => {
 // 保存编辑
 const handleSaveEdit = async () => {
   if (!editFormRef.value) return
-  
+
   try {
     await editFormRef.value.validate()
-    
+
     saveLoading.value = true
     const token = localStorage.getItem('token')
     const response = await axios.put(
-      `/api/user/admin/update/${currentEditUser.value.id}`, 
+      `/api/user/admin/update/${currentEditUser.value.id}`,
       editForm.value,
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
       }
     )
-    
+
     if (response.data.success) {
       ElMessage.success('保存成功')
       editDialogVisible.value = false
@@ -558,16 +558,16 @@ const handleSaveEdit = async () => {
 
 // 时间格式化函数
 const formatDateTime = (dateTimeString) => {
-  if (!dateTimeString) return '';
-  const date = new Date(dateTimeString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  if (!dateTimeString) return ''
+  const date = new Date(dateTimeString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 // 处理排序变化
@@ -627,12 +627,12 @@ const handleAdd = () => {
 // 保存添加
 const handleSaveAdd = async () => {
   if (!addFormRef.value) return
-  
+
   try {
     await addFormRef.value.validate()
     saveLoading.value = true
-    
-    console.log('准备添加新用户:', addForm.value);
+
+    console.log('准备添加新用户:', addForm.value)
     const token = localStorage.getItem('token')
     const response = await axios.post('/api/user/add', {
       username: addForm.value.username,
@@ -642,12 +642,12 @@ const handleSaveAdd = async () => {
       role: addForm.value.role
     }, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
-    
-    console.log('添加用户响应:', response.data);
-    
+
+    console.log('添加用户响应:', response.data)
+
     if (response.data.success) {
       ElMessage.success('添加用户成功')
       addDialogVisible.value = false
@@ -674,12 +674,12 @@ const handleDelete = (user) => {
     ElMessage.warning('只有管理员才能删除用户')
     return
   }
-  
+
   if (user.role === 'admin') {
     ElMessage.warning('不能删除管理员用户')
     return
   }
-  
+
   ElMessageBox.confirm(
     `确定要删除用户 "${user.username}" 吗？此操作不可恢复！`,
     '删除用户',
@@ -687,7 +687,7 @@ const handleDelete = (user) => {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消',
       type: 'warning',
-      draggable: true,
+      draggable: true
     }
   )
     .then(() => {
@@ -705,10 +705,10 @@ const deleteUser = async (userId) => {
     const token = localStorage.getItem('token')
     const response = await axios.delete(`/api/user/admin/delete/${userId}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
-    
+
     if (response.data.success) {
       ElMessage.success('用户删除成功')
       // 刷新用户列表和角色统计
@@ -727,10 +727,10 @@ const deleteUser = async (userId) => {
 
 // 页面加载时获取数据
 onMounted(() => {
-  console.log('页面加载，开始获取数据');
-  fetchRoleStats();
-  fetchUsers();
-});
+  console.log('页面加载，开始获取数据')
+  fetchRoleStats()
+  fetchUsers()
+})
 </script>
 
 <style scoped>
@@ -1091,4 +1091,4 @@ onMounted(() => {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(230, 66, 66, 0.2);
 }
-</style> 
+</style>

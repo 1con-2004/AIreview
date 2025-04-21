@@ -20,10 +20,10 @@
         <!-- 左侧社区导航 -->
         <div class="left-section">
           <div class="search-box">
-            <input 
-              type="text" 
-              v-model="searchQuery" 
-              placeholder="搜索社区..." 
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="搜索社区..."
               @input="handleSearch"
             >
             <i class="search-icon"></i>
@@ -77,16 +77,16 @@
             <!-- 分页控件 -->
             <div class="pagination-container" v-if="totalPages > 1">
               <div class="pagination">
-                <button 
-                  class="page-btn" 
+                <button
+                  class="page-btn"
                   :disabled="currentPage === 1"
                   @click="changePage(currentPage - 1)"
                   aria-label="上一页"
                 >
                 </button>
                 <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-                <button 
-                  class="page-btn" 
+                <button
+                  class="page-btn"
                   :disabled="currentPage === totalPages"
                   @click="changePage(currentPage + 1)"
                   aria-label="下一页"
@@ -98,7 +98,7 @@
         </div>
       </div>
     </template>
-    
+
     <!-- 开发中提示 -->
     <template v-else>
       <div class="development-notice">
@@ -127,7 +127,7 @@ export default {
   components: {
     NavBar
   },
-  data() {
+  data () {
     return {
       pageStatus: 0, // 默认为0，表示开发中状态
       searchQuery: '',
@@ -147,10 +147,10 @@ export default {
     }
   },
   computed: {
-    totalPages() {
+    totalPages () {
       return Math.ceil(this.filteredCommunities.length / this.pageSize)
     },
-    paginatedCommunities() {
+    paginatedCommunities () {
       const start = (this.currentPage - 1) * this.pageSize
       const end = start + this.pageSize
       return this.filteredCommunities.slice(start, end)
@@ -158,7 +158,7 @@ export default {
   },
   methods: {
     formatDate,
-    async fetchAnnouncements() {
+    async fetchAnnouncements () {
       try {
         const response = await axios.get('http://localhost:3000/api/communities/announcements')
         this.communityAnnouncements = response.data
@@ -167,7 +167,7 @@ export default {
         ElMessage.error('获取公告失败')
       }
     },
-    async fetchMyCommunities() {
+    async fetchMyCommunities () {
       try {
         const response = await axios.get('http://localhost:3000/api/communities/my')
         this.myCommunities = response.data
@@ -177,23 +177,23 @@ export default {
         ElMessage.error('获取我的社区失败')
       }
     },
-    handleSearch() {
+    handleSearch () {
       if (!this.searchQuery) {
         this.filterCommunities()
         return
       }
-      
+
       const query = this.searchQuery.toLowerCase()
       this.filteredCommunities = this.myCommunities.filter(community => {
         return community.name.toLowerCase().includes(query) ||
                community.description.toLowerCase().includes(query)
       })
     },
-    selectType(type) {
+    selectType (type) {
       this.currentType = type
       this.filterCommunities()
     },
-    filterCommunities() {
+    filterCommunities () {
       if (this.currentType === 'all') {
         this.filteredCommunities = this.myCommunities
       } else {
@@ -201,7 +201,7 @@ export default {
           community => community.type === this.currentType
         )
       }
-      
+
       // 如果有搜索关键词，继续过滤
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase()
@@ -211,20 +211,20 @@ export default {
         })
       }
     },
-    goToCreateCommunity() {
+    goToCreateCommunity () {
       this.$router.push('/community/create')
     },
-    goToMyCommunities() {
+    goToMyCommunities () {
       this.$router.push('/community/my-communities')
     },
-    enterCommunity(id) {
+    enterCommunity (id) {
       this.$router.push(`/community/detail/${id}`)
     },
-    changePage(page) {
+    changePage (page) {
       this.currentPage = page
     }
   },
-  created() {
+  created () {
     // 只有在页面状态为1时才加载数据
     if (this.pageStatus === 1) {
       this.fetchAnnouncements()

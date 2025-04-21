@@ -8,7 +8,7 @@
           placeholder="搜索学号或姓名..."
           @input="handleSearch"
         />
-        <button 
+        <button
           v-if="/^\d+$/.test(searchQuery.trim())"
           class="exact-search-btn"
           :class="{ active: exactSearch }"
@@ -126,15 +126,15 @@
 
     <!-- 分页组件 -->
     <div class="pagination" v-if="students.length > 0">
-      <button 
-        :disabled="currentPage === 1" 
+      <button
+        :disabled="currentPage === 1"
         @click="currentPage--"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
       <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
-      <button 
-        :disabled="currentPage === totalPages" 
+      <button
+        :disabled="currentPage === totalPages"
         @click="currentPage++"
       >
         <i class="fas fa-chevron-right"></i>
@@ -211,7 +211,7 @@
         <el-form-item label="班级名称" prop="class_name">
           <el-input v-model="classForm.class_name" placeholder="请输入班级名称"></el-input>
         </el-form-item>
-        
+
         <div class="student-management-section">
           <h3>学生管理</h3>
           <div class="student-search">
@@ -279,13 +279,13 @@
               </div>
             </div>
           </div>
-          
+
           <el-form :model="classManageForm" ref="classManageFormRef" label-width="100px">
             <el-form-item label="班级名称" prop="class_name">
               <el-input v-model="classManageForm.class_name" placeholder="请输入班级名称"></el-input>
             </el-form-item>
           </el-form>
-          
+
           <div class="class-students-section">
             <h3>班级学生</h3>
             <div class="student-search">
@@ -423,23 +423,23 @@ const formRules = {
 
 // 添加获取头像URL的函数
 const getFullAvatarUrl = (url) => {
-  if (!url) return 'http://localhost:3000/uploads/avatars/default-avatar.png';
-  if (url.startsWith('http')) return url;
-  
+  if (!url) return 'http://localhost:3000/uploads/avatars/default-avatar.png'
+  if (url.startsWith('http')) return url
+
   // 处理数据库中存储的路径，确保使用正确的URL格式
   // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
   // 需要转换为 http://localhost:3000/uploads/avatars/filename.jpeg
   if (url.includes('public/uploads/avatars/')) {
     // 提取文件名
-    const fileName = url.split('/').pop();
-    return `http://localhost:3000/uploads/avatars/${fileName}`;
+    const fileName = url.split('/').pop()
+    return `http://localhost:3000/uploads/avatars/${fileName}`
   }
-  
+
   // 处理其他情况
-  return `http://localhost:3000${url}`;
+  return `http://localhost:3000${url}`
 }
 
-async function fetchStudents() {
+async function fetchStudents () {
   try {
     const res = await axios.get('/api/admin/students')
     students.value = res.data.data
@@ -449,12 +449,12 @@ async function fetchStudents() {
   }
 }
 
-async function searchUsers(query, cb) {
+async function searchUsers (query, cb) {
   if (!query) {
     cb([])
     return
   }
-  
+
   userSearchLoading.value = true
   try {
     const res = await axios.get(`/api/users/search?q=${query}`)
@@ -474,7 +474,7 @@ async function searchUsers(query, cb) {
   }
 }
 
-function handleUserSelect(item) {
+function handleUserSelect (item) {
   form.value.user_id = item.id // 保存用户ID
   form.value.username = item.username // 保存用户名用于显示
 }
@@ -483,27 +483,27 @@ const filteredStudents = computed(() => {
   const query = searchQuery.value.toLowerCase()
   const filtered = students.value.filter(student => {
     if (!query) return true
-    
+
     if (exactSearch.value) {
       return student.student_no === query
     }
-    return student.student_no.includes(query) || 
+    return student.student_no.includes(query) ||
            student.real_name.toLowerCase().includes(query)
   })
-  
+
   // 分页处理
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return filtered.slice(start, end) // 只返回当前页的学生
 })
 
-function openCreateDialog() {
+function openCreateDialog () {
   isEditing.value = false
   form.value = initForm()
   showDialog.value = true
 }
 
-async function submitForm() {
+async function submitForm () {
   try {
     if (!form.value.user_id) {
       toast.add({ severity: 'error', summary: '错误', detail: '请选择用户' })
@@ -527,7 +527,7 @@ async function submitForm() {
   }
 }
 
-function initForm() {
+function initForm () {
   return {
     username: '',
     user_id: '',
@@ -541,13 +541,13 @@ function initForm() {
   }
 }
 
-function handleError(error, message) {
+function handleError (error, message) {
   console.error(message, error)
   toast.add({ severity: 'error', summary: '错误', detail: `${message}: ${error.response?.data?.message || error.message}` })
 }
 
 // 编辑学生信息
-function editStudent(student) {
+function editStudent (student) {
   currentStudent.value = student
   editForm.value = {
     student_no: student.student_no,
@@ -562,7 +562,7 @@ function editStudent(student) {
 }
 
 // 提交编辑
-async function submitEdit() {
+async function submitEdit () {
   try {
     await editFormRef.value.validate()
     const response = await axios.put(`/api/admin/students/${currentStudent.value.id}`, {
@@ -589,13 +589,13 @@ async function submitEdit() {
 }
 
 // 删除学生信息
-function deleteStudent(student) {
+function deleteStudent (student) {
   currentStudent.value = student
   showDeleteDialog.value = true
 }
 
 // 确认删除
-async function confirmDelete() {
+async function confirmDelete () {
   try {
     const response = await axios.delete(`/api/admin/students/${currentStudent.value.id}`)
     if (response.data.success) {
@@ -613,7 +613,7 @@ async function confirmDelete() {
   }
 }
 
-function openCreateClassDialog() {
+function openCreateClassDialog () {
   showClassDialog.value = true
   classForm.value = {
     class_name: '',
@@ -624,7 +624,7 @@ function openCreateClassDialog() {
   selectedStudents.value = []
 }
 
-async function handleStudentSearch() {
+async function handleStudentSearch () {
   if (!studentSearchQuery.value.trim()) {
     toast.add({
       severity: 'warn',
@@ -642,7 +642,7 @@ async function handleStudentSearch() {
       }
     })
     searchResults.value = res.data.data
-    
+
     if (searchResults.value.length === 0) {
       toast.add({
         severity: 'info',
@@ -656,19 +656,19 @@ async function handleStudentSearch() {
   }
 }
 
-function addStudent(student) {
+function addStudent (student) {
   selectedStudents.value.push(student)
   classForm.value.student_nos.push(student.student_no)
   searchResults.value = searchResults.value.filter(s => s.student_no !== student.student_no)
 }
 
-function removeSelectedStudent(student) {
+function removeSelectedStudent (student) {
   selectedStudents.value = selectedStudents.value.filter(s => s.student_no !== student.student_no)
   classForm.value.student_nos = classForm.value.student_nos.filter(s => s !== student.student_no)
   searchResults.value.push(student)
 }
 
-async function submitClassForm() {
+async function submitClassForm () {
   try {
     await classFormRef.value.validate()
     const response = await axios.post('/api/admin/classes', classForm.value)
@@ -687,12 +687,12 @@ async function submitClassForm() {
   }
 }
 
-async function searchClasses(query, cb) {
+async function searchClasses (query, cb) {
   if (!query) {
     cb([])
     return
   }
-  
+
   try {
     const res = await axios.get('/api/admin/classes/search', {
       params: { class_name: query }
@@ -704,12 +704,12 @@ async function searchClasses(query, cb) {
   }
 }
 
-function handleClassSelect(item) {
+function handleClassSelect (item) {
   form.value.class_id = item.id
   form.value.class_name = item.class_name
 }
 
-function handleEditClassSelect(item) {
+function handleEditClassSelect (item) {
   editForm.value.class_id = item.id
   editForm.value.class_name = item.class_name
 }
@@ -724,25 +724,25 @@ watch(currentPage, (newPage) => {
 })
 
 // 班级管理
-function manageClass(student) {
+function manageClass (student) {
   if (!student.class_id) return
-  
+
   currentClass.value = {
     id: student.class_id,
     class_name: student.class_name
   }
-  
+
   classManageForm.value = {
     class_id: student.class_id,
     class_name: student.class_name
   }
-  
+
   fetchClassStudents(student.class_id)
   showClassManageDialog.value = true
 }
 
 // 获取班级学生
-async function fetchClassStudents(classId) {
+async function fetchClassStudents (classId) {
   try {
     const res = await axios.get(`/api/admin/classes/${classId}/students`)
     classStudents.value = res.data.data
@@ -754,7 +754,7 @@ async function fetchClassStudents(classId) {
 }
 
 // 搜索可添加到班级的学生
-async function handleClassStudentSearch() {
+async function handleClassStudentSearch () {
   if (!classStudentSearchQuery.value.trim()) {
     toast.add({
       severity: 'warn',
@@ -773,7 +773,7 @@ async function handleClassStudentSearch() {
       }
     })
     classSearchResults.value = res.data.data
-    
+
     if (classSearchResults.value.length === 0) {
       toast.add({
         severity: 'info',
@@ -788,12 +788,12 @@ async function handleClassStudentSearch() {
 }
 
 // 添加学生到班级
-async function addStudentToClass(student) {
+async function addStudentToClass (student) {
   try {
     const res = await axios.post(`/api/admin/classes/${currentClass.value.id}/students`, {
       student_id: student.id
     })
-    
+
     if (res.data.success) {
       toast.add({
         severity: 'success',
@@ -801,7 +801,7 @@ async function addStudentToClass(student) {
         detail: '学生已添加到班级',
         life: 3000
       })
-      
+
       // 刷新班级学生列表
       fetchClassStudents(currentClass.value.id)
       // 从搜索结果中移除
@@ -813,10 +813,10 @@ async function addStudentToClass(student) {
 }
 
 // 从班级中移除学生
-async function removeStudentFromClass(student) {
+async function removeStudentFromClass (student) {
   try {
     const res = await axios.delete(`/api/admin/classes/${currentClass.value.id}/students/${student.id}`)
-    
+
     if (res.data.success) {
       toast.add({
         severity: 'success',
@@ -824,7 +824,7 @@ async function removeStudentFromClass(student) {
         detail: '学生已从班级中移除',
         life: 3000
       })
-      
+
       // 刷新班级学生列表
       fetchClassStudents(currentClass.value.id)
     }
@@ -834,12 +834,12 @@ async function removeStudentFromClass(student) {
 }
 
 // 保存班级更改
-async function saveClassChanges() {
+async function saveClassChanges () {
   try {
     const res = await axios.put(`/api/admin/classes/${currentClass.value.id}`, {
       class_name: classManageForm.value.class_name
     })
-    
+
     if (res.data.success) {
       toast.add({
         severity: 'success',
@@ -847,7 +847,7 @@ async function saveClassChanges() {
         detail: '班级信息已更新',
         life: 3000
       })
-      
+
       showClassManageDialog.value = false
       fetchStudents() // 刷新学生列表以更新班级名称
     }
@@ -1306,4 +1306,4 @@ onMounted(fetchStudents)
 .col-class {
   margin-right: 20px; /* 调整此值以增加或减少间距 */
 }
-</style> 
+</style>

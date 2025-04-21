@@ -9,25 +9,25 @@
     <div class="login-container">
       <div class="login-box">
         <div class="header-icons">
-          <svg 
+          <svg
             v-if="isDarkMode"
-            viewBox="0 0 24 24" 
+            viewBox="0 0 24 24"
             class="header-icon theme-icon"
             @click="toggleTheme"
           >
-            <path 
-              fill="currentColor" 
+            <path
+              fill="currentColor"
               d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"
             />
           </svg>
-          <svg 
+          <svg
             v-else
-            viewBox="0 0 24 24" 
+            viewBox="0 0 24 24"
             class="header-icon theme-icon"
             @click="toggleTheme"
           >
-            <path 
-              fill="currentColor" 
+            <path
+              fill="currentColor"
               d="M12,7a5,5,0,1,0,5,5A5,5,0,0,0,12,7ZM12,15a3,3,0,1,1,3-3A3,3,0,0,1,12,15ZM11,5V3a1,1,0,0,1,2,0V5a1,1,0,0,1-2,0Zm0,16v-2a1,1,0,0,1,2,0v2a1,1,0,0,1-2,0ZM19.778,6.636a1,1,0,1,1,1.414-1.414l1.414,1.414a1,1,0,0,1-1.414,1.414ZM1.394,19.02l1.414-1.414a1,1,0,0,1,1.414,1.414L2.808,20.434a1,1,0,0,1-1.414-1.414ZM21,11h2a1,1,0,0,1,0,2H21a1,1,0,0,1,0-2ZM3,11H1a1,1,0,0,1,0-2H3a1,1,0,0,1,0,2Zm16.192,6.606-1.414-1.414a1,1,0,0,1,1.414-1.414l1.414,1.414a1,1,0,0,1-1.414,1.414ZM4.222,6.636,2.808,5.222A1,1,0,0,1,4.222,3.808L5.636,5.222A1,1,0,0,1,4.222,6.636Z"
             />
           </svg>
@@ -78,7 +78,7 @@
                 <ellipse cx="512" cy="512" rx="400" ry="80" transform="rotate(-15,512,512)" fill="none" stroke="#fff" stroke-width="30"/>
               </g>
             </svg>
-            <h2>QuizPlanet 问知星球</h2>
+            <h2>QuizPlanet 问知星球333</h2>
           </div>
 
           <div class="feature-card">
@@ -86,17 +86,17 @@
               <h3>密码登录</h3>
               <form @submit.prevent="handleLogin">
                 <div class="form-item">
-                  <input 
-                    type="text" 
-                    v-model="loginForm.username" 
+                  <input
+                    type="text"
+                    v-model="loginForm.username"
                     placeholder="请输入用户名"
                     required
                   >
                 </div>
                 <div class="form-item">
-                  <input 
+                  <input
                     :type="showPassword ? 'text' : 'password'"
-                    v-model="loginForm.password" 
+                    v-model="loginForm.password"
                     placeholder="请输入密码"
                     required
                   >
@@ -111,8 +111,8 @@
                 </div>
                 <div class="form-options">
                   <label class="remember-pwd">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       v-model="loginForm.remember"
                     > 记住我
                   </label>
@@ -143,17 +143,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginIndex'
-}
-</script>
-
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import store from '@/store'
+import request from '@/utils/request'
 
 const router = useRouter()
 const showPassword = ref(false)
@@ -172,62 +167,71 @@ const togglePassword = () => {
 const handleLogin = async () => {
   try {
     // 在发送请求前先清除所有存储的用户数据
-    localStorage.clear(); // 彻底清除所有localStorage数据
-    sessionStorage.clear(); // 彻底清除所有sessionStorage数据
-    
-    const response = await fetch('http://localhost:3000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: loginForm.username,
-        password: loginForm.password,
-        remember: loginForm.remember
-      })
+    localStorage.clear() // 彻底清除所有localStorage数据
+    sessionStorage.clear() // 彻底清除所有sessionStorage数据
+
+    console.log('[登录] 发送登录请求，用户名:', loginForm.username)
+
+    // 使用自定义的axios服务
+    const response = await request.post('/api/login', {
+      username: loginForm.username,
+      password: loginForm.password,
+      remember: loginForm.remember
     })
-    
-    const data = await response.json()
-    console.log('登录返回数据:', data)
+
+    const data = response
+    console.log('[登录] 登录返回数据:', data)
 
     if (data.success) {
       const { accessToken, refreshToken, ...userInfo } = data.data
-      
-      console.log(`成功登录用户: ${userInfo.username}, 角色: ${userInfo.role}`);
-      
+
+      console.log(`成功登录用户: ${userInfo.username}, 角色: ${userInfo.role}`)
+
       // 如果选择记住密码，则保存密码
       if (loginForm.remember) {
         userInfo.password = loginForm.password
         userInfo.remember = true
       }
-      
+
       // 将token也存储在userInfo中
       userInfo.accessToken = accessToken
       userInfo.refreshToken = refreshToken
-      
+
       // 保存用户信息到localStorage
       localStorage.setItem('userInfo', JSON.stringify(userInfo))
       localStorage.setItem('accessToken', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
       localStorage.setItem('currentUsername', userInfo.username)
-      
+
       // 保存用户信息到Vuex
       store.dispatch('login', {
         userInfo,
         accessToken,
         refreshToken
       })
-      
+
       ElMessage.success('登录成功')
-      
+
       // 直接重定向到主页，避免可能的路由问题
       window.location.href = '/home'
     } else {
       ElMessage.error(data.message || '登录失败')
     }
   } catch (error) {
-    console.error('登录错误：', error)
-    ElMessage.error('登录失败，请稍后重试')
+    console.error('登录错误详情：', error)
+
+    // 添加更多错误信息记录
+    if (error.response) {
+      console.error('[登录错误] 状态码:', error.response.status)
+      console.error('[登录错误] 响应数据:', error.response.data)
+      ElMessage.error(`登录失败: ${error.response.status} - ${error.response.statusText || '服务器错误'}`)
+    } else if (error.request) {
+      console.error('[登录错误] 请求已发送但未收到响应:', error.request)
+      ElMessage.error('登录失败: 服务器无响应，请检查网络连接或稍后重试')
+    } else {
+      console.error('[登录错误] 请求配置错误:', error.message)
+      ElMessage.error(`登录失败: ${error.message || '网络错误，请稍后重试'}`)
+    }
   }
 }
 
@@ -243,7 +247,7 @@ onMounted(() => {
     isDarkMode.value = true
     document.body.classList.add('dark-mode')
   }
-  
+
   const savedUserInfo = localStorage.getItem('userInfo')
   if (savedUserInfo) {
     const userInfo = JSON.parse(savedUserInfo)
@@ -575,17 +579,17 @@ onMounted(() => {
   .login-box {
     padding: 20px;
   }
-  
+
   .feature-card {
     padding: 24px;
   }
-  
+
   .geometric-shape {
     display: none;
   }
-  
+
   .circle {
     opacity: 0.5;
   }
 }
-</style> 
+</style>

@@ -5,16 +5,16 @@
       <div class="header-section">
         <h1 class="page-title">学习计划</h1>
         <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
+          <input
+            type="text"
+            v-model="searchQuery"
             placeholder="搜索学习计划..."
             @input="handleSearch"
           >
           <i class="search-icon">🔍</i>
         </div>
       </div>
-      
+
       <!-- 计划列表 -->
       <div class="plans-grid">
         <div v-for="plan in displayedPlans" :key="plan.id" class="plan-card" @click="goToPlanDetail(plan.id)">
@@ -46,16 +46,16 @@
 
       <!-- 分页组件 -->
       <div class="pagination">
-        <button 
-          class="page-btn" 
+        <button
+          class="page-btn"
           :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
         >
           上一页
         </button>
         <div class="page-numbers">
-          <button 
-            v-for="page in displayedPages" 
+          <button
+            v-for="page in displayedPages"
             :key="page"
             class="page-number"
             :class="{ active: currentPage === page }"
@@ -64,8 +64,8 @@
             {{ page }}
           </button>
         </div>
-        <button 
-          class="page-btn" 
+        <button
+          class="page-btn"
           :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
@@ -88,13 +88,13 @@ export default {
   components: {
     NavBar
   },
-  setup() {
+  setup () {
     const router = useRouter()
     const plans = ref([])
     const filteredPlans = ref([])
     const searchQuery = ref('')
     const currentPage = ref(1)
-    const itemsPerPage = 6 //调整每一页的默认显示个数
+    const itemsPerPage = 6 // 调整每一页的默认显示个数
 
     // 计算总页数
     const totalPages = computed(() => {
@@ -113,7 +113,7 @@ export default {
       const pages = []
       const maxVisiblePages = 5
       let start = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
-      let end = Math.min(totalPages.value, start + maxVisiblePages - 1)
+      const end = Math.min(totalPages.value, start + maxVisiblePages - 1)
 
       if (end - start + 1 < maxVisiblePages) {
         start = Math.max(1, end - maxVisiblePages + 1)
@@ -140,7 +140,7 @@ export default {
         filteredPlans.value = plans.value
       } else {
         const query = searchQuery.value.toLowerCase()
-        filteredPlans.value = plans.value.filter(plan => 
+        filteredPlans.value = plans.value.filter(plan =>
           plan.title.toLowerCase().includes(query) ||
           plan.description.toLowerCase().includes(query) ||
           plan.tag.toLowerCase().includes(query)
@@ -157,8 +157,8 @@ export default {
 
     const fetchPlans = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/learning-plans');
-        
+        const response = await axios.get('http://localhost:3000/api/learning-plans')
+
         if (response.data) {
           plans.value = response.data.map(plan => ({
             id: plan.id,
@@ -171,20 +171,20 @@ export default {
             creator_name: plan.creator_name,
             creator_avatar: plan.creator_avatar,
             created_at: plan.created_at,
-            icon: plan.icon 
+            icon: plan.icon
               ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
               : '/icons/default.png'
-          }));
-          filteredPlans.value = plans.value; // 初始化过滤后的计划
-          console.log('获取学习计划列表成功:', plans.value);
+          }))
+          filteredPlans.value = plans.value // 初始化过滤后的计划
+          console.log('获取学习计划列表成功:', plans.value)
         } else {
-          console.error('获取学习计划列表失败:', response.data.message);
-          ElMessage.error('获取学习计划列表失败');
+          console.error('获取学习计划列表失败:', response.data.message)
+          ElMessage.error('获取学习计划列表失败')
         }
       } catch (error) {
-        console.error('获取学习计划列表失败:', error);
-        ElMessage.error('获取学习计划列表失败: ' + (error.message || '请检查网络连接或稍后重试'));
-        plans.value = [];
+        console.error('获取学习计划列表失败:', error)
+        ElMessage.error('获取学习计划列表失败: ' + (error.message || '请检查网络连接或稍后重试'))
+        plans.value = []
       }
     }
 
@@ -492,4 +492,4 @@ export default {
     font-size: 13px;
   }
 }
-</style> 
+</style>

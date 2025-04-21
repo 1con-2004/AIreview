@@ -26,29 +26,29 @@
 
         <div class="description-content">
           <div class="tabs">
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               :class="{ active: activeTab === 'description' }"
               @click="activeTab = 'description'"
             >
               题目描述
             </button>
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               :class="{ active: activeTab === 'solution' }"
               @click="activeTab = 'solution'"
             >
               答案
             </button>
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               :class="{ active: activeTab === 'submissions' }"
               @click="activeTab = 'submissions'"
             >
               提交记录
             </button>
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               :class="{ active: activeTab === 'aiAnalysis' }"
               @click="activeTab = 'aiAnalysis'"
             >
@@ -159,7 +159,7 @@
 
                   <div v-else class="language-selection">
                     <p>请选择答案语言</p>
-                    
+
                   </div>
                 </div>
               </div>
@@ -197,8 +197,7 @@
                     :value="option.code"
                   />
                 </el-select>
-                
-                
+
               </div>
 
               <!-- 提交记录列表 -->
@@ -206,8 +205,8 @@
                 <div v-if="filteredSubmissions.length === 0" class="no-submissions">
                   <el-empty description="暂无提交记录" />
                 </div>
-                <div 
-                  v-for="submission in paginatedSubmissions" 
+                <div
+                  v-for="submission in paginatedSubmissions"
                   :key="submission.id"
                   class="submission-card"
                   @click="showSubmissionDetail(submission)"
@@ -240,9 +239,9 @@
               </div>
 
               <!-- 提交详情弹窗 -->
-              <Dialog 
-                v-model:visible="dialogVisible" 
-                modal 
+              <Dialog
+                v-model:visible="dialogVisible"
+                modal
                 :header="'提交详情'"
                 :style="{ width: '80vw', border: '2px solid #333' }"
                 :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
@@ -291,7 +290,7 @@
                   <div v-if="selectedSubmission.error_message" class="error-section">
                     <h4>错误信息</h4>
                     <pre class="error-message">{{ selectedSubmission.error_message }}</pre>
-                  </div>  
+                  </div>
                 </div>
               </Dialog>
             </div>
@@ -300,7 +299,7 @@
                 <div v-if="!aiAnalysisResult && !isAnalyzing" class="no-analysis">
                   <el-empty description="请点击代码编辑器中的 AI 分析按钮获取分析结果" />
                 </div>
-                
+
                 <div v-else-if="isAnalyzing" class="analysis-loading">
                   <div class="loading-container">
                     <div class="ai-brain-loading">
@@ -388,8 +387,8 @@
                       </div>
                     </div>
                     <div class="error-list">
-                      <div v-for="(error, index) in aiAnalysisResult.errors" 
-                        :key="index" 
+                      <div v-for="(error, index) in aiAnalysisResult.errors"
+                        :key="index"
                         class="error-card"
                       >
                         <div class="error-card-header">
@@ -423,8 +422,8 @@
                       </div>
                     </div>
                     <div class="insights-list">
-                      <div v-for="(improvement, index) in aiAnalysisResult.improvements" 
-                        :key="index" 
+                      <div v-for="(improvement, index) in aiAnalysisResult.improvements"
+                        :key="index"
                         class="insight-item"
                       >
                         <i :class="improvement.icon" class="insight-icon"></i>
@@ -462,11 +461,11 @@
             <button class="run-button" @click="runCode" :disabled="isRunning">
               {{ isRunning ? '运行中...' : '运行代码' }}
             </button>
-            <button 
-              class="ai-analyze-button" 
+            <button
+              class="ai-analyze-button"
               @click="getAiAnalysis"
               :disabled="!code.trim() || isAnalyzing"
-              
+
             >
               <i :class="[
                 isAnalyzing ? 'el-icon-loading analyzing-icon' : 'el-icon-magic-stick'
@@ -514,8 +513,8 @@
           </div>
           <div class="console-content" v-show="!isConsoleCollapsed">
             <div class="console-tabs">
-              <div 
-                v-for="tab in consoleTabs" 
+              <div
+                v-for="tab in consoleTabs"
                 :key="tab.id"
                 class="console-tab"
                 :class="{ active: activeConsoleTab === tab.id }"
@@ -524,7 +523,7 @@
                 <span>{{ tab.name }}</span>
               </div>
             </div>
-            
+
             <!-- 测试用例面板 -->
             <div v-if="activeConsoleTab === 'testCase'" class="tab-panel">
               <div class="input-with-line-numbers">
@@ -533,7 +532,7 @@
                     {{ n }}
                   </div>
                 </div>
-                <textarea 
+                <textarea
                   v-model="customInput"
                   placeholder="输入测试用例..."
                   class="custom-input-textarea"
@@ -577,7 +576,7 @@ import { defineComponent, ref, onMounted, computed, watch, nextTick, reactive } 
 import { useRouter, useRoute } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, Dialog } from 'element-plus'
 import { Document, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 // 新增高亮库引入
 import Prism from 'prismjs'
@@ -589,9 +588,12 @@ import 'prismjs/components/prism-cpp'
 import 'prismjs/components/prism-java'
 import 'prismjs/components/prism-python'
 import 'prismjs/components/prism-javascript'
-import { Dialog } from 'element-plus'
 import InputTextarea from 'primevue/textarea'
 import { getProblemExamples } from '@/api/testCase'
+
+// 在引入部分添加apiService和getApiUrl
+import apiService from '@/utils/api'
+import { getApiUrl } from '@/utils/api'
 
 export default defineComponent({
   name: 'ProblemDetail',
@@ -601,9 +603,9 @@ export default defineComponent({
     Dialog,
     ArrowLeft,
     ArrowRight,
-    InputTextarea,
+    InputTextarea
   },
-  setup() {
+  setup () {
     const router = useRouter()
     const route = useRoute()
     const problem = ref(null)
@@ -614,7 +616,7 @@ export default defineComponent({
     const submissionFilter = ref('全部')
     const selectedSubmission = ref(null)
     const submissions = ref([])
-    const problemExamples = ref([])  // 添加problemExamples
+    const problemExamples = ref([]) // 添加problemExamples
     const aiAnalysisResult = ref({
       errors: [],
       improvements: []
@@ -645,22 +647,22 @@ export default defineComponent({
       // 控制控制台的展开和收起逻辑
       const consoleElement = document.querySelector('.console-content') // 假设控制台内容的类名为 console-content
       if (consoleElement) {
-        consoleElement.style.display = isExpanded.value ? 'block' : 'none'; // 根据状态显示或隐藏控制台内容
+        consoleElement.style.display = isExpanded.value ? 'block' : 'none' // 根据状态显示或隐藏控制台内容
       }
     }
 
     // 修改行号计算逻辑
     const lineCount = computed(() => {
       // 返回实际的代码行数，不设置最小值
-      return code.value.split('\n').length;
-    });
+      return code.value.split('\n').length
+    })
 
     const fetchProblem = async () => {
       try {
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           console.error('未找到用户token')
           return
@@ -669,21 +671,21 @@ export default defineComponent({
         const headers = { Authorization: `Bearer ${accessToken}` }
         const problemNumber = route.params.id.padStart(4, '0')
         const [problemRes, solutionRes] = await Promise.all([
-          axios.get(`http://localhost:3000/api/problems/${problemNumber}`, { headers }),
-          axios.get(`http://localhost:3000/api/problems/${problemNumber}/solution`, { headers })
+          apiService.get(`/api/problems/${problemNumber}`, { headers }),
+          apiService.get(`/api/problems/${problemNumber}/solution`, { headers })
         ])
-        
-        if (problemRes.data && problemRes.data.code === 200) {
+
+        if (problemRes && problemRes.code === 200) {
           problem.value = {
-            ...problemRes.data.data,
+            ...problemRes.data,
             example: {
-              input: problemRes.data.data.input_example,
-              output: problemRes.data.data.output_example
+              input: problemRes.data.input_example,
+              output: problemRes.data.output_example
             }
           }
 
-          if (solutionRes.data && solutionRes.data.code === 200) {
-            problem.value.solution = solutionRes.data.data
+          if (solutionRes && solutionRes.code === 200) {
+            problem.value.solution = solutionRes.data
           }
         }
       } catch (error) {
@@ -699,12 +701,12 @@ export default defineComponent({
       // 根据状态和语言筛选提交记录
       return submissions.value.filter(submission => {
         // 状态筛选
-        const statusMatch = !filters.status || submission.status === filters.status;
+        const statusMatch = !filters.status || submission.status === filters.status
         // 语言筛选
-        const languageMatch = !filters.language || submission.language.toLowerCase() === filters.language.toLowerCase();
+        const languageMatch = !filters.language || submission.language.toLowerCase() === filters.language.toLowerCase()
         // 同时满足状态和语言筛选条件
-        return statusMatch && languageMatch;
-      });
+        return statusMatch && languageMatch
+      })
     })
 
     const selectSubmission = (submission) => {
@@ -717,27 +719,27 @@ export default defineComponent({
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           console.error('未找到用户token')
           return
         }
 
         const headers = { Authorization: `Bearer ${accessToken}` }
-        
+
         // 首先尝试使用路由参数获取提交记录
-        const response = await axios.get(`http://localhost:3000/api/problems/${route.params.id}/submissions`, { headers })
-        
+        const response = await apiService.get(`/api/problems/${route.params.id}/submissions`, { headers })
+
         // 如果没有数据，且是数字ID，尝试将其作为实际的problem_id使用
-        if (response.data && response.data.code === 200 && (!response.data.data || response.data.data.length === 0)) {
+        if (response && response.code === 200 && (!response.data || response.data.length === 0)) {
           if (!isNaN(Number(route.params.id))) {
             console.log('尝试直接通过题目ID获取提交记录:', Number(route.params.id))
             // 尝试直接用数字ID获取
             try {
-              const directResponse = await axios.get(`http://localhost:3000/api/judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
-              if (directResponse.data && directResponse.data.length > 0) {
-                submissions.value = directResponse.data
-                
+              const directResponse = await apiService.get(`/api/judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
+              if (directResponse && directResponse.length > 0) {
+                submissions.value = directResponse
+
                 // 添加: 获取提交记录后应用代码高亮
                 nextTick(() => {
                   Prism.highlightAll()
@@ -749,10 +751,10 @@ export default defineComponent({
             }
           }
         }
-        
-        if (response.data && response.data.code === 200) {
-          submissions.value = response.data.data
-          
+
+        if (response && response.code === 200) {
+          submissions.value = response.data
+
           // 添加: 获取提交记录后应用代码高亮
           nextTick(() => {
             Prism.highlightAll()
@@ -786,13 +788,13 @@ export default defineComponent({
     // 获取状态文本
     const getStatusText = (status) => {
       const statusMap = {
-        'Accepted': '通过',
+        Accepted: '通过',
         'Wrong Answer': '答案错误',
         'Runtime Error': '运行错误',
         'Time Limit Exceeded': '超时',
         'Memory Limit Exceeded': '内存超限',
         'Compile Error': '编译错误',
-        'Pending': '等待中',
+        Pending: '等待中',
         'System Error': '系统错误',
         'Not Accepted': '未通过'
       }
@@ -812,30 +814,30 @@ export default defineComponent({
 
     // 重置筛选条件
     const resetFilters = () => {
-      filters.status = '';
-      filters.language = '';
-      currentPage.value = 1;
+      filters.status = ''
+      filters.language = ''
+      currentPage.value = 1
     }
 
     // 刷新提交记录
     const refreshSubmissions = () => {
-      fetchSubmissions();
+      fetchSubmissions()
       // 显示加载中的消息
       ElMessage({
         message: '正在刷新提交记录...',
         type: 'info',
         duration: 1000
-      });
+      })
     }
 
     // 监听标签页变化
     watch(activeTab, (newTab) => {
       if (newTab === 'submissions') {
-        fetchSubmissions();
+        fetchSubmissions()
         // 如果切换到提交记录标签，重置筛选条件
-        resetFilters();
+        resetFilters()
       }
-      
+
       // 添加: 当切换到解决方案或提交记录标签时，确保代码语法高亮生效
       if (newTab === 'solution' || newTab === 'submissions') {
         nextTick(() => {
@@ -847,12 +849,12 @@ export default defineComponent({
     onMounted(() => {
       fetchProblem()
       fetchSubmissions()
-      fetchProblemExamples()  // 添加获取样例的调用
-      
+      fetchProblemExamples() // 添加获取样例的调用
+
       // 初始化Prism
       nextTick(() => {
         Prism.highlightAll()
-        
+
         // 直接进行高亮处理，不需要判断语言
         highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'C')
       })
@@ -1016,12 +1018,12 @@ export default defineComponent({
 
     const copyCode = async () => {
       if (!selectedSubmission.value?.code) return
-      
+
       try {
         await navigator.clipboard.writeText(selectedSubmission.value.code)
         copied.value = true
         copyStatus.value = '已复制！'
-        
+
         setTimeout(() => {
           copied.value = false
           copyStatus.value = '复制代码'
@@ -1051,9 +1053,9 @@ export default defineComponent({
         impl => impl.language === selectedLanguage.value
       ).map(impl => {
         // 添加高亮逻辑
-        impl.highlightedCode = highlightCode(impl.code, selectedLanguage.value);
-        return impl;
-      });
+        impl.highlightedCode = highlightCode(impl.code, selectedLanguage.value)
+        return impl
+      })
     })
 
     // 复制实现代码
@@ -1103,7 +1105,7 @@ export default defineComponent({
     const showSubmissionDetail = (submission) => {
       selectedSubmission.value = submission
       dialogVisible.value = true
-      
+
       // 添加: 显示提交详情后，应用代码高亮
       nextTick(() => {
         Prism.highlightAll()
@@ -1137,10 +1139,10 @@ export default defineComponent({
 
     // 处理代码输入
     const handleCodeInput = (e) => {
-      code.value = e.target.value;
+      code.value = e.target.value
       // 确保使用正确的语言进行高亮
-      highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'c');
-      updateCursorPosition(e);
+      highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'c')
+      updateCursorPosition(e)
     }
 
     // 处理粘贴事件
@@ -1168,11 +1170,11 @@ export default defineComponent({
     onMounted(() => {
       fetchProblem()
       fetchSubmissions()
-      
+
       // 初始化Prism
       nextTick(() => {
         Prism.highlightAll()
-        
+
         // 如果有默认选中的语言，立即高亮答案代码
         if (selectedLanguage.value && problem.value?.solution?.implementations) {
           const impl = problem.value.solution.implementations.find(
@@ -1183,7 +1185,7 @@ export default defineComponent({
           }
         }
       })
-      
+
       // 新增：在组件挂载时进行代码高亮
       if (code.value) {
         highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'javascript')
@@ -1209,20 +1211,20 @@ export default defineComponent({
     watch(code, () => {
       nextTick(() => {
         // 更新高亮
-        highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'c');
-        
+        highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'c')
+
         // 确保编辑器容器高度足够
-        const codeContent = document.querySelector('.code-content');
-        const textarea = document.querySelector('.p-inputtextarea');
+        const codeContent = document.querySelector('.code-content')
+        const textarea = document.querySelector('.p-inputtextarea')
         if (codeContent && textarea) {
-          codeContent.style.height = `${Math.max(500, textarea.scrollHeight)}px`;
+          codeContent.style.height = `${Math.max(500, textarea.scrollHeight)}px`
         }
-      });
-    });
+      })
+    })
 
     const onLanguageChange = (lang) => {
       selectedLanguage.value = lang
-      hasUserSelectedLanguage.value = true  // 用户手动选择语言时设置标记
+      hasUserSelectedLanguage.value = true // 用户手动选择语言时设置标记
       // 选择语言后进行代码高亮
       if (code.value) {
         highlightedCode.value = highlightCode(code.value, lang)
@@ -1230,11 +1232,11 @@ export default defineComponent({
     }
 
     const showCursor = () => {
-      isCursorVisible.value = true; // 点击时显示光标
+      isCursorVisible.value = true // 点击时显示光标
       setTimeout(() => {
-        isCursorVisible.value = false; // 一段时间后隐藏光标
-      }, 2000); // 2秒后隐藏光标
-    };
+        isCursorVisible.value = false // 一段时间后隐藏光标
+      }, 2000) // 2秒后隐藏光标
+    }
 
     const runCode = async () => {
       if (!code.value.trim()) {
@@ -1252,14 +1254,14 @@ export default defineComponent({
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           ElMessage.error('请先登录')
           return
         }
 
-        const response = await axios.post(
-          `http://localhost:3000/api/judge/problems/${route.params.id}/run`,
+        const response = await apiService.post(
+          `/api/judge/problems/${route.params.id}/run`,
           {
             code: code.value,
             language: selectedLanguageForCode.value,
@@ -1271,51 +1273,32 @@ export default defineComponent({
         )
 
         // 检查是否存在编译警告或错误
-        const hasCompilerIssues = response.data.data.compilerOutput && 
-                                (response.data.data.compilerOutput.includes('warning') || 
-                                 response.data.data.compilerOutput.includes('error'));
+        const hasCompilerIssues = response.data.compilerOutput &&
+          (response.data.compilerOutput.includes('warning') ||
+          response.data.compilerOutput.includes('error'))
 
-        if (response.data.success && !hasCompilerIssues) {
-          // 真正成功的情况：后端返回成功且没有编译警告或错误
+        if (hasCompilerIssues) {
+          compilerOutput.value = response.data.compilerOutput
+          isConsoleCollapsed.value = false // 展开编译器输出
+        }
+
+        if (response.success) {
           runStatus.value = 'success'
-          consoleOutput.value = response.data.data.output
-          compilerOutput.value = response.data.data.compilerOutput
-          
-          // 运行成功后自动聚焦到程序输出面板
-          activeConsoleTab.value = 'output'
-          
-          // 显示成功提示
-          ElMessage({
-            message: '代码已成功编译,已跳转到程序输出,请自行查看运行结果',
-            type: 'success',
-            duration: 3000
-          })
+          if (response.data.output) {
+            consoleOutput.value = response.data.output
+          } else {
+            consoleOutput.value = '程序运行成功，但没有输出。'
+          }
         } else {
-          // 有编译警告或错误的情况，即使后端返回成功也视为有问题
           runStatus.value = 'error'
-          consoleOutput.value = response.data.data.output || ''
-          compilerOutput.value = response.data.data.compilerOutput || response.data.message
-          
-          // 运行失败后自动聚焦到编译器输出面板
-          activeConsoleTab.value = 'compiler'
-          
-          // 显示错误提示
-          ElMessage({
-            message: '该代码存在语法错误,无法正常编译,已跳转到编译器输出,根据输出检查代码存在的问题',
-            type: 'error',
-            duration: 3000
-          })
+          consoleOutput.value = response.data.error || '程序运行失败'
+          ElMessage.error('运行失败: ' + response.message)
         }
       } catch (error) {
         console.error('运行代码失败:', error)
         runStatus.value = 'error'
-        consoleOutput.value = ''
-        compilerOutput.value = error.response?.data?.data?.compilerOutput || error.response?.data?.message || '运行失败，请稍后重试'
-        
-        // 运行出错后自动聚焦到编译器输出面板
-        activeConsoleTab.value = 'compiler'
-        
-        // 显示错误提示
+        consoleOutput.value = error.response?.data?.message || '运行失败，请稍后重试'
+
         ElMessage({
           message: '该代码存在语法错误,无法正常编译,已跳转到编译器输出,根据输出检查代码存在的问题',
           type: 'error',
@@ -1343,7 +1326,7 @@ export default defineComponent({
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           ElMessage.error('请先登录')
           return
@@ -1354,8 +1337,8 @@ export default defineComponent({
           language: selectedLanguageForCode.value
         })
 
-        const response = await axios.post(
-          `http://localhost:3000/api/judge/problems/${route.params.id}/submit`,
+        const response = await apiService.post(
+          `/api/judge/problems/${route.params.id}/submit`,
           {
             code: code.value,
             language: selectedLanguageForCode.value
@@ -1365,19 +1348,19 @@ export default defineComponent({
           }
         )
 
-        if (response.data.success) {
+        if (response.success) {
           ElMessage.success('提交成功')
           // 更新提交记录
           fetchSubmissions()
           // 切换到提交记录标签
           activeTab.value = 'submissions'
-          
+
           // 添加: 提交代码后，对页面中的代码块重新应用语法高亮
           nextTick(() => {
             Prism.highlightAll()
           })
         } else {
-          ElMessage.error(response.data.message || '提交失败')
+          ElMessage.error(response.message || '提交失败')
         }
       } catch (error) {
         console.error('提交失败:', error)
@@ -1392,13 +1375,13 @@ export default defineComponent({
       const textarea = event.target
       const text = textarea.value
       const cursorIndex = textarea.selectionStart
-      
+
       // 计算行号和列号
       const textBeforeCursor = text.substring(0, cursorIndex)
       const line = (textBeforeCursor.match(/\n/g) || []).length + 1
       const lastNewLine = textBeforeCursor.lastIndexOf('\n')
       const column = lastNewLine === -1 ? cursorIndex + 1 : cursorIndex - lastNewLine
-      
+
       cursorPosition.value = { line, column }
     }
 
@@ -1409,11 +1392,11 @@ export default defineComponent({
         event.preventDefault()
         const start = event.target.selectionStart
         const end = event.target.selectionEnd
-        
+
         // 插入两个空格
         const newText = code.value.substring(0, start) + '  ' + code.value.substring(end)
         code.value = newText
-        
+
         // 重新设置光标位置
         nextTick(() => {
           event.target.selectionStart = event.target.selectionEnd = start + 2
@@ -1437,7 +1420,7 @@ export default defineComponent({
     })
 
     const justCopied = ref(false)
-    
+
     // 复制实现代码
     const copyImplementationCode = async (code) => {
       try {
@@ -1484,26 +1467,26 @@ export default defineComponent({
       try {
         // 改进获取token的方式，确保能找到正确的token
         let accessToken = null
-        
+
         // 首先从userInfo中获取token
         const userInfoStr = localStorage.getItem('userInfo')
         if (userInfoStr) {
           try {
             const userInfo = JSON.parse(userInfoStr)
-            accessToken = userInfo.accessToken || userInfo.token 
+            accessToken = userInfo.accessToken || userInfo.token
           } catch (e) {
             console.error('解析userInfo失败:', e)
           }
         }
-        
+
         // 如果userInfo中没有token，尝试直接从localStorage获取
         if (!accessToken) {
           accessToken = localStorage.getItem('accessToken')
         }
-        
+
         // 添加更多日志便于调试
         console.log('获取到的accessToken:', accessToken ? `${accessToken.substring(0, 10)}...` : 'null')
-        
+
         if (!accessToken) {
           isAnalyzing.value = false
           ElMessage.error('请先登录')
@@ -1513,8 +1496,8 @@ export default defineComponent({
         // 立即切换到左侧AI分析标签页
         activeTab.value = 'aiAnalysis'
 
-        const response = await axios.post(
-          'http://localhost:3000/api/ai/analyze-code',
+        const response = await apiService.post(
+          '/api/ai/analyze-code',
           {
             code: code.value,
             language: selectedLanguageForCode.value,
@@ -1528,21 +1511,21 @@ export default defineComponent({
         if (response.data.success) {
           // 解析AI返回的分析结果
           const analysis = response.data.data.codeAnalysis
-          
+
           // 提取错误和改进建议
           const errors = extractErrors(analysis)
           const improvements = extractImprovements(analysis)
-          
+
           // 更新optimizationInsights
           optimizationInsights.value = improvements
-          
+
           // 更新aiAnalysisResult
           aiAnalysisResult.value = {
             errors: errors,
             improvements: improvements,
             performance: extractPerformance(analysis)
           }
-          
+
           ElMessage.success('代码分析完成')
         } else {
           ElMessage.error(response.data.message || '分析失败')
@@ -1553,7 +1536,7 @@ export default defineComponent({
         if (error.response) {
           console.error('响应状态:', error.response.status)
           console.error('响应数据:', error.response.data)
-          
+
           if (error.response.status === 401) {
             ElMessage.error('登录已过期，请重新登录')
           } else {
@@ -1575,24 +1558,24 @@ export default defineComponent({
         try {
           // 标准化语言标识符
           let langKey = selectedLanguageForCode.value.toLowerCase()
-          
+
           // 处理特殊情况
           const langMap = {
             'c++': 'cpp',
-            'c#': 'csharp', 
-            'js': 'javascript',
-            'py': 'python'
+            'c#': 'csharp',
+            js: 'javascript',
+            py: 'python'
           }
-          
+
           if (langMap[langKey]) {
             langKey = langMap[langKey]
           }
-          
+
           // 确保Prism中有此语言的定义
           if (!Prism.languages[langKey]) {
             langKey = 'c' // 默认使用C语言高亮
           }
-          
+
           // 使用Prism.js高亮代码
           const highlighted = Prism.highlight(
             code,
@@ -1612,31 +1595,31 @@ export default defineComponent({
     const handleAiAnalysis = async () => {
       try {
         isAnalyzing.value = true
-        
+
         // 获取accessToken
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           ElMessage.error('请先登录')
           return
         }
-        
+
         const response = await analyzeCode({
           code: editor.value.getValue(),
           language: selectedLanguageForCode.value,
           problemId: route.params.id
-        }, accessToken)  // 传递accessToken到analyzeCode函数
+        }, accessToken) // 传递accessToken到analyzeCode函数
 
         if (response.data.success) {
           const analysis = response.data.data.codeAnalysis
           console.log('AI分析结果:', analysis) // 添加调试日志
-          
+
           // 提取错误和改进建议
           const errors = extractErrors(analysis)
           const improvements = extractImprovements(analysis)
-          
+
           console.log('提取的改进建议:', improvements) // 添加调试日志
 
           // 更新分析结果
@@ -1655,8 +1638,8 @@ export default defineComponent({
 
     // 监听筛选条件变化，重置分页
     watch(filters, () => {
-      currentPage.value = 1;
-    }, { deep: true });
+      currentPage.value = 1
+    }, { deep: true })
 
     // 代码高亮函数
     const highlightCode = (code, language) => {
@@ -1664,25 +1647,25 @@ export default defineComponent({
       try {
         // 标准化语言标识符
         let langKey = language.toLowerCase()
-        
+
         // 处理特殊情况，如C++转换为cpp
         const langMap = {
           'c++': 'cpp',
           'c#': 'csharp',
-          'js': 'javascript',
-          'py': 'python'
+          js: 'javascript',
+          py: 'python'
         }
-        
+
         if (langMap[langKey]) {
           langKey = langMap[langKey]
         }
-        
+
         // 确保Prism中有此语言的定义
         if (!Prism.languages[langKey]) {
           console.warn(`Prism不支持语言: ${langKey}, 将使用默认高亮`)
           langKey = 'c' // 默认使用C语言高亮
         }
-        
+
         return Prism.highlight(code, Prism.languages[langKey], langKey)
       } catch (err) {
         console.error('代码高亮失败:', err)
@@ -1693,13 +1676,13 @@ export default defineComponent({
     // 添加 getStatusClass 函数
     const getStatusClass = (status) => {
       const statusClassMap = {
-        'Accepted': 'status-accepted',
+        Accepted: 'status-accepted',
         'Wrong Answer': 'status-wrong',
         'Runtime Error': 'status-error',
         'Time Limit Exceeded': 'status-timeout',
         'Memory Limit Exceeded': 'status-memory',
         'Compile Error': 'status-compile-error',
-        'Pending': 'status-pending',
+        Pending: 'status-pending',
         'System Error': 'status-system-error',
         'Not Accepted': 'status-not-accepted'
       }
@@ -1711,7 +1694,7 @@ export default defineComponent({
         const userInfoStr = localStorage.getItem('userInfo')
         const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
         const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-        
+
         if (!accessToken) {
           console.error('未找到用户token')
           return
@@ -1727,37 +1710,37 @@ export default defineComponent({
 
     // 显示编译成功的提示
     const showCompileSuccess = () => {
-      ElMessage.success("编译成功，控制台已输出结果");
-    };
+      ElMessage.success('编译成功，控制台已输出结果')
+    }
 
     // 处理后端返回的结果
     const handleBackendResponse = (response) => {
-      console.log("后端响应:", response); // 打印响应以确认
+      console.log('后端响应:', response) // 打印响应以确认
       if (response.success) { // 检查 success 字段
-        showCompileSuccess(); // 调用弹窗提示
+        showCompileSuccess() // 调用弹窗提示
       } else {
-        console.log("编译未成功，状态:", response); // 打印状态以确认
+        console.log('编译未成功，状态:', response) // 打印状态以确认
       }
-    };
+    }
 
     // 获取语言的标准化类名
     const getLanguageClass = (language) => {
       if (!language) return 'language-c'
-      
+
       let langKey = language.toLowerCase()
-      
+
       // 处理特殊情况，如C++转换为cpp
       const langMap = {
         'c++': 'cpp',
         'c#': 'csharp',
-        'js': 'javascript',
-        'py': 'python'
+        js: 'javascript',
+        py: 'python'
       }
-      
+
       if (langMap[langKey]) {
         langKey = langMap[langKey]
       }
-      
+
       return `language-${langKey}`
     }
 
@@ -1864,7 +1847,7 @@ export default defineComponent({
       handleBackendResponse,
       getLanguageClass,
       updateLineNumbers,
-      syncScroll,
+      syncScroll
     }
   }
 })
@@ -2131,8 +2114,8 @@ export default defineComponent({
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0) 100%
   );
   opacity: 0;
@@ -3544,7 +3527,7 @@ export default defineComponent({
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, 
+  background: linear-gradient(90deg,
     rgba(76, 175, 80, 0) 0%,
     rgba(76, 175, 80, 0.3) 50%,
     rgba(76, 175, 80, 0) 100%
@@ -3619,7 +3602,7 @@ export default defineComponent({
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, 
+  background: linear-gradient(90deg,
     rgba(124, 77, 255, 0) 0%,
     rgba(124, 77, 255, 0.2) 50%,
     rgba(124, 77, 255, 0) 100%
@@ -3734,8 +3717,8 @@ export default defineComponent({
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.1) 0%,
     rgba(255, 255, 255, 0) 100%
   );
   opacity: 0;
@@ -3760,8 +3743,8 @@ export default defineComponent({
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, 
-    rgba(40, 40, 54, 0.6) 0%, 
+  background: linear-gradient(135deg,
+    rgba(40, 40, 54, 0.6) 0%,
     rgba(30, 30, 46, 0.6) 100%
   );
 }
@@ -3810,16 +3793,16 @@ export default defineComponent({
 }
 
 .output-wrapper.success::before {
-  background: linear-gradient(135deg, 
-    rgba(76, 175, 80, 0.1) 0%, 
+  background: linear-gradient(135deg,
+    rgba(76, 175, 80, 0.1) 0%,
     rgba(76, 175, 80, 0) 100%
   );
   opacity: 0.1;
 }
 
 .output-wrapper.error::before {
-  background: linear-gradient(135deg, 
-    rgba(244, 67, 54, 0.1) 0%, 
+  background: linear-gradient(135deg,
+    rgba(244, 67, 54, 0.1) 0%,
     rgba(244, 67, 54, 0) 100%
   );
   opacity: 0.1;
@@ -3996,7 +3979,6 @@ export default defineComponent({
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-
 pre {
   margin: 0;
   white-space: pre-wrap;
@@ -4084,13 +4066,13 @@ pre {
   .solution-container {
     grid-template-columns: 1fr;
   }
-  
+
   .language-switcher {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .lang-tab {
     flex: 1;
     text-align: center;
@@ -5013,7 +4995,7 @@ pre {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .filter-select {
     width: 100%;
   }

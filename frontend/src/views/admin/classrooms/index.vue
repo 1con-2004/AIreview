@@ -5,9 +5,9 @@
       <div class="header-actions">
         <div class="search-box">
           <i class="fas fa-search search-icon"></i>
-          <input 
-            type="text" 
-            v-model="searchQuery" 
+          <input
+            type="text"
+            v-model="searchQuery"
             placeholder="搜索课堂标题、课堂码或描述..."
             @input="handleSearch"
           >
@@ -32,17 +32,17 @@
         <div class="th">状态</div>
         <div class="th">操作</div>
       </div>
-      
+
       <div v-if="loading" class="loading-container">
         <div class="loading-spinner"></div>
         <p>加载中...</p>
       </div>
-      
+
       <div v-else-if="classrooms.length === 0" class="empty-data">
         <i class="fas fa-inbox"></i>
         <p>暂无课堂数据</p>
       </div>
-      
+
       <div v-else class="table-body">
         <div v-for="classroom in paginatedClassrooms" :key="classroom.id" class="table-row">
           <div class="td classroom-code" style="font-size: 1.5em; font-weight: bold; color: #409eff;">{{ classroom.classroom_code }}</div>
@@ -74,15 +74,15 @@
 
       <!-- 分页组件 -->
       <div class="pagination" v-if="classrooms.length > 0">
-        <button 
-          :disabled="currentPage === 1" 
+        <button
+          :disabled="currentPage === 1"
           @click="currentPage--"
         >
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
-        <button 
-          :disabled="currentPage === totalPages" 
+        <button
+          :disabled="currentPage === totalPages"
           @click="currentPage++"
         >
           <i class="fas fa-chevron-right"></i>
@@ -127,7 +127,7 @@
           <textarea v-model="newMessage" placeholder="请输入留言内容"></textarea>
         </div>
         <button class="submit-btn" @click="addMessage">添加留言</button>
-        
+
         <div class="message-list">
           <h3>已有留言</h3>
           <div v-if="messages.length === 0" class="empty-data">
@@ -171,7 +171,7 @@
             <span>{{ uploadProgress }}%</span>
           </div>
         </div>
-        
+
         <div class="file-list">
           <h3>已上传文件</h3>
           <div v-if="files.length === 0" class="empty-data">
@@ -225,106 +225,106 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import axios from 'axios';
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
 
 // 状态变量
-const classrooms = ref([]);
-const loading = ref(true);
-const showCreateModal = ref(false);
-const showMessageModal = ref(false);
-const showFileModal = ref(false);
-const showDeleteConfirm = ref(false);
-const currentClassroom = ref({});
-const messages = ref([]);
-const files = ref([]);
+const classrooms = ref([])
+const loading = ref(true)
+const showCreateModal = ref(false)
+const showMessageModal = ref(false)
+const showFileModal = ref(false)
+const showDeleteConfirm = ref(false)
+const currentClassroom = ref({})
+const messages = ref([])
+const files = ref([])
 const newClassroom = ref({
   title: '',
   description: ''
-});
-const newMessage = ref('');
-const uploadProgress = ref(0);
+})
+const newMessage = ref('')
+const uploadProgress = ref(0)
 
 // 分页相关
-const currentPage = ref(1);
-const pageSize = 10;
+const currentPage = ref(1)
+const pageSize = 10
 
 // 添加搜索相关的响应式变量
-const searchQuery = ref('');
+const searchQuery = ref('')
 const filteredClassrooms = computed(() => {
   if (!searchQuery.value) {
-    return classrooms.value;
+    return classrooms.value
   }
-  
-  const query = searchQuery.value.toLowerCase();
+
+  const query = searchQuery.value.toLowerCase()
   return classrooms.value.filter(classroom => {
     return classroom.title?.toLowerCase().includes(query) ||
            classroom.classroom_code?.toLowerCase().includes(query) ||
-           classroom.description?.toLowerCase().includes(query);
-  });
-});
+           classroom.description?.toLowerCase().includes(query)
+  })
+})
 
 // 修改分页计算，使用过滤后的数据
-const totalPages = computed(() => Math.ceil(filteredClassrooms.value.length / pageSize));
+const totalPages = computed(() => Math.ceil(filteredClassrooms.value.length / pageSize))
 
 const paginatedClassrooms = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  const end = start + pageSize;
-  return filteredClassrooms.value.slice(start, end);
-});
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+  return filteredClassrooms.value.slice(start, end)
+})
 
 // 监听页码变化，确保不超出范围
 watch(currentPage, (newPage) => {
   if (newPage < 1) {
-    currentPage.value = 1;
+    currentPage.value = 1
   } else if (newPage > totalPages.value) {
-    currentPage.value = totalPages.value;
+    currentPage.value = totalPages.value
   }
-});
+})
 
 // 获取用户信息
-const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 
 // 获取课堂列表
 const fetchClassrooms = async () => {
   try {
-    loading.value = true;
-    const response = await axios.get('/api/classroom');
-    console.log('获取课堂列表响应:', response.data);
-    
-    const originalData = Array.isArray(response.data.data) ? response.data.data : [];
-    classrooms.value = [...originalData];
+    loading.value = true
+    const response = await axios.get('/api/classroom')
+    console.log('获取课堂列表响应:', response.data)
+
+    const originalData = Array.isArray(response.data.data) ? response.data.data : []
+    classrooms.value = [...originalData]
   } catch (error) {
-    console.error('获取课堂列表失败:', error);
-    alert('获取课堂列表失败');
+    console.error('获取课堂列表失败:', error)
+    alert('获取课堂列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 创建新课堂
 const createClassroom = async () => {
   if (!newClassroom.value.title) {
-    alert('请输入课堂标题');
-    return;
+    alert('请输入课堂标题')
+    return
   }
-  
+
   try {
     const response = await axios.post('/api/classroom', {
       title: newClassroom.value.title,
       description: newClassroom.value.description,
       teacher_id: userInfo.id
-    });
-    
-    alert(`创建成功，课堂码: ${response.data.data.classroom_code}`);
-    showCreateModal.value = false;
-    newClassroom.value = { title: '', description: '' };
-    fetchClassrooms();
+    })
+
+    alert(`创建成功，课堂码: ${response.data.data.classroom_code}`)
+    showCreateModal.value = false
+    newClassroom.value = { title: '', description: '' }
+    fetchClassrooms()
   } catch (error) {
-    console.error('创建课堂失败:', error);
-    alert('创建课堂失败');
+    console.error('创建课堂失败:', error)
+    alert('创建课堂失败')
   }
-};
+}
 
 // 切换课堂状态
 const toggleClassroomStatus = async (classroom) => {
@@ -333,298 +333,298 @@ const toggleClassroomStatus = async (classroom) => {
       title: classroom.title,
       description: classroom.description,
       status: classroom.status ? 0 : 1
-    });
-    
-    classroom.status = classroom.status ? 0 : 1;
+    })
+
+    classroom.status = classroom.status ? 0 : 1
   } catch (error) {
-    console.error('更新课堂状态失败:', error);
-    alert('更新课堂状态失败');
+    console.error('更新课堂状态失败:', error)
+    alert('更新课堂状态失败')
   }
-};
+}
 
 // 显示留言弹窗
 const openMessageModal = async (classroom) => {
-  currentClassroom.value = classroom;
-  showMessageModal.value = true;
-  await fetchMessages(classroom.id);
-};
+  currentClassroom.value = classroom
+  showMessageModal.value = true
+  await fetchMessages(classroom.id)
+}
 
 // 关闭留言弹窗
 const closeMessageModal = () => {
-  showMessageModal.value = false;
-  newMessage.value = '';
-  messages.value = [];
-};
+  showMessageModal.value = false
+  newMessage.value = ''
+  messages.value = []
+}
 
 // 获取课堂留言
 const fetchMessages = async (classroomId) => {
   try {
-    const response = await axios.get(`/api/classroom/${classroomId}/messages`);
-    messages.value = response.data.data;
+    const response = await axios.get(`/api/classroom/${classroomId}/messages`)
+    messages.value = response.data.data
   } catch (error) {
-    console.error('获取留言失败:', error);
-    alert('获取留言失败');
+    console.error('获取留言失败:', error)
+    alert('获取留言失败')
   }
-};
+}
 
 // 添加留言
 const addMessage = async () => {
   if (!newMessage.value) {
-    alert('请输入留言内容');
-    return;
+    alert('请输入留言内容')
+    return
   }
-  
+
   try {
     await axios.post(`/api/classroom/${currentClassroom.value.id}/messages`, {
       content: newMessage.value
-    });
-    
-    newMessage.value = '';
-    await fetchMessages(currentClassroom.value.id);
+    })
+
+    newMessage.value = ''
+    await fetchMessages(currentClassroom.value.id)
   } catch (error) {
-    console.error('添加留言失败:', error);
-    alert('添加留言失败');
+    console.error('添加留言失败:', error)
+    alert('添加留言失败')
   }
-};
+}
 
 // 确认删除留言
 const confirmDeleteMessage = (message) => {
-  if (confirm(`确定要删除这条留言吗？此操作不可恢复！`)) {
-    deleteMessage(message);
+  if (confirm('确定要删除这条留言吗？此操作不可恢复！')) {
+    deleteMessage(message)
   }
-};
+}
 
 // 删除留言
 const deleteMessage = async (message) => {
   try {
-    console.log(`删除留言: ID: ${message.id}`);
-    await axios.delete(`/api/classroom/messages/${message.id}`);
-    await fetchMessages(currentClassroom.value.id);
+    console.log(`删除留言: ID: ${message.id}`)
+    await axios.delete(`/api/classroom/messages/${message.id}`)
+    await fetchMessages(currentClassroom.value.id)
   } catch (error) {
-    console.error('删除留言失败:', error);
-    alert('删除留言失败: ' + (error.response?.data?.message || error.message));
+    console.error('删除留言失败:', error)
+    alert('删除留言失败: ' + (error.response?.data?.message || error.message))
   }
-};
+}
 
 // 显示文件弹窗
 const openFileModal = async (classroom) => {
-  currentClassroom.value = classroom;
-  showFileModal.value = true;
-  await fetchFiles(classroom.id);
-};
+  currentClassroom.value = classroom
+  showFileModal.value = true
+  await fetchFiles(classroom.id)
+}
 
 // 关闭文件弹窗
 const closeFileModal = () => {
-  showFileModal.value = false;
-  files.value = [];
-  uploadProgress.value = 0;
-};
+  showFileModal.value = false
+  files.value = []
+  uploadProgress.value = 0
+}
 
 // 获取课堂文件
 const fetchFiles = async (classroomId) => {
   try {
-    const response = await axios.get(`/api/classroom/${classroomId}/files`);
-    files.value = response.data.data;
+    const response = await axios.get(`/api/classroom/${classroomId}/files`)
+    files.value = response.data.data
   } catch (error) {
-    console.error('获取文件列表失败:', error);
-    alert('获取文件列表失败');
+    console.error('获取文件列表失败:', error)
+    alert('获取文件列表失败')
   }
-};
+}
 
 // 处理文件选择
 const handleFileChange = (event) => {
-  const file = event.target.files[0];
+  const file = event.target.files[0]
   if (file) {
-    uploadFile(file);
+    uploadFile(file)
   }
-};
+}
 
 // 触发文件选择对话框
 const triggerFileInput = () => {
   if (fileInputRef.value) {
-    fileInputRef.value.click();
+    fileInputRef.value.click()
   } else {
-    console.error('文件输入元素不存在');
+    console.error('文件输入元素不存在')
   }
-};
+}
 
 // 上传文件
 const uploadFile = async (file) => {
   if (!file) {
-    alert('请选择文件');
-    return;
+    alert('请选择文件')
+    return
   }
-  
+
   // 检查文件大小
   if (file.size > 10 * 1024 * 1024) {
-    alert('文件大小不能超过10MB');
-    return;
+    alert('文件大小不能超过10MB')
+    return
   }
-  
-  const formData = new FormData();
-  formData.append('file', file);
-  
+
+  const formData = new FormData()
+  formData.append('file', file)
+
   try {
-    uploadProgress.value = 0;
-    
+    uploadProgress.value = 0
+
     await axios.post(`/api/classroom/${currentClassroom.value.id}/files`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
       onUploadProgress: (progressEvent) => {
-        uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
       }
-    });
-    
+    })
+
     // 重置文件输入
     if (fileInputRef.value) {
-      fileInputRef.value.value = '';
+      fileInputRef.value.value = ''
     }
-    uploadProgress.value = 0;
-    await fetchFiles(currentClassroom.value.id);
+    uploadProgress.value = 0
+    await fetchFiles(currentClassroom.value.id)
   } catch (error) {
-    console.error('上传文件失败:', error);
-    alert('上传文件失败: ' + (error.response?.data?.message || error.message));
-    uploadProgress.value = 0;
+    console.error('上传文件失败:', error)
+    alert('上传文件失败: ' + (error.response?.data?.message || error.message))
+    uploadProgress.value = 0
   }
-};
+}
 
 // 下载文件
 const downloadFile = async (file) => {
   try {
-    console.log(`下载文件: ${file.file_name}, ID: ${file.id}`);
-    
+    console.log(`下载文件: ${file.file_name}, ID: ${file.id}`)
+
     // 使用axios进行文件下载
     const response = await axios({
       url: `/api/classroom/files/${file.id}/download`,
       method: 'GET',
-      responseType: 'blob', // 重要：设置响应类型为blob
-    });
-    
+      responseType: 'blob' // 重要：设置响应类型为blob
+    })
+
     // 创建一个临时的URL对象
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+
     // 创建一个临时的a标签
-    const link = document.createElement('a');
-    link.href = url;
-    
+    const link = document.createElement('a')
+    link.href = url
+
     // 使用原始文件名作为下载文件名
-    const fileName = file.file_name;
-    console.log('下载文件名:', fileName);
-    
+    const fileName = file.file_name
+    console.log('下载文件名:', fileName)
+
     // 设置下载的文件名
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    
+    link.setAttribute('download', fileName)
+    document.body.appendChild(link)
+
     // 模拟点击下载
-    link.click();
-    
+    link.click()
+
     // 清理
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(link)
   } catch (error) {
-    console.error('下载文件失败:', error);
-    alert('下载文件失败: ' + (error.response?.data?.message || error.message));
+    console.error('下载文件失败:', error)
+    alert('下载文件失败: ' + (error.response?.data?.message || error.message))
   }
-};
+}
 
 // 确认删除
 const confirmDelete = (classroom) => {
-  currentClassroom.value = classroom;
-  showDeleteConfirm.value = true;
-};
+  currentClassroom.value = classroom
+  showDeleteConfirm.value = true
+}
 
 // 删除课堂
 const deleteClassroom = async () => {
   try {
-    await axios.delete(`/api/classroom/${currentClassroom.value.id}`);
-    showDeleteConfirm.value = false;
-    fetchClassrooms();
+    await axios.delete(`/api/classroom/${currentClassroom.value.id}`)
+    showDeleteConfirm.value = false
+    fetchClassrooms()
   } catch (error) {
-    console.error('删除课堂失败:', error);
-    alert('删除课堂失败');
+    console.error('删除课堂失败:', error)
+    alert('删除课堂失败')
   }
-};
+}
 
 // 确认删除文件
 const confirmDeleteFile = (file) => {
   if (confirm(`确定要删除文件 "${file.file_name}" 吗？此操作不可恢复！`)) {
-    deleteFile(file);
+    deleteFile(file)
   }
-};
+}
 
 // 删除文件
 const deleteFile = async (file) => {
   try {
-    console.log(`删除文件: ${file.file_name}, ID: ${file.id}`);
-    await axios.delete(`/api/classroom/files/${file.id}`);
-    await fetchFiles(currentClassroom.value.id);
+    console.log(`删除文件: ${file.file_name}, ID: ${file.id}`)
+    await axios.delete(`/api/classroom/files/${file.id}`)
+    await fetchFiles(currentClassroom.value.id)
   } catch (error) {
-    console.error('删除文件失败:', error);
-    alert('删除文件失败: ' + (error.response?.data?.message || error.message));
+    console.error('删除文件失败:', error)
+    alert('删除文件失败: ' + (error.response?.data?.message || error.message))
   }
-};
+}
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-};
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
 
 // 格式化文件大小
 const formatFileSize = (size) => {
   if (size < 1024) {
-    return size + ' B';
+    return size + ' B'
   } else if (size < 1024 * 1024) {
-    return (size / 1024).toFixed(2) + ' KB';
+    return (size / 1024).toFixed(2) + ' KB'
   } else if (size < 1024 * 1024 * 1024) {
-    return (size / (1024 * 1024)).toFixed(2) + ' MB';
+    return (size / (1024 * 1024)).toFixed(2) + ' MB'
   } else {
-    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
   }
-};
+}
 
 // 获取文件图标
 const getFileIcon = (type) => {
   const iconMap = {
-    'pdf': 'fas fa-file-pdf',
-    'doc': 'fas fa-file-word',
-    'docx': 'fas fa-file-word',
-    'xls': 'fas fa-file-excel',
-    'xlsx': 'fas fa-file-excel',
-    'ppt': 'fas fa-file-powerpoint',
-    'pptx': 'fas fa-file-powerpoint',
-    'jpg': 'fas fa-file-image',
-    'jpeg': 'fas fa-file-image',
-    'png': 'fas fa-file-image',
-    'zip': 'fas fa-file-archive',
-    'rar': 'fas fa-file-archive',
-    'txt': 'fas fa-file-alt',
-    'js': 'fab fa-js',
-    'html': 'fab fa-html5',
-    'css': 'fab fa-css3',
-    'default': 'fas fa-file'
-  };
-  
-  return iconMap[type] || iconMap.default;
-};
+    pdf: 'fas fa-file-pdf',
+    doc: 'fas fa-file-word',
+    docx: 'fas fa-file-word',
+    xls: 'fas fa-file-excel',
+    xlsx: 'fas fa-file-excel',
+    ppt: 'fas fa-file-powerpoint',
+    pptx: 'fas fa-file-powerpoint',
+    jpg: 'fas fa-file-image',
+    jpeg: 'fas fa-file-image',
+    png: 'fas fa-file-image',
+    zip: 'fas fa-file-archive',
+    rar: 'fas fa-file-archive',
+    txt: 'fas fa-file-alt',
+    js: 'fab fa-js',
+    html: 'fab fa-html5',
+    css: 'fab fa-css3',
+    default: 'fas fa-file'
+  }
+
+  return iconMap[type] || iconMap.default
+}
 
 // 搜索处理函数
 const handleSearch = () => {
-  currentPage.value = 1; // 重置页码到第一页
-};
+  currentPage.value = 1 // 重置页码到第一页
+}
 
 // 清除搜索
 const clearSearch = () => {
-  searchQuery.value = '';
-  currentPage.value = 1;
-};
+  searchQuery.value = ''
+  currentPage.value = 1
+}
 
 // 组件挂载时获取数据
 onMounted(() => {
-  fetchClassrooms();
-});
+  fetchClassrooms()
+})
 </script>
 
 <style scoped>
@@ -1238,7 +1238,7 @@ onMounted(() => {
   .table-header, .table-row {
     grid-template-columns: 15% 20% 20% 15% 15% 15%;
   }
-  
+
   .classroom-description {
     display: none;
   }
@@ -1248,16 +1248,16 @@ onMounted(() => {
   .table-header, .table-row {
     grid-template-columns: 20% 30% 25% 25%;
   }
-  
+
   .classroom-teacher, .classroom-time {
     display: none;
   }
-  
+
   .search-box {
     width: 100%;
     margin-bottom: 10px;
   }
-  
+
   .header-actions {
     flex-direction: column;
     align-items: stretch;
@@ -1268,9 +1268,9 @@ onMounted(() => {
   .table-header, .table-row {
     grid-template-columns: 30% 40% 30%;
   }
-  
+
   .classroom-status {
     display: none;
   }
 }
-</style> 
+</style>

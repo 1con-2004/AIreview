@@ -19,9 +19,9 @@
           <form @submit.prevent="handleSubmit" class="custom-form">
             <div class="form-group">
               <label>社区名称</label>
-              <input 
-                type="text" 
-                v-model="formData.name" 
+              <input
+                type="text"
+                v-model="formData.name"
                 placeholder="请输入社区名称"
                 :class="{ 'error': errors.name }"
               >
@@ -44,9 +44,9 @@
 
             <div class="form-group">
               <label>社区描述</label>
-              <textarea 
-                v-model="formData.description" 
-                rows="4" 
+              <textarea
+                v-model="formData.description"
+                rows="4"
                 placeholder="请输入社区描述"
                 :class="{ 'error': errors.description }"
               ></textarea>
@@ -55,9 +55,9 @@
 
             <div class="form-group">
               <label>社区图标 (URL)</label>
-              <input 
-                type="text" 
-                v-model="formData.cover_image" 
+              <input
+                type="text"
+                v-model="formData.cover_image"
                 placeholder="请输入图标URL"
               >
               <div class="url-preview" v-if="formData.cover_image">
@@ -68,9 +68,9 @@
             <template v-if="formData.type === 'class' || formData.type === 'college'">
               <div class="form-group">
                 <label>所属学校</label>
-                <input 
-                  type="text" 
-                  v-model="formData.school" 
+                <input
+                  type="text"
+                  v-model="formData.school"
                   placeholder="请输入学校名称"
                   :class="{ 'error': errors.school }"
                 >
@@ -79,9 +79,9 @@
 
               <div class="form-group" v-if="formData.type === 'college'">
                 <label>所属学院</label>
-                <input 
-                  type="text" 
-                  v-model="formData.college" 
+                <input
+                  type="text"
+                  v-model="formData.college"
                   placeholder="请输入学院名称"
                   :class="{ 'error': errors.college }"
                 >
@@ -90,9 +90,9 @@
 
               <div class="form-group" v-if="formData.type === 'class'">
                 <label>班级名称</label>
-                <input 
-                  type="text" 
-                  v-model="formData.class_name" 
+                <input
+                  type="text"
+                  v-model="formData.class_name"
                   placeholder="请输入班级名称"
                   :class="{ 'error': errors.class_name }"
                 >
@@ -102,9 +102,9 @@
 
             <div class="form-group">
               <label>社区公告</label>
-              <textarea 
-                v-model="formData.announcement" 
-                rows="4" 
+              <textarea
+                v-model="formData.announcement"
+                rows="4"
                 placeholder="请输入社区公告"
               ></textarea>
             </div>
@@ -150,7 +150,7 @@ export default {
   components: {
     NavBar
   },
-  data() {
+  data () {
     return {
       formData: {
         name: '',
@@ -167,7 +167,7 @@ export default {
     }
   },
   methods: {
-    getTypeLabel(type) {
+    getTypeLabel (type) {
       const types = {
         official: '官方社区',
         class: '班级社区',
@@ -175,54 +175,54 @@ export default {
       }
       return types[type] || '未选择类型'
     },
-    handleImageError() {
+    handleImageError () {
       // 如果图片加载失败，使用备用的base64编码的小图标
       this.formData.cover_image = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0ZWNkYzQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMyAxMmgxOE0zIDZoMThNMyAxOGgxOCIvPjwvc3ZnPg=='
     },
-    async handleSubmit() {
+    async handleSubmit () {
       this.errors = {}
-      
+
       // 表单验证
       if (!this.formData.name) {
         this.errors.name = '请输入社区名称'
       } else if (this.formData.name.length < 2 || this.formData.name.length > 50) {
         this.errors.name = '长度在 2 到 50 个字符'
       }
-      
+
       if (!this.formData.type) {
         this.errors.type = '请选择社区类型'
       }
-      
+
       if (!this.formData.description) {
         this.errors.description = '请输入社区描述'
       }
-      
+
       if (this.formData.type === 'class' || this.formData.type === 'college') {
         if (!this.formData.school) {
           this.errors.school = '请输入学校名称'
         }
-        
+
         if (this.formData.type === 'college' && !this.formData.college) {
           this.errors.college = '请输入学院名称'
         }
-        
+
         if (this.formData.type === 'class' && !this.formData.class_name) {
           this.errors.class_name = '请输入班级名称'
         }
       }
-      
+
       // 如果有错误，不提交表单
       if (Object.keys(this.errors).length > 0) {
         return
       }
-      
+
       try {
         // 如果用户没有提供图标URL，使用默认图标
         const formDataToSubmit = {
           ...this.formData,
           cover_image: this.formData.cover_image || this.defaultCover
         }
-        
+
         await axios.post('http://localhost:3000/api/communities', formDataToSubmit)
         ElMessage.success('社区创建成功')
         this.$router.push('/community')
@@ -231,7 +231,7 @@ export default {
         ElMessage.error('创建社区失败：' + (error.response?.data?.message || error.message))
       }
     },
-    goBack() {
+    goBack () {
       this.$router.go(-1)
     }
   }
@@ -548,11 +548,11 @@ export default {
   .main-content {
     flex-direction: column;
   }
-  
+
   .preview-section {
     max-width: none;
   }
-  
+
   .preview-card {
     position: static;
   }
@@ -562,17 +562,17 @@ export default {
   .content {
     padding: 20px;
   }
-  
+
   .top-card {
     padding: 24px;
   }
-  
+
   .card-content h2 {
     font-size: 24px;
   }
-  
+
   .geometric-shape {
     display: none;
   }
 }
-</style> 
+</style>

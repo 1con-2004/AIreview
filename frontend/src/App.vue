@@ -15,19 +15,19 @@ const ensureUserConsistency = () => {
     // 获取本地存储的用户信息
     const userInfoStr = localStorage.getItem('userInfo')
     if (!userInfoStr) return
-    
+
     const userInfo = JSON.parse(userInfoStr)
-    
+
     // 记录当前活跃用户名
     localStorage.setItem('currentUsername', userInfo.username)
-    
+
     // 检查Vuex中的用户数据与localStorage是否一致
     const storeUserInfo = store.getters.getUserInfo
-    
+
     if (storeUserInfo && storeUserInfo.username !== userInfo.username) {
       console.log('检测到用户信息不一致:', storeUserInfo?.username, '!=', userInfo.username)
       console.log('正在同步Vuex中的用户信息...')
-      
+
       // 同步用户信息到Vuex
       store.dispatch('login', {
         userInfo,
@@ -44,17 +44,17 @@ const ensureUserConsistency = () => {
 const handleRouteChange = (to, from, next) => {
   // 每次路由变化时确保用户信息一致性
   ensureUserConsistency()
-  
+
   // 检查是否需要登录权限的页面
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const userInfoStr = localStorage.getItem('userInfo')
-  
+
   if (requiresAuth && !userInfoStr) {
     console.log('访问需要登录的页面，但用户未登录，重定向到登录页')
     next('/login')
     return
   }
-  
+
   // 检查是否有角色限制
   if (userInfoStr && to.meta.roles) {
     const userInfo = JSON.parse(userInfoStr)
@@ -64,7 +64,7 @@ const handleRouteChange = (to, from, next) => {
       return
     }
   }
-  
+
   next()
 }
 
@@ -78,7 +78,7 @@ onMounted(() => {
   // 初始化时执行一次
   ensureUserConsistency()
   mountGlobalUtil()
-  
+
   // 添加路由事件监听
   router.beforeEach(handleRouteChange)
 })
@@ -120,12 +120,12 @@ onUnmounted(() => {
   --gray-700: #495057;
   --gray-800: #343a40;
   --gray-900: #212529;
-  
+
   /* 字体变量 */
   --body-font: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   --heading-font: var(--body-font);
   --monospace-font: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  
+
   /* 尺寸变量 */
   --header-height: 70px;
   --border-radius: 8px;

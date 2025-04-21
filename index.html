@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIreview 测试页面</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #409EFF;
+            margin-top: 0;
+        }
+        p {
+            line-height: 1.6;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f9eb;
+            border-left: 4px solid #67c23a;
+            border-radius: 4px;
+        }
+        .timestamp {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #909399;
+        }
+        button {
+            background-color: #409EFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #66b1ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AIreview 系统测试页面</h1>
+        <p>这是一个用于测试Nginx和Docker卷挂载配置的页面。</p>
+        <p>如果您能看到这个页面，说明Nginx服务器配置正常，并且静态文件服务工作正常。</p>
+        
+        <div class="status">
+            <strong>状态：</strong> 网站运行正常，Nginx配置有效。
+        </div>
+        
+        <button onclick="testApi()">测试API连接</button>
+        <div id="apiResult" style="margin-top: 15px;"></div>
+        
+        <div class="timestamp">
+            <p>页面生成时间：<span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 显示当前时间
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('zh-CN');
+        
+        // 测试API连接
+        function testApi() {
+            const apiResultElem = document.getElementById('apiResult');
+            apiResultElem.innerHTML = "正在连接API...";
+            
+            fetch('/api/health')
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('API连接失败');
+                })
+                .then(data => {
+                    apiResultElem.innerHTML = `<div style="color: #67c23a;">✓ API连接成功: ${data}</div>`;
+                })
+                .catch(error => {
+                    apiResultElem.innerHTML = `<div style="color: #f56c6c;">✗ ${error.message}</div>`;
+                });
+        }
+    </script>
+</body>
+</html> 

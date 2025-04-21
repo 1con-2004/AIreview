@@ -20,8 +20,8 @@
         <div class="chart-header">
           <h3>用户增长趋势</h3>
           <div class="chart-actions">
-            <button 
-              v-for="period in ['7天', '30天']" 
+            <button
+              v-for="period in ['7天', '30天']"
               :key="period"
               :class="['chart-period-btn', { active: userChartPeriod === period }]"
               @click="userChartPeriod = period"
@@ -38,8 +38,8 @@
         <div class="chart-header">
           <h3>网站访问趋势</h3>
           <div class="chart-actions">
-            <button 
-              v-for="period in ['7天', '30天']" 
+            <button
+              v-for="period in ['7天', '30天']"
               :key="period"
               :class="['chart-period-btn', { active: visitChartPeriod === period }]"
               @click="visitChartPeriod = period"
@@ -81,36 +81,36 @@ const stats = ref([
     value: '0',
     icon: 'fas fa-chart-line',
     color: '#ffd93d'
-  },
-  
+  }
+
 ])
 
 // 获取统计数据
 const fetchStats = async () => {
   try {
-    console.log('获取统计数据...');
+    console.log('获取统计数据...')
     // 从localStorage中获取token
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const token = userInfo.accessToken;
-    console.log('当前token:', token);
-    
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const token = userInfo.accessToken
+    console.log('当前token:', token)
+
     if (!token) {
-      console.error('未找到token，请重新登录');
-      router.push('/login');
-      return;
+      console.error('未找到token，请重新登录')
+      router.push('/login')
+      return
     }
 
     const response = await axios.get('/api/stats/dashboard', {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
-    });
-    console.log('统计数据响应:', response.data);
-    
+    })
+    console.log('统计数据响应:', response.data)
+
     if (response.data.success) {
-      const data = response.data.data;
-      console.log('更新前的统计卡片数据:', stats.value);
-      
+      const data = response.data.data
+      console.log('更新前的统计卡片数据:', stats.value)
+
       // 更新统计卡片数据
       stats.value = [
         {
@@ -130,39 +130,39 @@ const fetchStats = async () => {
           value: data.today_visits.toString(),
           icon: 'fas fa-chart-line',
           color: '#ffd93d'
-        },
-        
-      ];
-      
-      console.log('更新后的统计卡片数据:', stats.value);
+        }
+
+      ]
+
+      console.log('更新后的统计卡片数据:', stats.value)
     }
   } catch (error) {
-    console.error('获取统计数据失败:', error);
+    console.error('获取统计数据失败:', error)
   }
 }
 
 // 记录用户访问
 const recordVisit = async () => {
   try {
-    console.log('记录用户访问...');
+    console.log('记录用户访问...')
     // 从localStorage中获取token
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const token = userInfo.accessToken;
-    console.log('当前token:', token);
-    
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const token = userInfo.accessToken
+    console.log('当前token:', token)
+
     if (!token) {
-      console.error('未找到token，请重新登录');
-      router.push('/login');
-      return;
+      console.error('未找到token，请重新登录')
+      router.push('/login')
+      return
     }
 
     await axios.post('/api/stats/record-visit', {}, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
-    });
+    })
   } catch (error) {
-    console.error('记录访问失败:', error);
+    console.error('记录访问失败:', error)
   }
 }
 
@@ -175,29 +175,29 @@ const visitChartPeriod = ref('7天')
 // 获取图表数据
 const fetchChartData = async (type, days) => {
   try {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const token = userInfo.accessToken;
-    
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const token = userInfo.accessToken
+
     if (!token) {
-      console.error('未找到token，请重新登录');
-      router.push('/login');
-      return null;
+      console.error('未找到token，请重新登录')
+      router.push('/login')
+      return null
     }
 
     const response = await axios.get(`/api/stats/trend/${type}`, {
       params: { days },
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
-    });
+    })
 
     if (response.data.success) {
-      return response.data.data;
+      return response.data.data
     }
-    return null;
+    return null
   } catch (error) {
-    console.error(`获取${type}趋势数据失败:`, error);
-    return null;
+    console.error(`获取${type}趋势数据失败:`, error)
+    return null
   }
 }
 
@@ -262,7 +262,7 @@ const initChart = (chartRef, title, data) => {
 
 // 更新图表数据
 const updateChart = async (chart, type, days) => {
-  const data = await fetchChartData(type, days);
+  const data = await fetchChartData(type, days)
   if (data) {
     chart.setOption({
       xAxis: {
@@ -271,21 +271,21 @@ const updateChart = async (chart, type, days) => {
       series: [{
         data: data.values
       }]
-    });
+    })
   }
 }
 
 // 监听周期变化
 watch([userChartPeriod, visitChartPeriod], async ([newUserPeriod, newVisitPeriod]) => {
-  const userDays = newUserPeriod === '7天' ? 7 : 30;
-  const visitDays = newVisitPeriod === '7天' ? 7 : 30;
-  
+  const userDays = newUserPeriod === '7天' ? 7 : 30
+  const visitDays = newVisitPeriod === '7天' ? 7 : 30
+
   if (userChartInstance.value) {
-    await updateChart(userChartInstance.value, 'users', userDays);
+    await updateChart(userChartInstance.value, 'users', userDays)
   }
-  
+
   if (visitChartInstance.value) {
-    await updateChart(visitChartInstance.value, 'visits', visitDays);
+    await updateChart(visitChartInstance.value, 'visits', visitDays)
   }
 })
 
@@ -295,19 +295,19 @@ const visitChartInstance = ref(null)
 
 onMounted(async () => {
   // 记录访问并获取统计数据
-  await recordVisit();
-  await fetchStats();
-  
+  await recordVisit()
+  await fetchStats()
+
   // 获取初始图表数据
-  const userData = await fetchChartData('users', 7);
-  const visitData = await fetchChartData('visits', 7);
-  
+  const userData = await fetchChartData('users', 7)
+  const visitData = await fetchChartData('visits', 7)
+
   // 初始化图表
   if (userData) {
-    userChartInstance.value = initChart(userChart.value, '用户数量', userData);
+    userChartInstance.value = initChart(userChart.value, '用户数量', userData)
   }
   if (visitData) {
-    visitChartInstance.value = initChart(visitChart.value, '访问量', visitData);
+    visitChartInstance.value = initChart(visitChart.value, '访问量', visitData)
   }
 
   // 监听窗口大小变化
@@ -442,9 +442,9 @@ onMounted(async () => {
   .chart-section {
     grid-template-columns: 1fr;
   }
-  
+
   .chart-container {
     height: 300px;
   }
 }
-</style> 
+</style>

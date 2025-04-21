@@ -6,6 +6,7 @@ const { performance } = require('perf_hooks');
 const { execCommand, sleep } = require('./utils');
 const util = require('util');
 const execAsync = util.promisify(exec);
+const dockerHelper = require('./docker-helper');
 
 class Sandbox {
   constructor(containerId, workDir, language) {
@@ -641,7 +642,8 @@ async function createSandbox(language) {
   const image = images[normalizedLanguage];
   console.log('使用Docker镜像:', image);
   
-  const cmd = `docker run -d --network none --cpus=1 --memory=512m --name=${containerName} -w /app ${image} tail -f /dev/null`;
+  // 使用docker-helper获取命令，解决网络连接问题
+  const cmd = await dockerHelper.getJudgeContainerCommand(containerName, image);
   
   try {
     await execCommand(cmd);

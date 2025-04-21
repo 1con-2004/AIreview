@@ -56,13 +56,13 @@
     <!-- 操作栏 -->
     <div class="action-bar">
       <div class="search-box">
-        <input 
-          type="text" 
-          v-model="searchQuery" 
+        <input
+          type="text"
+          v-model="searchQuery"
           placeholder="搜索题目标题、描述或标签..."
           @input="handleSearch"
         >
-        <button 
+        <button
           v-if="/^\d+$/.test(searchQuery.trim())"
           class="exact-search-btn"
           :class="{ active: isExactSearch }"
@@ -115,9 +115,9 @@
       <div class="filter-group">
         <h3>题目分类</h3>
         <div class="tag-search">
-          <input 
-            type="text" 
-            v-model="tagSearchQuery" 
+          <input
+            type="text"
+            v-model="tagSearchQuery"
             placeholder="搜索标签..."
             class="tag-search-input"
           />
@@ -183,15 +183,15 @@
 
     <!-- 分页器 -->
     <div class="pagination">
-      <button 
-        :disabled="currentPage === 1" 
+      <button
+        :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
       <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
-      <button 
-        :disabled="currentPage === totalPages" 
+      <button
+        :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
       >
         <i class="fas fa-chevron-right"></i>
@@ -205,19 +205,19 @@
       <i class="fas fa-tools notice-icon"></i>
       <h2>功能开发中</h2>
       <p>新建题目功能正在开发中，敬请期待...</p>
-      <Button 
-        label="我知道了" 
-        icon="pi pi-check" 
+      <Button
+        label="我知道了"
+        icon="pi pi-check"
         @click="showDialog = false"
-        class="p-button-secondary" 
+        class="p-button-secondary"
       />
     </div>
   </div>
 
   <!-- 修改题目弹窗 -->
-  <Dialog 
-    v-model:visible="showEditDialog" 
-    :header="'修改题目操作'" 
+  <Dialog
+    v-model:visible="showEditDialog"
+    :header="'修改题目操作'"
     :modal="true"
     class="edit-dialog"
   >
@@ -234,9 +234,9 @@
   </Dialog>
 
   <!-- 修改题目内容弹窗 -->
-  <Dialog 
-    v-model:visible="showEditContentDialog" 
-    :header="'修改题目内容'" 
+  <Dialog
+    v-model:visible="showEditContentDialog"
+    :header="'修改题目内容'"
     :modal="true"
     :resizable="true"
     class="edit-content-dialog"
@@ -364,9 +364,9 @@
   </Dialog>
 
   <!-- 修改题目答案弹窗 -->
-  <Dialog 
-    v-model:visible="showEditSolutionDialog" 
-    :header="'修改题目答案'" 
+  <Dialog
+    v-model:visible="showEditSolutionDialog"
+    :header="'修改题目答案'"
     :modal="true"
     :resizable="true"
     class="edit-solution-dialog"
@@ -377,7 +377,7 @@
         <label>通用解题思路</label>
         <textarea v-model="solutionForm.solution_approach" placeholder="请输入通用解题思路"></textarea>
       </div>
-      
+
       <!-- 多语言代码编辑区域 -->
       <el-tabs v-model="activeLanguage" type="border-card">
         <el-tab-pane v-for="lang in languageOptions" :key="lang.value" :label="lang.label" :name="lang.value">
@@ -401,9 +401,9 @@
   </Dialog>
 
   <!-- 删除确认弹窗 -->
-  <Dialog 
-    v-model:visible="showDeleteDialog" 
-    :header="'确认删除'" 
+  <Dialog
+    v-model:visible="showDeleteDialog"
+    :header="'确认删除'"
     :modal="true"
     class="delete-dialog"
   >
@@ -424,7 +424,7 @@
     width="80%"
     :before-close="handleCloseDialog"
   >
-    <el-form 
+    <el-form
       ref="createFormRef"
       :model="createForm"
       :rules="formRules"
@@ -443,15 +443,15 @@
       </el-form-item>
 
       <el-form-item label="标签" prop="tags">
-        <el-input 
-          v-model="createForm.tags" 
+        <el-input
+          v-model="createForm.tags"
           placeholder="请输入标签，多个标签用逗号分隔"
         ></el-input>
       </el-form-item>
 
       <el-form-item label="描述" prop="description">
-        <el-input 
-          type="textarea" 
+        <el-input
+          type="textarea"
           v-model="createForm.description"
           :rows="4"
           placeholder="请输入题目描述"
@@ -459,8 +459,8 @@
       </el-form-item>
 
       <el-form-item label="时间限制(ms)" prop="time_limit">
-        <el-input-number 
-          v-model="createForm.time_limit" 
+        <el-input-number
+          v-model="createForm.time_limit"
           :min="100"
           :max="10000"
           :step="100"
@@ -468,8 +468,8 @@
       </el-form-item>
 
       <el-form-item label="内存限制(MB)" prop="memory_limit">
-        <el-input-number 
-          v-model="createForm.memory_limit" 
+        <el-input-number
+          v-model="createForm.memory_limit"
           :min="64"
           :max="1024"
           :step="64"
@@ -477,8 +477,8 @@
       </el-form-item>
 
       <el-form-item label="解题思路" prop="solution_approach">
-        <el-input 
-          type="textarea" 
+        <el-input
+          type="textarea"
           v-model="createForm.solution_approach"
           :rows="4"
           placeholder="请输入解题思路"
@@ -486,14 +486,14 @@
       </el-form-item>
 
       <el-form-item label="时间复杂度" prop="time_complexity">
-        <el-input 
+        <el-input
           v-model="createForm.time_complexity"
           placeholder="请输入时间复杂度，如 O(n)"
         ></el-input>
       </el-form-item>
 
       <el-form-item label="空间复杂度" prop="space_complexity">
-        <el-input 
+        <el-input
           v-model="createForm.space_complexity"
           placeholder="请输入空间复杂度，如 O(1)"
         ></el-input>
@@ -783,7 +783,7 @@ const languageOptions = [
 const filteredTags = computed(() => {
   if (!tagSearchQuery.value) return tags.value
   const query = tagSearchQuery.value.toLowerCase()
-  return tags.value.filter(tag => 
+  return tags.value.filter(tag =>
     tag.toLowerCase().includes(query)
   )
 })
@@ -867,10 +867,10 @@ const processTagString = (tags) => {
 const handleSubmit = async () => {
   try {
     submitting.value = true
-    
+
     // 表单验证
     await createFormRef.value.validate()
-    
+
     // 检查solutions是否都有内容
     if (!createForm.value.solutions.c.trim() ||
         !createForm.value.solutions.cpp.trim() ||
@@ -904,7 +904,7 @@ const handleSubmit = async () => {
     const token = localStorage.getItem('token')
     const response = await axios.post('/api/problems/create', formData, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
 
@@ -940,7 +940,7 @@ const reorderProblems = async () => {
     const token = localStorage.getItem('token')
     await axios.post('/api/problems/reorder', {}, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
     toast.add({
@@ -1056,17 +1056,17 @@ const fetchProblems = async () => {
       difficulties: selectedDifficulty.value ? selectedDifficulty.value : '',
       categories: selectedCategories.value.join(',')
     }
-    
+
     const response = await axios.get('/api/problems/list', { params })
     let filteredProblems = response.data.data.problems
 
     // 本地搜索过滤
     if (searchQuery.value.trim()) {
       const query = searchQuery.value.trim().toLowerCase()
-      
+
       // 如果是数字且开启了精确搜索
       if (/^\d+$/.test(query) && isExactSearch.value) {
-        filteredProblems = filteredProblems.filter(problem => 
+        filteredProblems = filteredProblems.filter(problem =>
           problem.id.toString() === query
         )
       } else {
@@ -1089,12 +1089,12 @@ const fetchProblems = async () => {
 
     // 计算总页数
     totalPages.value = Math.ceil(filteredProblems.length / pageSize.value)
-    
+
     // 分页处理
     const start = (currentPage.value - 1) * pageSize.value
     const end = start + pageSize.value
     problems.value = filteredProblems.slice(start, end)
-    
+
     loading.value = false
   } catch (error) {
     console.error('获取题目列表失败:', error)
@@ -1143,7 +1143,7 @@ const handleEditContent = async () => {
     const token = localStorage.getItem('token')
     const response = await axios.get(`/api/problems/${currentProblem.value.id}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
     const problemData = response.data.data
@@ -1151,7 +1151,7 @@ const handleEditContent = async () => {
     // 获取题目的测试用例
     const testCasesResponse = await axios.get(`/api/problems/${currentProblem.value.id}/test-cases`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
     const testCases = testCasesResponse.data.data
@@ -1184,7 +1184,7 @@ const handleEditSolution = async () => {
     const token = localStorage.getItem('token')
     const response = await axios.get(`/api/problems/${currentProblem.value.id}/solution`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
     const solutionData = response.data.data
@@ -1219,7 +1219,7 @@ const saveContentEdit = async () => {
     // 更新题目基本信息
     await axios.put(`/api/problems/${currentProblem.value.id}`, formData, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
 
@@ -1228,7 +1228,7 @@ const saveContentEdit = async () => {
       test_cases: formData.test_cases
     }, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
 
@@ -1291,7 +1291,7 @@ const saveSolutionEdit = async () => {
       }
     }, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
     showEditSolutionDialog.value = false
@@ -1322,68 +1322,68 @@ const deleteProblem = (problem) => {
 const confirmDelete = async () => {
   try {
     // 首先尝试从store中获取token
-    let accessToken = store.getters.getAccessToken;
-    
+    let accessToken = store.getters.getAccessToken
+
     // 如果store中没有，再尝试从localStorage获取
     if (!accessToken) {
-      const userInfoStr = localStorage.getItem('userInfo');
-      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken');
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
     }
-    
+
     if (!accessToken) {
-      console.error('认证token不存在');
+      console.error('认证token不存在')
       toast.add({
         severity: 'error',
         summary: '错误',
         detail: '认证失败，请重新登录',
         life: 3000
-      });
-      return;
+      })
+      return
     }
-    
-    console.log('开始删除题目，ID:', currentProblem.value.id);
-    
+
+    console.log('开始删除题目，ID:', currentProblem.value.id)
+
     const response = await axios.delete(`/api/problems/${currentProblem.value.id}`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`
       }
-    });
-    
+    })
+
     if (response.data.code === 200) {
-      showDeleteDialog.value = false;
+      showDeleteDialog.value = false
       toast.add({
         severity: 'success',
         summary: '成功',
         detail: '题目删除成功',
         life: 3000
-      });
-      fetchProblems();
+      })
+      fetchProblems()
     } else {
-      throw new Error(response.data.message || '删除失败');
+      throw new Error(response.data.message || '删除失败')
     }
   } catch (error) {
-    console.error('删除失败:', error);
-    let errorMessage = '删除失败';
-    
+    console.error('删除失败:', error)
+    let errorMessage = '删除失败'
+
     if (error.response) {
-      console.error('响应错误状态:', error.response.status);
-      console.error('响应错误数据:', error.response.data);
-      errorMessage = error.response.data?.message || errorMessage;
+      console.error('响应错误状态:', error.response.status)
+      console.error('响应错误数据:', error.response.data)
+      errorMessage = error.response.data?.message || errorMessage
     } else if (error.request) {
-      console.error('请求错误:', error.request);
-      errorMessage = '服务器无响应';
+      console.error('请求错误:', error.request)
+      errorMessage = '服务器无响应'
     } else {
-      console.error('错误信息:', error.message);
-      errorMessage = error.message;
+      console.error('错误信息:', error.message)
+      errorMessage = error.message
     }
-    
+
     toast.add({
       severity: 'error',
       summary: '错误',
       detail: errorMessage,
       life: 3000
-    });
+    })
   }
 }
 
@@ -1401,7 +1401,7 @@ watch(() => solutionForm.value.currentLanguage, async (newLang) => {
       `/api/problems/${currentProblem.value.id}/solution/${newLang}`,
       {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
       }
     )
@@ -1754,16 +1754,16 @@ const gotoProblemPool = () => {
   font-weight: 500;
 }
 
-.difficulty-easy { 
-  color: #34C759; 
+.difficulty-easy {
+  color: #34C759;
   font-weight: 500;
 }
-.difficulty-medium { 
-  color: #FF9500; 
+.difficulty-medium {
+  color: #FF9500;
   font-weight: 500;
 }
-.difficulty-hard { 
-  color: #FF3B30; 
+.difficulty-hard {
+  color: #FF3B30;
   font-weight: 500;
 }
 
@@ -2180,7 +2180,7 @@ const gotoProblemPool = () => {
   .el-tabs {
     margin-bottom: 20px;
   }
-  
+
   .el-tab-pane {
     padding: 15px;
   }
@@ -2297,4 +2297,4 @@ const gotoProblemPool = () => {
 .el-select:hover .el-input__wrapper {
   box-shadow: 0 0 0 1px #007AFF !important;
 }
-</style> 
+</style>

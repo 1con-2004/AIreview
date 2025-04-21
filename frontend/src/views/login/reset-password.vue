@@ -9,7 +9,7 @@
     <div class="login-container">
       <div class="login-box">
         <div class="header-icons">
-          
+
         </div>
 
         <div class="login-content">
@@ -65,23 +65,23 @@
               <h3>重置密码</h3>
               <form @submit.prevent="handleResetPassword">
                 <div class="form-item">
-                  <input 
-                    type="email" 
-                    v-model="resetForm.email" 
+                  <input
+                    type="email"
+                    v-model="resetForm.email"
                     placeholder="请输入邮箱"
                     required
                   >
                 </div>
                 <div class="form-item verification-code">
-                  <input 
-                    type="text" 
-                    v-model="resetForm.code" 
+                  <input
+                    type="text"
+                    v-model="resetForm.code"
                     placeholder="请输入验证码"
                     required
                   >
-                  <button 
-                    type="button" 
-                    class="send-code-btn" 
+                  <button
+                    type="button"
+                    class="send-code-btn"
                     :disabled="countdown > 0"
                     @click="sendVerificationCode"
                   >
@@ -89,17 +89,17 @@
                   </button>
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="password" 
-                    v-model="resetForm.newPassword" 
+                  <input
+                    type="password"
+                    v-model="resetForm.newPassword"
                     placeholder="请输入新密码"
                     required
                   >
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="password" 
-                    v-model="resetForm.confirmPassword" 
+                  <input
+                    type="password"
+                    v-model="resetForm.confirmPassword"
                     placeholder="请确认新密码"
                     required
                   >
@@ -127,12 +127,6 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ResetPassword'
-}
-</script>
-
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -152,12 +146,12 @@ const sendVerificationCode = async () => {
     alert('请输入正确的邮箱地址')
     return
   }
-  
+
   try {
     console.log('开始发送验证码请求')
-    const response = await axios({
+    const response = await axios.request({
       method: 'post',
-      url: 'http://localhost:3000/api/auth/send-reset-code',
+      url: '/api/auth/send-reset-code',
       data: {
         email: resetForm.email
       },
@@ -211,10 +205,10 @@ const handleResetPassword = async () => {
     alert('请输入正确的邮箱地址')
     return
   }
-  
+
   try {
     console.log('开始重置密码请求')
-    const response = await axios.post('http://localhost:3000/api/auth/reset-password', {
+    const response = await axios.post('/api/auth/reset-password', {
       email: resetForm.email,
       code: resetForm.code,
       newPassword: resetForm.newPassword
@@ -529,17 +523,17 @@ const handleResetPassword = async () => {
   .login-box {
     padding: 20px;
   }
-  
+
   .feature-card {
     padding: 24px;
   }
-  
+
   .geometric-shape {
     display: none;
   }
-  
+
   .circle {
     opacity: 0.5;
   }
 }
-</style> 
+</style>

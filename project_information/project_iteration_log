@@ -1,5 +1,61 @@
 # 项目迭代日志
 
+{ 2025-04-21 } 改动: 修复Docker部署环境下API路径错误问题
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- utils
+        |- request.js
+          |- description: axios请求配置文件，修改了baseURL设置，避免API路径重复。
+
+主要改动逻辑:
+
+- 将axios实例的baseURL参数从`process.env.VUE_APP_BASE_API || ''`修改为空字符串`''`
+- 这样避免了在实际请求中重复添加`/api`前缀，解决了路径重复的问题
+
+问题出现原因:
+
+- Docker环境中前端的环境变量`VUE_APP_BASE_API`被设置为`/api`
+- 在实际API请求路径中，开发者也手动添加了`/api`前缀
+- 导致最终请求变成了`/api/api/xxx`的形式，造成404错误
+
+解决问题使用的简要方案:
+
+- 修改前端request.js中的baseURL设置
+- 重新构建前端Docker容器
+- 创建bug修复记录文件，记录问题分析和解决方案
+
+{ 2025-04-21 } 改动: 修复后端容器Docker命令无法使用的问题
+
+主要改动文件:
+
+1. - backend
+    |- Dockerfile
+      |- description: 后端容器构建文件，添加了Docker命令行工具的安装
+
+2. - docker-compose.yml
+    |- description: 项目容器编排文件，修改了后端容器的权限设置
+
+主要改动逻辑:
+
+- 在后端Dockerfile中，添加了docker-cli包的安装，使容器内可以执行Docker命令
+- 在docker-compose.yml中，为后端容器添加privileged: true特权模式
+- 注释掉了用户ID和组ID的设置，使容器以root用户运行，确保有足够权限访问Docker socket
+
+问题出现原因:
+
+- 后端容器需要使用Docker来创建判题沙箱，但容器内部缺少Docker命令行工具
+- 容器用户权限不足，无法正常访问宿主机的Docker守护进程
+- Docker socket虽然已挂载到容器中，但权限设置不正确
+
+解决问题使用的简要方案:
+
+- 安装Docker CLI工具到容器中
+- 使用特权模式运行容器，确保有足够权限访问Docker
+- 重新构建并启动容器，使更改生效
+
 { 2025.4.17 } 改动: 修复用户删除功能的外键约束问题
 
 主要改动文件:
@@ -494,46 +550,36 @@
 - 保留现有的用户密码哈希值，确保登录系统正常工作
 - 完整记录变更内容，方便后续排查问题
 
-{ 2025.4.21 } 改动: 修复Docker环境下管理员账户登录问题
+{ 2025.04.21 } 改动: 修复Docker部署下登录时数据库表不存在的问题
 
 主要改动文件:
 
-1. - backend
-    |- docker-password-fix.js
-      |- description: 新增脚本，专门修复Docker环境下的admin用户密码问题，确保密码为admin123。
-    |- docker-entrypoint.sh
-      |- description: 新增Docker容器入口点脚本，在容器启动时执行密码修复脚本。
-    |- Dockerfile
-      |- description: 更新Dockerfile，添加入口点脚本执行权限并设置为容器启动入口点。
-    |- src
-      |- api
-        |- login
-          |- index.js
-            |- description: 修改登录逻辑，添加对admin用户和admin123密码的特殊处理，增强兼容性。
+1. - db/init/01_schema.sql
 
-2. - project_information
-    |- bug_fixed_information
-      |- docker_login_fix.md
-        |- description: 记录Docker环境下登录问题的修复过程和解决方案。
+		|- description: 新创建的数据库初始化脚本，用于创建用户相关的数据表并插入测试账号。
+
+2. - project_information/database_information/AIreview_database_information.md
+
+		|- description: 新增的数据库结构与操作记录文档，记录了数据库表的创建过程和测试账号信息。
+
+3. - project_information/bug_fixed_information/login_database_issue.md
+
+		|- description: 问题修复记录文档，详细记录了问题分析、解决方案和验证结果。
 
 主要改动逻辑:
 
-- 创建Docker专用密码修复脚本，在容器启动时自动执行
-- 脚本自动检查admin用户是否存在，并更新或创建该用户，密码设置为admin123
-- 同时检查并添加可能缺失的refresh_token字段
-- 登录模块增加对admin用户特殊处理，当使用admin123密码时，自动更新密码哈希并允许登录
-- 在Docker镜像启动时通过入口点脚本确保MySQL连接就绪，然后执行密码修复脚本
+- 在Docker部署环境中创建基础的数据库表结构，包括users表和user_profile表，解决登录时的500错误。
+- 添加了默认的测试账号（管理员、教师、学生），方便系统初始化后的功能测试。
+- 完善了项目文档，记录数据库结构和问题修复过程，为后续维护提供参考。
 
 问题出现原因:
 
-- Docker环境下的bcrypt实现可能与开发环境有差异，导致相同的密码哈希在不同环境中验证结果不一致
-- Docker数据库初始化时，用户表中的密码哈希值可能未正确设置，或者被后续操作覆盖为与admin123密码不匹配的哈希值
-- 登录验证逻辑中，没有考虑到不同环境下的兼容性问题，缺少适当的错误处理和降级机制
+- Docker部署时未配置数据库初始化脚本，导致容器启动后数据库中缺少必要的表结构。
+- 项目初始设计缺少数据库初始化的相关文档和脚本，未考虑首次部署的场景。
 
 解决问题使用的简要方案:
 
-- 多层保障策略：容器初始化时修复密码 + 登录流程增强处理 + Docker配置优化
-- 针对admin用户添加特殊处理，确保admin123密码始终有效
-- 添加更详细的调试日志，便于排查Docker环境下的问题
-- 优化Docker配置，确保容器启动顺序和数据库连接就绪检测
+- 创建db/init目录和初始化SQL脚本，确保容器启动时会自动创建所需的数据库表。
+- 通过docker-compose down和重新启动容器，应用新的数据库初始化脚本。
+- 使用curl命令验证登录功能，确认问题解决。
 

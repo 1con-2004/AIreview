@@ -291,66 +291,104 @@ docker-compose logs -f
 ## 部署指南
 
 ### 环境要求
-- Docker 和 Docker Compose
-- 权限访问Docker套接字（用于判题功能）
+- Docker 20.10+
+- Docker Compose 2.0+
+- 操作系统: Linux, macOS, 或 Windows 10+ (WSL2)
 
 ### 快速部署
 
 1. 克隆仓库
+   ```bash
+   git clone <repository-url>
+   cd AIreview
+   ```
+
+2. 启动服务
+   ```bash
+   # 使用专用启动脚本（推荐）
+   chmod +x start-containers.sh
+   ./start-containers.sh
+   ```
+
+3. 访问应用
+   - 前端: http://localhost
+   - 健康检查: http://localhost/health
+   - 后端API: http://localhost/api
+
+### 常见问题
+
+#### Docker权限问题
+
+如果后端服务无法访问Docker守护进程，请运行以下命令修复权限：
+
 ```bash
-git clone https://github.com/yourusername/AIreview.git
-cd AIreview
+sudo chmod +x fix-docker-permissions.sh
+sudo ./fix-docker-permissions.sh
 ```
 
-2. 使用Docker Compose启动
-```bash
-docker-compose up -d
+**注意**: 运行此脚本后，您需要重新登录系统或开启新的终端窗口才能使组权限生效。
+
+#### 登录问题
+
+- 默认管理员账号: admin
+- 默认密码: admin123
+
+如果无法登录，请确保后端服务正常运行并能连接到数据库。
+
+## 项目结构
+
+```
+AIreview/
+├── backend/              # 后端代码
+│   ├── src/              # 源代码
+│   │   ├── api/          # API路由
+│   │   ├── controllers/  # 控制器
+│   │   ├── middleware/   # 中间件
+│   │   ├── services/     # 服务
+│   │   ├── utils/        # 工具函数
+│   │   └── app.js        # 应用入口
+│   └── Dockerfile        # 后端Docker配置
+├── frontend/             # 前端代码
+│   ├── src/              # 源代码
+│   │   ├── api/          # API请求
+│   │   ├── assets/       # 静态资源
+│   │   ├── components/   # 组件
+│   │   ├── router/       # 路由
+│   │   ├── store/        # 状态管理
+│   │   ├── utils/        # 工具函数
+│   │   └── views/        # 页面
+│   └── Dockerfile        # 前端Docker配置
+├── db/                   # 数据库初始化脚本
+├── nginx/                # Nginx配置
+├── docker-compose.yml    # Docker Compose配置
+├── start-containers.sh   # 容器启动脚本
+└── fix-docker-permissions.sh  # Docker权限修复脚本
 ```
 
-3. 访问平台
-- 前端界面: http://localhost:8080
-- 后端API: http://localhost:3000
+## 技术栈
 
-### 初始账户
+- 前端: Vue 3, Element Plus, PrimeVue
+- 后端: Node.js, Express
+- 数据库: MySQL
+- 容器化: Docker, Docker Compose
+- 反向代理: Nginx
 
-系统预设了三种角色的初始账户，可直接使用：
+## 开发团队
 
-| 用户名 | 密码 | 角色 |
-|-------|------|------|
-| admin | admin123 | 管理员 |
-| teacher | admin123 | 教师 |
-| student | admin123 | 学生 |
-
-## 开发指南
-
-### 前端开发
-```bash
-cd frontend
-yarn install
-yarn serve
-```
-
-### 后端开发
-```bash
-cd backend
-yarn install
-node src/app.js
-```
-
-## 常见问题解决
-
-### 登录问题
-如果遇到登录验证失败，请确保：
-1. 数据库中users表包含refresh_token字段
-2. 使用了更新的密码哈希值（见数据库初始化脚本）
-3. Docker环境已正确配置bcrypt依赖
-
-### 判题系统问题
-如判题功能不可用，请检查：
-1. Docker服务是否正常运行
-2. 后端容器是否有权限访问Docker套接字
-3. 查看后端日志获取详细错误信息
+AIreview 是一个教育项目，旨在提供高质量的代码审核和在线判题平台。
 
 ## 贡献
 
 欢迎通过Issue或Pull Request贡献代码或提供建议。
+
+### 启动项目
+```bash
+docker-compose up -d
+```
+
+### 清理Docker环境
+如果发现Docker环境中积累了太多未使用的镜像或卷，可以使用以下命令清理：
+```bash
+./docker-cleanup.sh
+```
+此脚本将清理所有未使用的Docker镜像、容器和卷，解决每次重建Docker产生的资源浪费问题。

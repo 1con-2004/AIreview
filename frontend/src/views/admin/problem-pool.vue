@@ -63,9 +63,9 @@
     <!-- 操作栏 -->
     <div class="action-bar">
       <div class="search-box">
-        <input 
-          type="text" 
-          v-model="searchQuery" 
+        <input
+          type="text"
+          v-model="searchQuery"
           placeholder="搜索题目标题、序号..."
           @input="handleSearch"
         >
@@ -103,9 +103,9 @@
       <div class="filter-group">
         <h3>题目分类</h3>
         <div class="tag-search">
-          <input 
-            type="text" 
-            v-model="tagSearchQuery" 
+          <input
+            type="text"
+            v-model="tagSearchQuery"
             placeholder="搜索标签..."
             class="tag-search-input"
           />
@@ -177,15 +177,15 @@
 
     <!-- 分页器 -->
     <div class="pagination">
-      <button 
-        :disabled="currentPage === 1" 
+      <button
+        :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
       <span class="page-info">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
-      <button 
-        :disabled="currentPage === totalPages" 
+      <button
+        :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
       >
         <i class="fas fa-chevron-right"></i>
@@ -228,9 +228,9 @@ const statistics = ref({
   total: 0,
   categories: 0,
   difficulty: {
-    '简单': 0,
-    '中等': 0,
-    '困难': 0
+    简单: 0,
+    中等: 0,
+    困难: 0
   }
 })
 const currentPage = ref(1)
@@ -262,7 +262,7 @@ const filteredTags = computed(() => {
   if (!tagSearchQuery.value) {
     return allTags.value
   }
-  return allTags.value.filter(tag => 
+  return allTags.value.filter(tag =>
     tag.toLowerCase().includes(tagSearchQuery.value.toLowerCase())
   )
 })
@@ -278,9 +278,9 @@ const fetchStatistics = async () => {
         total: apiData.totalProblems || 0,
         categories: apiData.totalCategories || 0,
         difficulty: {
-          '简单': apiData.difficultyDistribution?.['简单'] || 0,
-          '中等': apiData.difficultyDistribution?.['中等'] || 0,
-          '困难': apiData.difficultyDistribution?.['困难'] || 0
+          简单: apiData.difficultyDistribution?.['简单'] || 0,
+          中等: apiData.difficultyDistribution?.['中等'] || 0,
+          困难: apiData.difficultyDistribution?.['困难'] || 0
         }
       }
     }
@@ -299,15 +299,15 @@ const fetchProblems = async () => {
       difficulty: selectedDifficulty.value,
       tags: selectedTags.value.join(',')
     }
-    
+
     const response = await axios.get('/api/admin/problem-pool/list', { params })
-    
+
     // 根据API设计，后端返回的数据位于response.data.data下
     if (response.data.success && response.data.data) {
       problems.value = response.data.data.problems || []
       totalItems.value = response.data.data.total || 0
       totalPages.value = Math.ceil(totalItems.value / pageSize.value)
-      
+
       // 更新所有标签
       const tags = new Set()
       problems.value.forEach(problem => {
@@ -394,30 +394,31 @@ const changePage = (page) => {
 const importProblem = async (problem) => {
   try {
     // 先获取完整的题目详情
-    const response = await axios.get(`/api/admin/problem-pool/${problem.id}`);
-    
+    const response = await axios.get(`/api/admin/problem-pool/${problem.id}`)
+
     if (!response.data || !response.data.success) {
-      console.error('获取题目详情失败:', response.data);
-      alert('获取题目详情失败，请稍后重试');
-      return;
+      console.error('获取题目详情失败:', response.data)
+      alert('获取题目详情失败，请稍后重试')
+      return
     }
-    
-    const fullProblemData = response.data.data;
-    console.log('完整题目详情:', fullProblemData);
-    
+
+    const fullProblemData = response.data.data
+    console.log('完整题目详情:', fullProblemData)
+
     // 获取测试用例
-    const testCasesResponse = await axios.get(`/api/admin/problem-pool/${problem.id}/test-cases`);
-    console.log('测试用例响应:', testCasesResponse);
-    
-    const testCases = testCasesResponse.data && testCasesResponse.data.success ? 
-      testCasesResponse.data.data.map(tc => ({
+    const testCasesResponse = await axios.get(`/api/admin/problem-pool/${problem.id}/test-cases`)
+    console.log('测试用例响应:', testCasesResponse)
+
+    const testCases = testCasesResponse.data && testCasesResponse.data.success
+      ? testCasesResponse.data.data.map(tc => ({
         input: tc.input || '',
         output: tc.output || '',
         is_example: tc.is_example === 1 || tc.is_example === true
-      })) : [];
-    
-    console.log('获取到的测试用例:', testCases);
-    
+      }))
+      : []
+
+    console.log('获取到的测试用例:', testCases)
+
     // 确保题目包含所有必要字段，如果后端返回的数据缺少某些字段，设置默认值
     const completeProblem = {
       ...problem,
@@ -429,19 +430,21 @@ const importProblem = async (problem) => {
       tags: fullProblemData.problem.tags || problem.tags || '',
       category: fullProblemData.problem.category_name || fullProblemData.problem.category || problem.category || '',
       // 添加测试用例
-      testcases: testCases.length > 0 ? testCases : [{
-        input: '',
-        output: '',
-        is_example: true
-      }]
-    };
-    
-    console.log('引用题目详情:', completeProblem);
-    selectedProblem.value = completeProblem;
-    showImportDialog.value = true;
+      testcases: testCases.length > 0
+        ? testCases
+        : [{
+            input: '',
+            output: '',
+            is_example: true
+          }]
+    }
+
+    console.log('引用题目详情:', completeProblem)
+    selectedProblem.value = completeProblem
+    showImportDialog.value = true
   } catch (error) {
-    console.error('获取题目详情失败:', error);
-    alert('获取题目详情失败，请稍后重试');
+    console.error('获取题目详情失败:', error)
+    alert('获取题目详情失败，请稍后重试')
   }
 }
 
@@ -455,7 +458,7 @@ const deleteProblem = (problem) => {
 const confirmDeleteProblem = async () => {
   try {
     const response = await axios.delete(`/api/admin/problem-pool/${selectedProblem.value.id}`)
-    
+
     if (response.data.success) {
       showDeleteDialog.value = false
       // 刷新列表
@@ -483,18 +486,18 @@ const fetchCreatorsAvatars = async () => {
     const creatorIds = problems.value
       .filter(problem => problem.creator_id)
       .map(problem => problem.creator_id)
-    
+
     if (creatorIds.length === 0) return
-    
+
     // 去重
     const uniqueIds = [...new Set(creatorIds)]
-    
+
     // 获取用户信息
     const response = await axios.post('/api/user/profiles', { userIds: uniqueIds })
-    
+
     if (response.data.success && response.data.data) {
       const userProfiles = response.data.data
-      
+
       // 将用户信息添加到问题中
       problems.value.forEach(problem => {
         if (problem.creator_id) {
@@ -504,9 +507,9 @@ const fetchCreatorsAvatars = async () => {
               username: userProfile.username || userProfile.display_name || 'unknown',
               avatar: userProfile.avatar_url
             }
-            
+
             // 打印日志，检查头像路径
-            console.log(`用户 ${problem.creator.username} 的头像路径:`, problem.creator.avatar);
+            console.log(`用户 ${problem.creator.username} 的头像路径:`, problem.creator.avatar)
           }
         }
       })
@@ -520,7 +523,7 @@ const fetchCreatorsAvatars = async () => {
 const getAvatarUrl = (avatar) => {
   if (!avatar) return `${API_BASE_URL}/uploads/avatars/default-avatar.png`
   if (avatar.startsWith('http')) return avatar
-  
+
   // 处理数据库中存储的路径，确保使用正确的URL格式
   // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
   // 需要转换为 http://localhost:3000/uploads/avatars/filename.jpeg
@@ -529,12 +532,12 @@ const getAvatarUrl = (avatar) => {
     const fileName = avatar.split('/').pop()
     return `${API_BASE_URL}/uploads/avatars/${fileName}`
   }
-  
+
   // 处理其他情况 - 如果只有文件名
   if (!avatar.includes('/')) {
     return `${API_BASE_URL}/uploads/avatars/${avatar}`
   }
-  
+
   return `${API_BASE_URL}${avatar.startsWith('/') ? '' : '/'}${avatar}`
 }
 
@@ -547,61 +550,61 @@ const goBack = () => {
 onMounted(() => {
   fetchStatistics()
   fetchProblems()
-  
+
   // 添加事件监听器，检测图片加载错误
   setTimeout(() => {
-    const avatarImages = document.querySelectorAll('.creator-avatar');
+    const avatarImages = document.querySelectorAll('.creator-avatar')
     avatarImages.forEach(img => {
       if (img.tagName === 'IMG') {
         // 为每个头像图片添加错误处理
-        img.addEventListener('error', function(e) {
-          console.error('头像加载失败:', this.src);
+        img.addEventListener('error', function (e) {
+          console.error('头像加载失败:', this.src)
           // 替换为默认头像
-          this.src = `${API_BASE_URL}/uploads/avatars/default-avatar.png`;
-        });
-        
+          this.src = `${API_BASE_URL}/uploads/avatars/default-avatar.png`
+        })
+
         // 添加加载成功处理
-        img.addEventListener('load', function(e) {
-          console.log('头像加载成功:', this.src);
-        });
-        
+        img.addEventListener('load', function (e) {
+          console.log('头像加载成功:', this.src)
+        })
+
         // 如果图片已经加载完成但发生了错误，则重新加载
         if (img.complete && img.naturalHeight === 0) {
-          console.warn('头像已加载但高度为0，可能加载失败:', img.src);
-          img.src = `${API_BASE_URL}/uploads/avatars/default-avatar.png`;
+          console.warn('头像已加载但高度为0，可能加载失败:', img.src)
+          img.src = `${API_BASE_URL}/uploads/avatars/default-avatar.png`
         }
       }
-    });
-  }, 1000);
+    })
+  }, 1000)
 })
 
 // 处理导入题目
 const handleImportProblem = async (importedProblem) => {
-  console.log('导入题目结果:', importedProblem);
-  
+  console.log('导入题目结果:', importedProblem)
+
   if (importedProblem.imported) {
     // 显示导入成功消息
-    alert(`题目"${importedProblem.title}"已成功导入到题库，题号：${importedProblem.problem_number || '新题号'}`);
-    
+    alert(`题目"${importedProblem.title}"已成功导入到题库，题号：${importedProblem.problem_number || '新题号'}`)
+
     // 关闭导入弹窗
-    showImportDialog.value = false;
-    
+    showImportDialog.value = false
+
     // 立即更新当前列表中的引用次数
     if (importedProblem.id) {
-      const problemIndex = problems.value.findIndex(p => p.id === importedProblem.id);
+      const problemIndex = problems.value.findIndex(p => p.id === importedProblem.id)
       if (problemIndex !== -1) {
         // 更新引用次数
-        problems.value[problemIndex].reference_count = importedProblem.reference_count || 
-                                                      (problems.value[problemIndex].reference_count || 0) + 1;
-        console.log(`更新题目 ${importedProblem.id} 的引用次数为: ${problems.value[problemIndex].reference_count}`);
+        problems.value[problemIndex].reference_count = importedProblem.reference_count ||
+                                                      (problems.value[problemIndex].reference_count || 0) + 1
+        console.log(`更新题目 ${importedProblem.id} 的引用次数为: ${problems.value[problemIndex].reference_count}`)
       }
     }
-    
+
     // 刷新列表
-    fetchProblems();
-    
+    fetchProblems()
+
     // 更新统计信息
-    fetchStatistics();
+    fetchStatistics()
   }
 }
 </script>
@@ -1052,7 +1055,7 @@ const handleImportProblem = async (importedProblem) => {
   .table-header, .table-row {
     grid-template-columns: 60px 2fr 1fr 1.5fr 1fr 1fr 1fr 0.5fr 80px;
   }
-  
+
   .table-header .col-source, .table-row .col-source {
     display: none;
   }
@@ -1062,13 +1065,13 @@ const handleImportProblem = async (importedProblem) => {
   .statistics-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .problems-table {
     overflow-x: auto;
   }
-  
+
   .table-header, .table-row {
     width: 1000px;
   }
 }
-</style> 
+</style>

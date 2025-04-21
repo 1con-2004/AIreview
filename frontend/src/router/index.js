@@ -181,36 +181,36 @@ const router = createRouter({
 
 // 添加路由守卫
 router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/register', '/home', '/login/phone', '/login/reset-password'];
-  const authRequired = !publicPages.includes(to.path);
-  const userInfoStr = localStorage.getItem('userInfo');
-  
+  const publicPages = ['/login', '/register', '/home', '/login/phone', '/login/reset-password']
+  const authRequired = !publicPages.includes(to.path)
+  const userInfoStr = localStorage.getItem('userInfo')
+
   // 未登录且需要认证，跳转到登录页
   if (authRequired && !userInfoStr) {
-    next('/login');
-    return;
+    next('/login')
+    return
   }
-  
+
   // 检查角色权限
   if (userInfoStr) {
-    const userInfo = JSON.parse(userInfoStr);
-    
+    const userInfo = JSON.parse(userInfoStr)
+
     // 路由需要管理员权限
     if (to.meta.requiresAdmin && userInfo.role !== 'admin') {
-      console.log('需要管理员权限，当前用户角色:', userInfo.role);
-      next('/login');
-      return;
+      console.log('需要管理员权限，当前用户角色:', userInfo.role)
+      next('/login')
+      return
     }
-    
+
     // 路由需要教师权限
     if (to.meta.requiresTeacher && userInfo.role !== 'teacher' && userInfo.role !== 'admin') {
-      console.log('需要教师权限，当前用户角色:', userInfo.role);
-      next('/login');
-      return;
+      console.log('需要教师权限，当前用户角色:', userInfo.role)
+      next('/login')
+      return
     }
   }
-  
-  next();
+
+  next()
 })
 
 export default router

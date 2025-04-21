@@ -13,8 +13,8 @@
     </div>
 
     <div class="communities-grid">
-      <div 
-        v-for="community in filteredCommunities" 
+      <div
+        v-for="community in filteredCommunities"
         :key="community.id"
         class="community-card"
         @click="enterCommunity(community.id)"
@@ -60,7 +60,7 @@ import { ElMessage } from 'element-plus'
 
 export default {
   name: 'MyCommunities',
-  data() {
+  data () {
     return {
       communities: [],
       searchQuery: '',
@@ -68,17 +68,17 @@ export default {
     }
   },
   computed: {
-    filteredCommunities() {
+    filteredCommunities () {
       if (!this.searchQuery) return this.communities
       const query = this.searchQuery.toLowerCase()
-      return this.communities.filter(community => 
+      return this.communities.filter(community =>
         community.name.toLowerCase().includes(query) ||
         community.description.toLowerCase().includes(query)
       )
     }
   },
   methods: {
-    async fetchMyCommunities() {
+    async fetchMyCommunities () {
       try {
         const response = await axios.get('/api/communities/my')
         this.communities = response.data
@@ -87,10 +87,10 @@ export default {
         ElMessage.error('获取社区列表失败')
       }
     },
-    handleSearch() {
+    handleSearch () {
       // 搜索逻辑已通过计算属性实现
     },
-    getTypeLabel(type) {
+    getTypeLabel (type) {
       const labels = {
         official: '官方',
         class: '班级',
@@ -98,7 +98,7 @@ export default {
       }
       return labels[type] || '其他'
     },
-    getRoleLabel(role) {
+    getRoleLabel (role) {
       const labels = {
         owner: '创建者',
         admin: '管理员',
@@ -106,14 +106,14 @@ export default {
       }
       return labels[role] || '成员'
     },
-    enterCommunity(id) {
+    enterCommunity (id) {
       this.$router.push(`/community/detail/${id}`)
     },
-    goToExplore() {
+    goToExplore () {
       this.$router.push('/community')
     }
   },
-  created() {
+  created () {
     this.fetchMyCommunities()
   }
 }
@@ -282,4 +282,4 @@ h3 {
   background: #45b6af;
   transform: translateY(-2px);
 }
-</style> 
+</style>

@@ -13,7 +13,7 @@
             <p>学生总数</p>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <i class="fas fa-chalkboard"></i>
@@ -23,7 +23,7 @@
             <p>班级总数</p>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <i class="fas fa-code"></i>
@@ -78,7 +78,7 @@
             </template>
           </el-input>
         </div>
-        
+
         <!-- 班级筛选框放在右侧 -->
         <div class="filter-box">
           <el-select
@@ -106,8 +106,8 @@
           :data="studentList"
           stripe
           style="width: 100%"
-          :header-cell-style="{ 
-            background: '#f5f7fa', 
+          :header-cell-style="{
+            background: '#f5f7fa',
             color: '#333',
             fontSize: '16px',
             padding: '16px',
@@ -214,7 +214,7 @@
               <div id="errorTypePieChart" class="chart"></div>
             </div>
           </div>
-          
+
           <!-- 右侧图表 -->
           <div class="chart-column">
             <div class="chart-card">
@@ -227,14 +227,14 @@
             </div>
           </div>
         </div>
-        
+
         <div class="charts-row">
           <div class="chart-card full-width">
             <h3>每日提交数量趋势</h3>
             <div id="dailySubmissionChart" class="chart"></div>
           </div>
         </div>
-        
+
         <div class="charts-row">
           <div class="chart-card full-width">
             <h3>提交时间分布</h3>
@@ -294,42 +294,42 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import axios from 'axios';
-import { ElMessage } from 'element-plus';
-import * as echarts from 'echarts';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
 
 // 数据状态
-const loading = ref(false);
-const problemLoading = ref(false);
-const searchQuery = ref('');
-const selectedClass = ref('');
-const studentList = ref([]);
-const classList = ref([]);
-const totalStudentsCount = ref(0);
-const currentPage = ref(1);
-const dialogVisible = ref(false);
-const currentStudent = ref({});
-const problemList = ref([]);
-const totalProblemsCount = ref(0);
-const problemCurrentPage = ref(1);
-const totalStudents = ref(0);
-const totalProblems = ref(0);
-const totalClasses = ref(0);
+const loading = ref(false)
+const problemLoading = ref(false)
+const searchQuery = ref('')
+const selectedClass = ref('')
+const studentList = ref([])
+const classList = ref([])
+const totalStudentsCount = ref(0)
+const currentPage = ref(1)
+const dialogVisible = ref(false)
+const currentStudent = ref({})
+const problemList = ref([])
+const totalProblemsCount = ref(0)
+const problemCurrentPage = ref(1)
+const totalStudents = ref(0)
+const totalProblems = ref(0)
+const totalClasses = ref(0)
 
 // 图表数据状态
-const completionData = ref(null);
-const errorTypeData = ref(null);
-const knowledgeData = ref(null);
-const dailySubmissionData = ref(null);
-const submissionTimeData = ref(null);
-const solvingTimeData = ref(null);
+const completionData = ref(null)
+const errorTypeData = ref(null)
+const knowledgeData = ref(null)
+const dailySubmissionData = ref(null)
+const submissionTimeData = ref(null)
+const solvingTimeData = ref(null)
 const systemChartData = ref({
   difficultyDist: null,
   categoryTree: null,
   completionRank: null,
   difficultyBar: null
-});
+})
 
 // 存储图表实例的引用
 const charts = ref({
@@ -344,170 +344,170 @@ const charts = ref({
   categoryTreeChart: null,
   completionRankChart: null,
   difficultyBarChart: null
-});
+})
 
 // 获取班级列表
 const fetchClassList = async () => {
   try {
-    const response = await axios.get('/api/admin/statistics/classes');
-    classList.value = response.data.data || [];
-    totalClasses.value = classList.value.length || 0;
-    
+    const response = await axios.get('/api/admin/statistics/classes')
+    classList.value = response.data.data || []
+    totalClasses.value = classList.value.length || 0
+
     // 如果有选中的班级，更新显示
     if (selectedClass.value) {
-      const selectedClassInfo = classList.value.find(c => c.id === selectedClass.value);
+      const selectedClassInfo = classList.value.find(c => c.id === selectedClass.value)
       if (selectedClassInfo) {
-        selectedClass.value = selectedClassInfo.id;
+        selectedClass.value = selectedClassInfo.id
       }
     }
   } catch (error) {
-    console.error('获取班级列表失败:', error);
-    ElMessage.error('获取班级列表失败');
+    console.error('获取班级列表失败:', error)
+    ElMessage.error('获取班级列表失败')
   }
-};
+}
 
 // 获取学生列表
 const fetchStudentList = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     const params = {
       page: currentPage.value,
       pageSize: 10,
       search: searchQuery.value,
       classId: selectedClass.value
-    };
+    }
 
-    const response = await axios.get('/api/admin/statistics/students', { params });
-    studentList.value = response.data.data || [];
-    totalStudentsCount.value = response.data.total || 0;
-    totalStudents.value = response.data.totalStudents || 0;
-    totalProblems.value = response.data.totalProblems || 0;
+    const response = await axios.get('/api/admin/statistics/students', { params })
+    studentList.value = response.data.data || []
+    totalStudentsCount.value = response.data.total || 0
+    totalStudents.value = response.data.totalStudents || 0
+    totalProblems.value = response.data.totalProblems || 0
   } catch (error) {
-    console.error('获取学生列表失败:', error);
-    ElMessage.error('获取学生列表失败');
+    console.error('获取学生列表失败:', error)
+    ElMessage.error('获取学生列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 获取题目完成情况
 const fetchProblemDetails = async (userId) => {
-  problemLoading.value = true;
+  problemLoading.value = true
   try {
     const params = {
       userId,
       page: problemCurrentPage.value,
       pageSize: 10
-    };
+    }
 
-    const response = await axios.get('/api/admin/statistics/student-problems', { params });
-    problemList.value = response.data.data || [];
-    totalProblemsCount.value = response.data.total || 0;
+    const response = await axios.get('/api/admin/statistics/student-problems', { params })
+    problemList.value = response.data.data || []
+    totalProblemsCount.value = response.data.total || 0
   } catch (error) {
-    console.error('获取题目完成情况失败:', error);
-    ElMessage.error('获取题目完成情况失败');
+    console.error('获取题目完成情况失败:', error)
+    ElMessage.error('获取题目完成情况失败')
   } finally {
-    problemLoading.value = false;
+    problemLoading.value = false
   }
-};
+}
 
 // 获取图表数据的函数
 const fetchChartData = async (userId) => {
   try {
     // 获取题目完成情况数据
-    const completionResponse = await axios.get(`/api/admin/statistics/student-completion/${userId}`);
-    completionData.value = completionResponse.data;
+    const completionResponse = await axios.get(`/api/admin/statistics/student-completion/${userId}`)
+    completionData.value = completionResponse.data
 
     // 获取错误类型分析数据
-    const errorTypeResponse = await axios.get(`/api/admin/statistics/student-error-types/${userId}`);
-    errorTypeData.value = errorTypeResponse.data;
+    const errorTypeResponse = await axios.get(`/api/admin/statistics/student-error-types/${userId}`)
+    errorTypeData.value = errorTypeResponse.data
 
     // 获取知识点掌握情况数据
-    const knowledgeResponse = await axios.get(`/api/admin/statistics/student-knowledge/${userId}`);
-    knowledgeData.value = knowledgeResponse.data;
+    const knowledgeResponse = await axios.get(`/api/admin/statistics/student-knowledge/${userId}`)
+    knowledgeData.value = knowledgeResponse.data
 
     // 获取每日提交数量数据
-    const dailySubmissionResponse = await axios.get(`/api/admin/statistics/student-daily-submissions/${userId}`);
-    dailySubmissionData.value = dailySubmissionResponse.data;
+    const dailySubmissionResponse = await axios.get(`/api/admin/statistics/student-daily-submissions/${userId}`)
+    dailySubmissionData.value = dailySubmissionResponse.data
 
     // 获取提交时间分布数据
-    const submissionTimeResponse = await axios.get(`/api/admin/statistics/student-submission-time/${userId}`);
-    submissionTimeData.value = submissionTimeResponse.data;
+    const submissionTimeResponse = await axios.get(`/api/admin/statistics/student-submission-time/${userId}`)
+    submissionTimeData.value = submissionTimeResponse.data
 
     // 获取解题用时数据
-    const solvingTimeResponse = await axios.get(`/api/admin/statistics/student-solving-time/${userId}`);
-    solvingTimeData.value = solvingTimeResponse.data;
+    const solvingTimeResponse = await axios.get(`/api/admin/statistics/student-solving-time/${userId}`)
+    solvingTimeData.value = solvingTimeResponse.data
 
     // 初始化图表
-    initCharts();
+    initCharts()
   } catch (error) {
-    console.error('获取图表数据失败:', error);
-    ElMessage.error('获取图表数据失败');
+    console.error('获取图表数据失败:', error)
+    ElMessage.error('获取图表数据失败')
   }
-};
+}
 
 // 获取系统整体统计数据
 const fetchSystemChartData = async () => {
   try {
     // 获取题目难度分布数据
-    const difficultyResponse = await axios.get('/api/admin/statistics/difficulty-distribution');
-    systemChartData.value.difficultyDist = difficultyResponse.data;
+    const difficultyResponse = await axios.get('/api/admin/statistics/difficulty-distribution')
+    systemChartData.value.difficultyDist = difficultyResponse.data
 
     // 获取题目分类树状图数据
-    const categoryResponse = await axios.get('/api/admin/statistics/category-tree');
-    systemChartData.value.categoryTree = categoryResponse.data;
+    const categoryResponse = await axios.get('/api/admin/statistics/category-tree')
+    systemChartData.value.categoryTree = categoryResponse.data
 
     // 获取题目完成率排行数据
-    const completionResponse = await axios.get('/api/admin/statistics/completion-rank');
-    systemChartData.value.completionRank = completionResponse.data;
+    const completionResponse = await axios.get('/api/admin/statistics/completion-rank')
+    systemChartData.value.completionRank = completionResponse.data
 
     // 获取难度分布柱状图数据
-    const difficultyBarResponse = await axios.get('/api/admin/statistics/difficulty-bar');
-    systemChartData.value.difficultyBar = difficultyBarResponse.data;
+    const difficultyBarResponse = await axios.get('/api/admin/statistics/difficulty-bar')
+    systemChartData.value.difficultyBar = difficultyBarResponse.data
 
     // 初始化系统图表
-    initSystemCharts();
+    initSystemCharts()
   } catch (error) {
-    console.error('获取系统统计数据失败:', error);
-    ElMessage.error('获取系统统计数据失败');
+    console.error('获取系统统计数据失败:', error)
+    ElMessage.error('获取系统统计数据失败')
   }
-};
+}
 
 // 修改初始化图表的函数
 const initCharts = () => {
   // 销毁之前的图表实例
   Object.values(charts.value).forEach(chart => {
     if (chart) {
-      chart.dispose();
+      chart.dispose()
     }
-  });
+  })
 
   // 确保 DOM 元素存在后再初始化图表
-  const completionElement = document.getElementById('completionPieChart');
-  const errorTypeElement = document.getElementById('errorTypePieChart');
-  const knowledgeElement = document.getElementById('knowledgeRadarChart');
-  const dailySubmissionElement = document.getElementById('dailySubmissionChart');
-  const submissionHeatmapElement = document.getElementById('submissionHeatmap');
-  const solvingTimeElement = document.getElementById('solvingTimeBoxChart');
+  const completionElement = document.getElementById('completionPieChart')
+  const errorTypeElement = document.getElementById('errorTypePieChart')
+  const knowledgeElement = document.getElementById('knowledgeRadarChart')
+  const dailySubmissionElement = document.getElementById('dailySubmissionChart')
+  const submissionHeatmapElement = document.getElementById('submissionHeatmap')
+  const solvingTimeElement = document.getElementById('solvingTimeBoxChart')
 
   // 只在 DOM 元素存在时初始化图表
   if (completionElement) {
-    charts.value.completionChart = echarts.init(completionElement);
+    charts.value.completionChart = echarts.init(completionElement)
   }
   if (errorTypeElement) {
-    charts.value.errorTypeChart = echarts.init(errorTypeElement);
+    charts.value.errorTypeChart = echarts.init(errorTypeElement)
   }
   if (knowledgeElement) {
-    charts.value.knowledgeChart = echarts.init(knowledgeElement);
+    charts.value.knowledgeChart = echarts.init(knowledgeElement)
   }
   if (dailySubmissionElement) {
-    charts.value.dailySubmissionChart = echarts.init(dailySubmissionElement);
+    charts.value.dailySubmissionChart = echarts.init(dailySubmissionElement)
   }
   if (submissionHeatmapElement) {
-    charts.value.submissionHeatmap = echarts.init(submissionHeatmapElement);
+    charts.value.submissionHeatmap = echarts.init(submissionHeatmapElement)
   }
   if (solvingTimeElement) {
-    charts.value.solvingTimeChart = echarts.init(solvingTimeElement);
+    charts.value.solvingTimeChart = echarts.init(solvingTimeElement)
   }
 
   // 设置图表配置项
@@ -516,7 +516,7 @@ const initCharts = () => {
       { name: '已完成', value: completionData.value.data.completed_problems },
       { name: '未尝试', value: completionData.value.data.not_attempted_problems },
       { name: '失败', value: completionData.value.data.failed_problems }
-    ];
+    ]
 
     charts.value.completionChart.setOption({
       tooltip: { trigger: 'item' },
@@ -528,14 +528,14 @@ const initCharts = () => {
         data: pieData,
         emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
       }]
-    });
+    })
   }
 
   if (errorTypeData.value && charts.value.errorTypeChart) {
     const errorData = errorTypeData.value.data.map(item => ({
       name: item.error_type,
       value: item.count
-    }));
+    }))
 
     charts.value.errorTypeChart.setOption({
       tooltip: { trigger: 'item' },
@@ -547,25 +547,25 @@ const initCharts = () => {
         data: errorData,
         emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
       }]
-    });
+    })
   }
 
   if (knowledgeData.value && charts.value.knowledgeChart) {
-    const data = knowledgeData.value.data;
+    const data = knowledgeData.value.data
     const indicators = data.map(item => ({
       name: item.knowledge_point,
       max: 100
-    }));
-    const values = data.map(item => item.mastery_percentage);
+    }))
+    const values = data.map(item => item.mastery_percentage)
 
     charts.value.knowledgeChart.setOption({
       tooltip: { trigger: 'axis' },
       radar: {
         indicator: indicators,
-        shape: 'circle',  // 添加形状配置
-        center: ['50%', '50%'],  // 添加中心点位置
-        radius: '60%',    // 添加半径大小
-        splitNumber: 5,   // 添加分割段数
+        shape: 'circle', // 添加形状配置
+        center: ['50%', '50%'], // 添加中心点位置
+        radius: '60%', // 添加半径大小
+        splitNumber: 5, // 添加分割段数
         axisName: {
           color: '#333'
         },
@@ -596,13 +596,13 @@ const initCharts = () => {
           }
         }]
       }]
-    });
+    })
   }
 
   if (dailySubmissionData.value && charts.value.dailySubmissionChart) {
-    const data = dailySubmissionData.value.data;
+    const data = dailySubmissionData.value.data
     charts.value.dailySubmissionChart.setOption({
-      tooltip: { 
+      tooltip: {
         trigger: 'axis',
         axisPointer: {
           type: 'cross',
@@ -621,15 +621,15 @@ const initCharts = () => {
         bottom: '3%',
         containLabel: true
       },
-      xAxis: { 
+      xAxis: {
         type: 'category',
         boundaryGap: false,
         data: data.map(item => {
-          const date = new Date(item.date);
-          return `${date.getMonth() + 1}月${date.getDate()}日`;
+          const date = new Date(item.date)
+          return `${date.getMonth() + 1}月${date.getDate()}日`
         })
       },
-      yAxis: { 
+      yAxis: {
         type: 'value',
         name: '提交次数'
       },
@@ -653,22 +653,22 @@ const initCharts = () => {
           }
         }
       ]
-    });
+    })
   }
 
   if (submissionTimeData.value && charts.value.submissionHeatmap) {
-    const data = submissionTimeData.value.data;
-    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const data = submissionTimeData.value.data
+    const hours = Array.from({ length: 24 }, (_, i) => i)
     const submissionCounts = hours.map(hour => {
-      const hourData = data.find(item => item.hour === hour);
-      return hourData ? hourData.submission_count : 0;
-    });
+      const hourData = data.find(item => item.hour === hour)
+      return hourData ? hourData.submission_count : 0
+    })
 
     charts.value.submissionHeatmap.setOption({
       tooltip: {
         trigger: 'axis',
-        formatter: function(params) {
-          return `${params[0].name}<br/>提交次数：${params[0].value}`;
+        formatter: function (params) {
+          return `${params[0].name}<br/>提交次数：${params[0].value}`
         }
       },
       title: {
@@ -695,7 +695,7 @@ const initCharts = () => {
           formatter: '{value}'
         }
       },
-      yAxis: { 
+      yAxis: {
         type: 'value',
         name: '提交次数',
         minInterval: 1
@@ -714,11 +714,11 @@ const initCharts = () => {
           formatter: '{c}次'
         }
       }]
-    });
+    })
   }
 
   if (solvingTimeData.value && charts.value.solvingTimeChart) {
-    const data = solvingTimeData.value.data;
+    const data = solvingTimeData.value.data
     charts.value.solvingTimeChart.setOption({
       tooltip: { trigger: 'axis' },
       xAxis: {
@@ -733,17 +733,17 @@ const initCharts = () => {
           data: data.map(item => item.avg_time)
         }
       ]
-    });
+    })
   }
-};
+}
 
 // 初始化系统图表
 const initSystemCharts = () => {
   // 初始化题目难度分布图
   if (systemChartData.value.difficultyDist) {
-    const difficultyDistElement = document.getElementById('difficultyDistChart');
+    const difficultyDistElement = document.getElementById('difficultyDistChart')
     if (difficultyDistElement) {
-      charts.value.difficultyDistChart = echarts.init(difficultyDistElement);
+      charts.value.difficultyDistChart = echarts.init(difficultyDistElement)
       charts.value.difficultyDistChart.setOption({
         tooltip: { trigger: 'item' },
         legend: { orient: 'vertical', left: 'left' },
@@ -754,15 +754,15 @@ const initSystemCharts = () => {
           data: systemChartData.value.difficultyDist.data,
           emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
         }]
-      });
+      })
     }
   }
 
   // 初始化题目分类树状图
   if (systemChartData.value.categoryTree) {
-    const categoryTreeElement = document.getElementById('categoryTreeChart');
+    const categoryTreeElement = document.getElementById('categoryTreeChart')
     if (categoryTreeElement) {
-      charts.value.categoryTreeChart = echarts.init(categoryTreeElement);
+      charts.value.categoryTreeChart = echarts.init(categoryTreeElement)
       charts.value.categoryTreeChart.setOption({
         tooltip: { trigger: 'item', formatter: '{b}: {c}题' },
         series: [{
@@ -792,19 +792,19 @@ const initSystemCharts = () => {
           animationDuration: 550,
           animationDurationUpdate: 750
         }]
-      });
+      })
     }
   }
 
   // 初始化题目完成率排行图
   if (systemChartData.value.completionRank) {
-    const completionRankElement = document.getElementById('completionRankChart');
+    const completionRankElement = document.getElementById('completionRankChart')
     if (completionRankElement) {
-      charts.value.completionRankChart = echarts.init(completionRankElement);
-      const data = systemChartData.value.completionRank.data;
-      
+      charts.value.completionRankChart = echarts.init(completionRankElement)
+      const data = systemChartData.value.completionRank.data
+
       const tooltipFormatter = (params) => {
-        const item = data[params[0].dataIndex];
+        const item = data[params[0].dataIndex]
         return `
           <div style="padding: 8px">
             <h4 style="margin: 0 0 8px">${item.title}</h4>
@@ -815,20 +815,20 @@ const initSystemCharts = () => {
             <p style="margin: 4px 0">通过次数: ${item.accepted_submissions}</p>
             <p style="margin: 8px 0 4px; color: #666">${item.analysis}</p>
           </div>
-        `;
-      };
+        `
+      }
 
       const getBarColor = (item) => {
-        if (item.total_submissions < 50) return '#909399';
-        if (item.completion_rate >= 90) return '#67C23A';
-        if (item.completion_rate >= 70) return '#E6A23C';
-        return '#F56C6C';
-      };
+        if (item.total_submissions < 50) return '#909399'
+        if (item.completion_rate >= 90) return '#67C23A'
+        if (item.completion_rate >= 70) return '#E6A23C'
+        return '#F56C6C'
+      }
 
       const labelFormatter = (params) => {
-        const item = data[params.dataIndex];
-        return `${item.completion_rate}% (${item.accepted_submissions}/${item.total_submissions})`;
-      };
+        const item = data[params.dataIndex]
+        return `${item.completion_rate}% (${item.accepted_submissions}/${item.total_submissions})`
+      }
 
       charts.value.completionRankChart.setOption({
         tooltip: {
@@ -855,8 +855,8 @@ const initSystemCharts = () => {
           data: data.map(item => item.title),
           axisLabel: {
             formatter: (value) => {
-              const item = data.find(d => d.title === value);
-              return `${item.title} (${item.submission_level})`;
+              const item = data.find(d => d.title === value)
+              return `${item.title} (${item.submission_level})`
             }
           }
         },
@@ -875,15 +875,15 @@ const initSystemCharts = () => {
             formatter: labelFormatter
           }
         }]
-      });
+      })
     }
   }
 
   // 初始化难度分布柱状图
   if (systemChartData.value.difficultyBar) {
-    const difficultyBarElement = document.getElementById('difficultyBarChart');
+    const difficultyBarElement = document.getElementById('difficultyBarChart')
     if (difficultyBarElement) {
-      charts.value.difficultyBarChart = echarts.init(difficultyBarElement);
+      charts.value.difficultyBarChart = echarts.init(difficultyBarElement)
       charts.value.difficultyBarChart.setOption({
         tooltip: {
           trigger: 'axis',
@@ -908,70 +908,70 @@ const initSystemCharts = () => {
           type: 'bar',
           data: systemChartData.value.difficultyBar.data,
           itemStyle: {
-            color: function(params) {
+            color: function (params) {
               const colors = {
-                '简单': '#67C23A',
-                '中等': '#E6A23C',
-                '困难': '#F56C6C'
-              };
-              return colors[params.name] || '#409EFF';
+                简单: '#67C23A',
+                中等: '#E6A23C',
+                困难: '#F56C6C'
+              }
+              return colors[params.name] || '#409EFF'
             }
           }
         }]
-      });
+      })
     }
   }
-};
+}
 
 // 修改 handleResize 函数
 const handleResize = () => {
   Object.values(charts.value).forEach(chart => {
-    if (chart && typeof chart.resize === 'function') {  // 确保图表实例存在且resize方法可用
+    if (chart && typeof chart.resize === 'function') { // 确保图表实例存在且resize方法可用
       try {
-        const option = chart.getOption();
-        if (option && Object.keys(option).length > 0) {  // 确保图表配置存在且不为空
-          chart.resize();
+        const option = chart.getOption()
+        if (option && Object.keys(option).length > 0) { // 确保图表配置存在且不为空
+          chart.resize()
         }
       } catch (error) {
-        console.warn('图表重置大小时发生错误:', error);
+        console.warn('图表重置大小时发生错误:', error)
       }
     }
-  });
-};
+  })
+}
 
 // 事件处理函数
 const handleSearch = () => {
-  currentPage.value = 1;
-  fetchStudentList();
-};
+  currentPage.value = 1
+  fetchStudentList()
+}
 
 const handleClassChange = () => {
-  currentPage.value = 1;
-  fetchStudentList();
-};
+  currentPage.value = 1
+  fetchStudentList()
+}
 
 const handleCurrentChange = (page) => {
-  currentPage.value = page;
-  fetchStudentList();
-};
+  currentPage.value = page
+  fetchStudentList()
+}
 
 const handleProblemPageChange = (page) => {
-  problemCurrentPage.value = page;
-  fetchProblemDetails(currentStudent.value.user_id);
-};
+  problemCurrentPage.value = page
+  fetchProblemDetails(currentStudent.value.user_id)
+}
 
 const showProblemDetails = async (student) => {
-  currentStudent.value = student || {};
-  problemCurrentPage.value = 1;
-  dialogVisible.value = true;
-  
+  currentStudent.value = student || {}
+  problemCurrentPage.value = 1
+  dialogVisible.value = true
+
   try {
     // 等待数据加载完成
     await Promise.all([
       fetchProblemDetails(student.user_id),
       fetchChartData(student.user_id)
-    ]);
-    
+    ])
+
     // 使用 nextTick 确保 DOM 已更新
     nextTick(() => {
       try {
@@ -983,52 +983,52 @@ const showProblemDetails = async (student) => {
           'dailySubmissionChart',
           'submissionHeatmap',
           'solvingTimeBoxChart'
-        ];
-        
-        const missingElements = elements.filter(id => !document.getElementById(id));
+        ]
+
+        const missingElements = elements.filter(id => !document.getElementById(id))
         if (missingElements.length > 0) {
-          console.warn('部分图表容器未找到:', missingElements);
-          return;
+          console.warn('部分图表容器未找到:', missingElements)
+          return
         }
-        
-        initCharts();
+
+        initCharts()
       } catch (error) {
-        console.error('初始化图表时发生错误:', error);
-        ElMessage.error('初始化图表失败，请刷新页面重试');
+        console.error('初始化图表时发生错误:', error)
+        ElMessage.error('初始化图表失败，请刷新页面重试')
       }
-    });
+    })
   } catch (error) {
-    console.error('加载学生详情数据失败:', error);
-    ElMessage.error('加载学生详情数据失败');
+    console.error('加载学生详情数据失败:', error)
+    ElMessage.error('加载学生详情数据失败')
   }
-};
+}
 
 // 监听弹窗关闭事件，重新初始化系统图表
 const handleDialogClose = () => {
   // 使用nextTick确保DOM已更新
   nextTick(() => {
     // 重新初始化系统图表
-    initSystemCharts();
-  });
-};
+    initSystemCharts()
+  })
+}
 
 // 生命周期钩子
 onMounted(() => {
-  window.addEventListener('resize', handleResize);
-  fetchClassList();
-  fetchStudentList();
-  fetchSystemChartData(); // 添加系统图表数据获取
-});
+  window.addEventListener('resize', handleResize)
+  fetchClassList()
+  fetchStudentList()
+  fetchSystemChartData() // 添加系统图表数据获取
+})
 
 // 组件卸载时移除窗口大小变化监听并销毁图表实例
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
+  window.removeEventListener('resize', handleResize)
   Object.values(charts.value).forEach(chart => {
     if (chart) {
-      chart.dispose();
+      chart.dispose()
     }
-  });
-});
+  })
+})
 </script>
 
 <style scoped>
@@ -1244,16 +1244,16 @@ onUnmounted(() => {
     align-items: stretch;
     gap: 16px;
   }
-  
+
   .search-box, .filter-box {
     width: 100%;
   }
-  
+
   .problem-details-header {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .student-info {
     grid-template-columns: 1fr;
   }
@@ -1304,7 +1304,7 @@ onUnmounted(() => {
   .charts-row {
     flex-direction: column;
   }
-  
+
   .chart-column {
     width: 100%;
   }
@@ -1327,4 +1327,4 @@ onUnmounted(() => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border: 1px solid #ebeef5;
 }
-</style> 
+</style>

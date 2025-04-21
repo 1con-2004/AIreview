@@ -1,8 +1,8 @@
 <template>
-  <Dialog 
-    :visible="visible" 
-    :header="'用户资料'" 
-    :modal="true" 
+  <Dialog
+    :visible="visible"
+    :header="'用户资料'"
+    :modal="true"
     :style="{ width: '90%', maxWidth: '500px' }"
     :closable="true"
     :closeOnEscape="true"
@@ -18,7 +18,7 @@
           <div class="avatar-overlay" @click="triggerFileInput" v-if="isCurrentUser">
             <i class="pi pi-camera"></i>
           </div>
-          <input 
+          <input
             type="file"
             ref="fileInput"
             style="display: none"
@@ -27,7 +27,7 @@
           >
         </div>
       </div>
-      
+
       <!-- 用户信息部分 -->
       <div class="profile-info">
         <!-- 账号(不可修改) -->
@@ -40,15 +40,15 @@
         <div class="field">
           <label>用户名称</label>
           <div class="p-inputgroup">
-            <InputText 
-              v-model="editForm.display_name" 
+            <InputText
+              v-model="editForm.display_name"
               :disabled="!isCurrentUser"
               class="w-full"
               placeholder="设置用户名称"
             />
-            <Button 
+            <Button
               v-if="isCurrentUser && isFieldChanged('display_name')"
-              icon="pi pi-check" 
+              icon="pi pi-check"
               @click="handleFieldUpdate('display_name', editForm.display_name)"
             />
           </div>
@@ -67,9 +67,9 @@
               placeholder="选择性别"
               class="w-full"
             />
-            <Button 
+            <Button
               v-if="isCurrentUser && isFieldChanged('gender')"
-              icon="pi pi-check" 
+              icon="pi pi-check"
               @click="handleFieldUpdate('gender', editForm.gender)"
             />
           </div>
@@ -86,9 +86,9 @@
               class="w-full"
               placeholder="选择生日"
             />
-            <Button 
+            <Button
               v-if="isCurrentUser && isFieldChanged('birth_date')"
-              icon="pi pi-check" 
+              icon="pi pi-check"
               @click="handleFieldUpdate('birth_date', editForm.birth_date)"
             />
           </div>
@@ -98,15 +98,15 @@
         <div class="field">
           <label>地址</label>
           <div class="p-inputgroup">
-            <InputText 
-              v-model="editForm.location" 
+            <InputText
+              v-model="editForm.location"
               :disabled="!isCurrentUser"
               class="w-full"
               placeholder="设置地址"
             />
-            <Button 
+            <Button
               v-if="isCurrentUser && isFieldChanged('location')"
-              icon="pi pi-check" 
+              icon="pi pi-check"
               @click="handleFieldUpdate('location', editForm.location)"
             />
           </div>
@@ -116,16 +116,16 @@
         <div class="field">
           <label>个性签名</label>
           <div class="p-inputgroup">
-            <Textarea 
-              v-model="editForm.bio" 
+            <Textarea
+              v-model="editForm.bio"
               :disabled="!isCurrentUser"
-              rows="3" 
+              rows="3"
               class="w-full"
               placeholder="添加个性签名..."
             />
-            <Button 
+            <Button
               v-if="isCurrentUser && isFieldChanged('bio')"
-              icon="pi pi-check" 
+              icon="pi pi-check"
               @click="handleFieldUpdate('bio', editForm.bio)"
             />
           </div>
@@ -138,6 +138,7 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import apiService, { getApiUrl, getResourceUrl } from '@/utils/api'
 
 export default {
   name: 'UserProfileDialog',
@@ -152,12 +153,12 @@ export default {
     }
   },
   emits: ['update:visible'],
-  setup(props, { emit }) {
+  setup (props, { emit }) {
     const toast = useToast()
-    const defaultAvatar = ref('/images/default-avatar.png')
+    const defaultAvatar = ref(getResourceUrl('uploads/avatars/default-avatar.png'))
     const userProfile = ref({})
     const fileInput = ref(null)
-    
+
     const editForm = ref({
       display_name: '',
       gender: null,
@@ -165,7 +166,7 @@ export default {
       location: '',
       bio: ''
     })
-    
+
     const genderOptions = ref([
       { label: '男性', value: '男性' },
       { label: '女性', value: '女性' }
@@ -178,56 +179,51 @@ export default {
 
     const getFullAvatarUrl = (url) => {
       if (!url || url === 'null' || url === 'undefined') {
-        console.log('没有头像URL，使用默认头像:', defaultAvatar.value);
-        return defaultAvatar.value;
+        console.log('没有头像URL，使用默认头像:', defaultAvatar.value)
+        return defaultAvatar.value
       }
-      
+
       if (url.startsWith('http')) {
-        console.log('使用完整的URL:', url);
-        return url;
+        console.log('使用完整的URL:', url)
+        return url
       }
-      
+
       // 处理数据库中存储的路径
       if (url.includes('public/uploads/avatars/')) {
-        const fileName = url.split('/').pop();
-        const fullUrl = `http://localhost:3000/uploads/avatars/${fileName}?t=${Date.now()}`;
-        console.log('转换后的头像URL:', fullUrl);
-        return fullUrl;
+        const fileName = url.split('/').pop()
+        return getResourceUrl(`uploads/avatars/${fileName}?t=${Date.now()}`)
       }
-      
+
       // 处理其他情况
-      const fullUrl = `http://localhost:3000${url}?t=${Date.now()}`;
-      console.log('其他情况的头像URL:', fullUrl);
-      return fullUrl;
+      return getResourceUrl(`${url}?t=${Date.now()}`)
     }
 
     const fetchUserProfile = async () => {
       try {
         console.log('获取用户资料:', props.username)
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        
+
         // 直接使用传入的用户名作为参数，确保获取正确的用户资料
         const username = props.username
-        
-        const response = await fetch(`http://localhost:3000/api/user/user-profile/${username}`, {
+
+        const response = await apiService.get(`/api/user/user-profile/${username}`, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
         })
-        
-        const data = await response.json()
-        if (response.ok) {
-          console.log('获取到的用户资料:', data)
-          userProfile.value = data
+
+        if (response.success) {
+          console.log('获取到的用户资料:', response.data)
+          userProfile.value = response.data
           editForm.value = {
-            display_name: data.display_name || '',
-            gender: data.gender || null,
-            birth_date: data.birth_date ? new Date(data.birth_date).toISOString().split('T')[0] : null,
-            location: data.location || '',
-            bio: data.bio || ''
+            display_name: response.data.display_name || '',
+            gender: response.data.gender || null,
+            birth_date: response.data.birth_date ? new Date(response.data.birth_date).toISOString().split('T')[0] : null,
+            location: response.data.location || '',
+            bio: response.data.bio || ''
           }
         } else {
-          toast.add({ severity: 'error', summary: '错误', detail: data.message || '获取用户资料失败' })
+          toast.add({ severity: 'error', summary: '错误', detail: response.message || '获取用户资料失败' })
         }
       } catch (error) {
         console.error('获取用户资料失败:', error)
@@ -249,23 +245,20 @@ export default {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         // 处理日期格式
         let processedValue = value
-        if (field === 'birth_date' && value) {
+        if (field === 'birth_date') {
           processedValue = value // 已经是 YYYY-MM-DD 格式
         }
-        const response = await fetch('http://localhost:3000/api/user/user-profile', {
-          method: 'PATCH',
+        const response = await apiService.patch('/api/user/user-profile', { [field]: processedValue }, {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
-          },
-          body: JSON.stringify({ [field]: processedValue })
+          }
         })
-        const data = await response.json()
-        if (response.ok) {
+
+        if (response.success) {
           toast.add({ severity: 'success', summary: '成功', detail: '更新成功' })
           await fetchUserProfile()
         } else {
-          toast.add({ severity: 'error', summary: '错误', detail: data.message || '更新失败' })
+          toast.add({ severity: 'error', summary: '错误', detail: response.message || '更新失败' })
         }
       } catch (error) {
         console.error('更新失败:', error)
@@ -287,7 +280,9 @@ export default {
       try {
         console.log('开始上传头像...')
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const response = await fetch('http://localhost:3000/api/user/avatar', {
+
+        // 由于apiService默认使用JSON，这里需要使用fetch进行文件上传
+        const response = await fetch(getApiUrl('api/user/avatar'), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
@@ -298,23 +293,23 @@ export default {
         const data = await response.json()
         if (response.ok) {
           console.log('头像上传成功，返回数据:', data)
-          
+
           // 更新本地显示的头像
           if (data.avatar_url) {
             // 确保使用正确的路径格式
             userProfile.value.avatar_url = data.avatar_url
-            
+
             console.log('更新后的头像路径:', userProfile.value.avatar_url)
-            
+
             // 更新localStorage中的用户信息
             const currentUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
             currentUserInfo.avatar_url = data.avatar_url
             localStorage.setItem('userInfo', JSON.stringify(currentUserInfo))
-            
+
             // 触发全局事件，通知导航栏更新头像
             window.dispatchEvent(new Event('userAvatarUpdated'))
           }
-          
+
           toast.add({ severity: 'success', summary: '成功', detail: '头像上传成功' })
         } else {
           console.error('头像上传失败:', data)
@@ -469,4 +464,4 @@ export default {
   border-bottom-right-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-</style> 
+</style>

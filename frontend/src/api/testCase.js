@@ -13,9 +13,9 @@ request.interceptors.request.use(
     const userInfoStr = localStorage.getItem('userInfo')
     const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
     const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-    
+
     if (accessToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`
+      config.headers.Authorization = `Bearer ${accessToken}`
     }
     return config
   },
@@ -43,9 +43,9 @@ export const getProblemExamples = async (problemId) => {
     const userInfoStr = localStorage.getItem('userInfo')
     const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
     const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-    
+
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
-    
+
     const response = await axios.get(`/api/testcases/examples/${problemId}`, { headers })
     return response.data
   } catch (error) {
@@ -96,4 +96,4 @@ export const deleteTestCase = async (id) => {
     console.error('删除测试用例失败:', error)
     throw error
   }
-} 
+}

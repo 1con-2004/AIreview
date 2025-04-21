@@ -7,7 +7,7 @@ module.exports = defineConfig({
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        'primevue': path.resolve(__dirname, 'node_modules/primevue')
+        primevue: path.resolve(__dirname, 'node_modules/primevue')
       }
     },
     module: {
@@ -18,7 +18,7 @@ module.exports = defineConfig({
             fullySpecified: false
           },
           include: /node_modules/,
-          type: "javascript/auto"
+          type: 'javascript/auto'
         }
       ]
     }
@@ -34,6 +34,29 @@ module.exports = defineConfig({
             require('postcss-preset-env')
           ]
         }
+      }
+    }
+  },
+  devServer: {
+    hot: true,
+    watchFiles: {
+      paths: ['src/**/*'],
+      options: {
+        ignored: /node_modules/,
+        poll: true
+      }
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost',
+        changeOrigin: true,
+        secure: false,
+        logLevel: 'debug'
+      },
+      '/uploads': {
+        target: 'http://localhost',
+        changeOrigin: true,
+        secure: false
       }
     }
   }

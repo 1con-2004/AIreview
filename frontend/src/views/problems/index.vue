@@ -6,12 +6,12 @@
       <!-- 学习计划部分 -->
       <div class="learning-plans">
         <div class="section-header">
-          <h2>学习计划</h2>
+          <h2>学习计划测试更22新</h2>
           <router-link to="/learning-plans" class="view-more">查看更多</router-link>
         </div>
         <div class="plan-cards">
-          <router-link 
-            v-for="(plan, index) in paginatedPlans" 
+          <router-link
+            v-for="(plan, index) in paginatedPlans"
             :key="index"
             :to="`/learning-plans/${plan.id}`"
             class="plan-card"
@@ -73,12 +73,12 @@
             </el-select>
           </div>
           <div class="search-box">
-            <input 
-              type="text" 
-              v-model="searchQuery" 
+            <input
+              type="text"
+              v-model="searchQuery"
               placeholder="搜索题目..."
             >
-            <button 
+            <button
               v-if="/^\d+$/.test(searchQuery.trim())"
               class="exact-search-btn"
               :class="{ active: isExactSearch }"
@@ -96,9 +96,9 @@
         <!-- 左侧题目列表 -->
         <div class="problems-list">
           <div class="problem-cards">
-            <router-link 
-              v-for="problem in paginatedProblems" 
-              :key="problem.id" 
+            <router-link
+              v-for="problem in paginatedProblems"
+              :key="problem.id"
               :to="'/problems/detail/' + problem.problem_number"
               class="problem-card"
             >
@@ -119,7 +119,7 @@
               </div>
             </router-link>
           </div>
-          
+
           <div class="pagination">
             <button class="page-button" @click="prevPage" :disabled="currentPage === 1">
               <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -138,27 +138,27 @@
         <!-- 右侧分类栏 -->
         <div class="categories">
           <h3>题目分类</h3>
-          
+
           <!-- 添加分类搜索框 -->
           <div class="category-search">
-            <input 
-              type="text" 
-              v-model="categorySearchQuery" 
+            <input
+              type="text"
+              v-model="categorySearchQuery"
               placeholder="搜索分类..."
               class="category-search-input"
             />
           </div>
-          
+
           <!-- 分类加载中状态 -->
           <div class="category-loading" v-if="loading.categories">
             <div class="loading-spinner"></div>
             <span>正在加载分类...</span>
           </div>
-          
+
           <!-- 一级分类卡片列表 -->
           <div class="category-cards" v-else>
-            <div 
-              v-for="category in filteredCategories" 
+            <div
+              v-for="category in filteredCategories"
               :key="category.id"
               class="parent-category-card"
               :class="{ 'active': expandedCategories[category.id] }"
@@ -169,7 +169,7 @@
                   <template v-if="category.iconType === 'emoji'">
                     {{ category.emoji || '📚' }}
                   </template>
-                  <img 
+                  <img
                     v-else
                     :src="getCategoryIcon(category)"
                     :alt="category.name"
@@ -183,15 +183,15 @@
                   </svg>
                 </div>
               </div>
-              
+
               <!-- 子分类展开部分 -->
-              <div 
-                class="sub-categories" 
+              <div
+                class="sub-categories"
                 v-if="expandedCategories[category.id]"
                 :class="{ 'expanded': expandedCategories[category.id] }"
               >
-                <div 
-                  v-for="subCategory in category.children" 
+                <div
+                  v-for="subCategory in category.children"
                   :key="subCategory.id"
                   class="sub-category-card"
                   :class="{ 'active': selectedCategories.includes(subCategory.id) }"
@@ -203,7 +203,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 如果标签还需要保留显示，可以添加一个标签区域 -->
           <div class="legacy-tags" v-if="false">
             <h4>标签</h4>
@@ -219,9 +219,9 @@
             </div>
             <!-- 标签分页 -->
             <div class="tag-pagination">
-              <button 
-                class="page-button" 
-                @click="prevTagPage" 
+              <button
+                class="page-button"
+                @click="prevTagPage"
                 :disabled="tagCurrentPage === 1"
               >
                 <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -229,9 +229,9 @@
                 </svg>
               </button>
               <span class="page-info">{{ tagCurrentPage }} / {{ totalTagPages }}</span>
-              <button 
-                class="page-button" 
-                @click="nextTagPage" 
+              <button
+                class="page-button"
+                @click="nextTagPage"
                 :disabled="tagCurrentPage >= totalTagPages"
               >
                 <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -259,7 +259,7 @@ export default {
     ElSelect,
     ElOption
   },
-  data() {
+  data () {
     return {
       problems: [],
       tags: [],
@@ -292,145 +292,145 @@ export default {
       categories: [],
       activeCategory: null,
       expandedCategories: {},
-      selectedCategories: [],
+      selectedCategories: []
     }
   },
   computed: {
-    totalPages() {
-      return Math.ceil(this.filterProblems().length / this.itemsPerPage);
+    totalPages () {
+      return Math.ceil(this.filterProblems().length / this.itemsPerPage)
     },
-    paginatedProblems() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.filterProblems().slice(start, start + this.itemsPerPage);
+    paginatedProblems () {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      return this.filterProblems().slice(start, start + this.itemsPerPage)
     },
     // 过滤后的标签列表
-    filteredTags() {
-      if (!this.categorySearchQuery) return this.tags;
-      const query = this.categorySearchQuery.toLowerCase();
-      return this.tags.filter(tag => 
+    filteredTags () {
+      if (!this.categorySearchQuery) return this.tags
+      const query = this.categorySearchQuery.toLowerCase()
+      return this.tags.filter(tag =>
         tag.toLowerCase().includes(query)
-      );
+      )
     },
     // 标签总页数
-    totalTagPages() {
-      return Math.ceil(this.filteredTags.length / this.tagsPerPage);
+    totalTagPages () {
+      return Math.ceil(this.filteredTags.length / this.tagsPerPage)
     },
     // 当前页的标签
-    paginatedTags() {
-      const start = (this.tagCurrentPage - 1) * this.tagsPerPage;
-      return this.filteredTags.slice(start, start + this.tagsPerPage);
+    paginatedTags () {
+      const start = (this.tagCurrentPage - 1) * this.tagsPerPage
+      return this.filteredTags.slice(start, start + this.tagsPerPage)
     },
-    totalPlanPages() {
-      return Math.ceil(this.plans.length / this.plansPerPage);
+    totalPlanPages () {
+      return Math.ceil(this.plans.length / this.plansPerPage)
     },
-    paginatedPlans() {
-      const start = (this.currentPlanPage - 1) * this.plansPerPage;
-      return this.plans.slice(start, start + this.plansPerPage);
+    paginatedPlans () {
+      const start = (this.currentPlanPage - 1) * this.plansPerPage
+      return this.plans.slice(start, start + this.plansPerPage)
     },
     // 过滤后的分类列表
-    filteredCategories() {
-      if (!this.categorySearchQuery) return this.categories;
-      
-      const query = this.categorySearchQuery.toLowerCase();
+    filteredCategories () {
+      if (!this.categorySearchQuery) return this.categories
+
+      const query = this.categorySearchQuery.toLowerCase()
       return this.categories.map(category => {
         // 检查父分类名称是否匹配
-        const isParentMatch = category.name.toLowerCase().includes(query);
-        
+        const isParentMatch = category.name.toLowerCase().includes(query)
+
         // 过滤匹配的子分类
-        const matchedChildren = category.children.filter(child => 
+        const matchedChildren = category.children.filter(child =>
           child.name.toLowerCase().includes(query)
-        );
-        
+        )
+
         // 如果父分类匹配或有匹配的子分类，则返回过滤后的分类
         if (isParentMatch || matchedChildren.length > 0) {
           return {
             ...category,
             children: isParentMatch ? category.children : matchedChildren
-          };
+          }
         }
-        
+
         // 如果既不匹配父分类也没有匹配的子分类，则返回null
-        return null;
-      }).filter(Boolean); // 过滤掉null值
+        return null
+      }).filter(Boolean) // 过滤掉null值
     }
   },
-  async created() {
+  async created () {
     // 初始化时首先检查用户登录状态是否一致
     try {
       const userInfoStr = localStorage.getItem('userInfo')
       if (userInfoStr) {
         const userInfo = JSON.parse(userInfoStr)
         console.log('Problems页面初始化，当前用户:', userInfo.username)
-        
+
         // 直接将用户名存入sessionStorage，不调用可能导致用户切换的全局函数
         sessionStorage.setItem('current_user', userInfo.username)
       }
     } catch (err) {
       console.error('Problems页面检查用户状态出错:', err)
     }
-    
+
     // 确保初始化完成后再获取数据
-    await this.$nextTick();
-    await this.fetchPlans();
-    await this.fetchCategories();
-    this.fetchProblems();
-    this.fetchTags();
-    this.updateItemsPerPage();
-    window.addEventListener('resize', this.updateItemsPerPage);
+    await this.$nextTick()
+    await this.fetchPlans()
+    await this.fetchCategories()
+    this.fetchProblems()
+    this.fetchTags()
+    this.updateItemsPerPage()
+    window.addEventListener('resize', this.updateItemsPerPage)
   },
   methods: {
-    async fetchPlans() {
+    async fetchPlans () {
       try {
-        console.log('开始获取学习计划...');
-        const response = await request.get('/api/learning-plans');
-        
-        console.log('学习计划响应:', response);
-        
+        console.log('开始获取学习计划...')
+        const response = await request.get('/api/learning-plans')
+
+        console.log('学习计划响应:', response)
+
         if (response && Array.isArray(response)) {
           this.plans = response.map(plan => ({
             id: plan.id,
             title: plan.title || '',
             description: plan.description || '',
-            icon: plan.icon 
+            icon: plan.icon
               ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
               : '/icons/default.png',
             creator_name: plan.creator_name || ''
-          }));
-          console.log('处理后的学习计划:', this.plans);
+          }))
+          console.log('处理后的学习计划:', this.plans)
         } else {
-          console.log('学习计划数据格式不正确:', response);
-          this.plans = [];
+          console.log('学习计划数据格式不正确:', response)
+          this.plans = []
         }
       } catch (error) {
-        console.error('获取学习计划失败:', error);
+        console.error('获取学习计划失败:', error)
         if (error.response?.status === 401) {
-          this.$message.error('获取学习计划失败，请稍后重试');
+          this.$message.error('获取学习计划失败，请稍后重试')
         } else {
-          this.$message.error('获取学习计划失败: ' + (error.message || '请检查网络连接或稍后重试'));
+          this.$message.error('获取学习计划失败: ' + (error.message || '请检查网络连接或稍后重试'))
         }
-        this.plans = [];
+        this.plans = []
       }
     },
-    async fetchCategories() {
+    async fetchCategories () {
       try {
-        this.loading.categories = true;
-        const token = store.getters.getAccessToken;
-        
+        this.loading.categories = true
+        const token = store.getters.getAccessToken
+
         // 使用新的API端点获取分类数据
         const response = await request.get('/api/problems/all-categories', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
-        });
-        
-        console.log('获取到的分类数据:', response);
-        
+        })
+
+        console.log('获取到的分类数据:', response)
+
         if (response && (response.data || response.code === 200)) {
           // 处理分类数据
-          const categories = response.data?.categories || response.data || [];
-          const parentCategories = [];
-          const childrenMap = {};
-          
+          const categories = response.data?.categories || response.data || []
+          const parentCategories = []
+          const childrenMap = {}
+
           // 按级别分组
           categories.forEach(category => {
             if (category.level === 1) {
@@ -444,10 +444,10 @@ export default {
                 iconType: 'emoji',
                 emoji: this.getCategoryEmoji(category.slug || category.name),
                 children: []
-              });
+              })
             } else if (category.level === 2 && category.parent_id) {
               if (!childrenMap[category.parent_id]) {
-                childrenMap[category.parent_id] = [];
+                childrenMap[category.parent_id] = []
               }
               childrenMap[category.parent_id].push({
                 id: category.id,
@@ -455,68 +455,68 @@ export default {
                 description: category.description || '',
                 parentId: category.parent_id,
                 slug: category.slug || ''
-              });
+              })
             }
-          });
-          
+          })
+
           // 将子分类添加到父分类中
           parentCategories.forEach(parent => {
             if (childrenMap[parent.id]) {
-              parent.children = childrenMap[parent.id];
+              parent.children = childrenMap[parent.id]
             }
-          });
-          
-          this.categories = parentCategories;
-          console.log('处理后的分类数据:', this.categories);
+          })
+
+          this.categories = parentCategories
+          console.log('处理后的分类数据:', this.categories)
         } else {
           // 如果API返回格式不对，使用备用数据
-          console.error('API返回格式不正确，使用备用数据');
-          this.useFallbackCategories();
+          console.error('API返回格式不正确，使用备用数据')
+          this.useFallbackCategories()
         }
       } catch (error) {
-        console.error('获取分类失败:', error);
+        console.error('获取分类失败:', error)
         if (error.response?.status === 401) {
-          await store.dispatch('logout');
-          this.$router.push('/login');
-          this.$message.error('登录已过期，请重新登录');
+          await store.dispatch('logout')
+          this.$router.push('/login')
+          this.$message.error('登录已过期，请重新登录')
         } else {
-          console.error('使用备用数据:', error.message);
-          this.useFallbackCategories();
+          console.error('使用备用数据:', error.message)
+          this.useFallbackCategories()
         }
       } finally {
-        this.loading.categories = false;
+        this.loading.categories = false
       }
     },
     // 根据分类名称或slug获取对应的emoji
-    getCategoryEmoji(category) {
+    getCategoryEmoji (category) {
       // 分类emoji映射
       const emojiMap = {
         'data-structure': '📊',
-        'algorithm': '🧩',
-        'math': '🔢',
-        'basic': '💻',
-        'array': '📋',
-        'string': '🔤',
-        'tree': '🌳',
+        algorithm: '🧩',
+        math: '🔢',
+        basic: '💻',
+        array: '📋',
+        string: '🔤',
+        tree: '🌳',
         'linked-list': '🔗',
         'hash-table': '🔍',
         'dynamic-programming': '📈',
-        'greedy': '🏎️',
-        'backtracking': '🔄',
-        'sorting': '📊',
-        'recursion': '🔁',
-        'queue': '📦',
-        'stack': '📚'
-      };
-      
+        greedy: '🏎️',
+        backtracking: '🔄',
+        sorting: '📊',
+        recursion: '🔁',
+        queue: '📦',
+        stack: '📚'
+      }
+
       // 转换分类名为小写，作为key查找
-      const key = category.toLowerCase().replace(/\s+/g, '-');
-      
+      const key = category.toLowerCase().replace(/\s+/g, '-')
+
       // 返回找到的emoji或默认emoji
-      return emojiMap[key] || '📘';
+      return emojiMap[key] || '📘'
     },
     // 使用备用分类数据
-    useFallbackCategories() {
+    useFallbackCategories () {
       const fallbackCategories = [
         {
           id: 1,
@@ -581,15 +581,15 @@ export default {
             { id: 404, name: '正则表达式', description: '正则表达式相关题目', parentId: 4, slug: 'regex' }
           ]
         }
-      ];
-      
-      this.categories = fallbackCategories;
-      console.log('使用备用分类数据:', this.categories);
+      ]
+
+      this.categories = fallbackCategories
+      console.log('使用备用分类数据:', this.categories)
     },
-    async fetchProblems() {
+    async fetchProblems () {
       try {
-        this.loading.problems = true;
-        const token = store.getters.getAccessToken;
+        this.loading.problems = true
+        const token = store.getters.getAccessToken
         const params = {
           page: this.currentPage,
           limit: this.itemsPerPage,
@@ -597,16 +597,16 @@ export default {
           difficulty: this.selectedDifficulty,
           status: this.selectedStatus,
           tags: this.selectedTags
-        };
-        
-        const response = await request.get('/api/problems', { 
+        }
+
+        const response = await request.get('/api/problems', {
           params,
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
-        });
-        console.log('获取到的题目数据:', response);
-        
+        })
+        console.log('获取到的题目数据:', response)
+
         if (response && response.data) {
           this.problems = response.data.map(problem => ({
             id: problem.id,
@@ -618,173 +618,173 @@ export default {
             acceptance_rate: parseFloat(problem.acceptance_rate) || 0,
             status: problem.status || 'Not Started',
             description: problem.description || ''
-          }));
-          this.total = response.total || this.problems.length;
-          console.log('处理后的题目列表:', this.problems);
-          
+          }))
+          this.total = response.total || this.problems.length
+          console.log('处理后的题目列表:', this.problems)
+
           // 获取用户题目完成状态
-          await this.fetchUserProblemStatus();
-          
+          await this.fetchUserProblemStatus()
+
           // 添加调试信息：检查题目状态
           console.log('获取完用户状态后的题目列表:', this.problems.filter(p => p.status === 'Accepted').map(p => ({
             id: p.id,
-            title: p.title, 
+            title: p.title,
             status: p.status
-          })));
+          })))
         } else {
-          throw new Error('获取题目列表失败');
+          throw new Error('获取题目列表失败')
         }
       } catch (error) {
-        console.error('获取问题列表失败:', error);
+        console.error('获取问题列表失败:', error)
         if (error.response?.status === 401) {
-          await store.dispatch('logout');
-          this.$router.push('/login');
-          this.$message.error('登录已过期，请重新登录');
+          await store.dispatch('logout')
+          this.$router.push('/login')
+          this.$message.error('登录已过期，请重新登录')
         } else {
-          this.$message.error('获取问题列表失败: ' + (error.message || '请检查网络连接或稍后重试'));
-          this.problems = [];
-          this.total = 0;
+          this.$message.error('获取问题列表失败: ' + (error.message || '请检查网络连接或稍后重试'))
+          this.problems = []
+          this.total = 0
         }
       } finally {
-        this.loading.problems = false;
+        this.loading.problems = false
       }
     },
     // 获取用户题目完成状态
-    async fetchUserProblemStatus() {
+    async fetchUserProblemStatus () {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const token = userInfo.token || store.getters.getAccessToken;
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        const token = userInfo.token || store.getters.getAccessToken
         if (!token) {
-          console.log('用户未登录，跳过获取题目状态');
-          return;
+          console.log('用户未登录，跳过获取题目状态')
+          return
         }
 
         // 提取所有题目ID - 确保都是有效数字
         const problemIds = this.problems
           .map(p => p.id)
-          .filter(id => !isNaN(id) && id !== null && id !== undefined);
-          
+          .filter(id => !isNaN(id) && id !== null && id !== undefined)
+
         if (problemIds.length === 0) {
-          console.log('没有有效的题目ID，跳过获取状态');
-          return;
+          console.log('没有有效的题目ID，跳过获取状态')
+          return
         }
-        
-        console.log('获取题目状态，题目IDs:', problemIds);
-        
+
+        console.log('获取题目状态，题目IDs:', problemIds)
+
         // 获取用户提交状态
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${token}` }
         try {
           // 注意这里使用明确的完整API路径，避免路由混淆
-          console.log('请求API路径：/api/problems/user-status');
+          console.log('请求API路径：/api/problems/user-status')
           const response = await request.get('/api/problems/user-status', {
             params: { problem_ids: problemIds.join(',') },
             headers
-          });
-          
-          console.log('获取到的用户题目状态:', response);
-          
+          })
+
+          console.log('获取到的用户题目状态:', response)
+
           if (response && response.success && Array.isArray(response.data)) {
             // 创建题目ID到状态的映射
-            const statusMap = {};
+            const statusMap = {}
             response.data.forEach(item => {
               if (item && item.problem_id && item.status) {
-                statusMap[item.problem_id] = item.status;
+                statusMap[item.problem_id] = item.status
               }
-            });
-            
+            })
+
             // 更新题目完成状态
             if (Object.keys(statusMap).length > 0) {
               this.problems = this.problems.map(problem => ({
                 ...problem,
                 status: statusMap[problem.id] || problem.status || 'Not Started'
-              }));
-              
-              console.log('更新后的题目状态:', this.problems.filter(p => p.status === 'Accepted').map(p => ({ 
-                id: p.id, 
-                title: p.title, 
-                status: p.status 
-              })));
+              }))
+
+              console.log('更新后的题目状态:', this.problems.filter(p => p.status === 'Accepted').map(p => ({
+                id: p.id,
+                title: p.title,
+                status: p.status
+              })))
             } else {
-              console.log('没有获取到任何题目状态数据');
+              console.log('没有获取到任何题目状态数据')
             }
           } else {
-            console.log('API响应格式不正确或没有数据:', response);
+            console.log('API响应格式不正确或没有数据:', response)
           }
         } catch (apiError) {
-          console.error('API请求失败:', apiError);
+          console.error('API请求失败:', apiError)
           // 尝试备选方案：直接获取用户所有题目状态
           try {
-            console.log('尝试备选方案获取用户题目状态，请求路径: /api/user/problem-status');
-            const acceptedResponse = await request.get('/api/user/problem-status', { headers });
-            
+            console.log('尝试备选方案获取用户题目状态，请求路径: /api/user/problem-status')
+            const acceptedResponse = await request.get('/api/user/problem-status', { headers })
+
             if (acceptedResponse && acceptedResponse.success && Array.isArray(acceptedResponse.data)) {
-              const statusMap = {};
+              const statusMap = {}
               acceptedResponse.data.forEach(item => {
                 if (item && item.problem_id) {
-                  statusMap[item.problem_id] = item.status;
+                  statusMap[item.problem_id] = item.status
                 }
-              });
-              
+              })
+
               if (Object.keys(statusMap).length > 0) {
                 this.problems = this.problems.map(problem => ({
                   ...problem,
                   status: statusMap[problem.id] || problem.status || 'Not Started'
-                }));
-                
-                console.log('备选方案更新后的题目状态:', 
-                  this.problems.filter(p => p.status === 'Accepted').length, '道已通过');
+                }))
+
+                console.log('备选方案更新后的题目状态:',
+                  this.problems.filter(p => p.status === 'Accepted').length, '道已通过')
               }
             }
           } catch (fallbackError) {
-            console.error('备选方案获取用户题目状态失败:', fallbackError);
+            console.error('备选方案获取用户题目状态失败:', fallbackError)
           }
         }
       } catch (error) {
-        console.error('获取用户题目状态失败:', error);
+        console.error('获取用户题目状态失败:', error)
         // 错误时不更新题目状态，保持原状态
       }
     },
-    async fetchTags() {
+    async fetchTags () {
       try {
-        this.loading.tags = true;
-        const token = store.getters.getAccessToken;
+        this.loading.tags = true
+        const token = store.getters.getAccessToken
         const response = await request.get('/api/problems/tags', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
-        });
-        console.log('获取到的标签数据:', response);
-        
+        })
+        console.log('获取到的标签数据:', response)
+
         if (Array.isArray(response)) {
           // 处理标签数据，去重并排序
-          const allTags = new Set();
+          const allTags = new Set()
           response.forEach(tag => {
             if (typeof tag === 'string' && tag.trim()) {
-              allTags.add(tag.trim());
+              allTags.add(tag.trim())
             }
-          });
-          
-          this.tags = Array.from(allTags).sort();
-          console.log('处理后的标签列表:', this.tags);
+          })
+
+          this.tags = Array.from(allTags).sort()
+          console.log('处理后的标签列表:', this.tags)
         } else {
-          throw new Error('获取标签失败');
+          throw new Error('获取标签失败')
         }
       } catch (error) {
-        console.error('获取标签失败:', error);
+        console.error('获取标签失败:', error)
         if (error.response?.status === 401) {
-          await store.dispatch('logout');
-          this.$router.push('/login');
-          this.$message.error('登录已过期，请重新登录');
+          await store.dispatch('logout')
+          this.$router.push('/login')
+          this.$message.error('登录已过期，请重新登录')
         } else {
-          this.$message.error('获取标签失败: ' + (error.message || '请检查网络连接或稍后重试'));
-          this.tags = [];
+          this.$message.error('获取标签失败: ' + (error.message || '请检查网络连接或稍后重试'))
+          this.tags = []
         }
       } finally {
-        this.loading.tags = false;
+        this.loading.tags = false
       }
     },
-    filterProblems() {
-      let filteredProblems = this.problems;
+    filterProblems () {
+      let filteredProblems = this.problems
 
       // 使用新的分类过滤逻辑
       if (this.selectedCategories.length > 0) {
@@ -792,230 +792,230 @@ export default {
           // 修改为"与"操作，确保问题包含所有已选分类
           return this.selectedCategories.every(categoryId => {
             // 在这里需要根据问题的标签和分类ID进行匹配
-            const category = this.categories.flatMap(c => c.children).find(c => c.id === categoryId);
-            return category && problem.tags.includes(category.name);
-          });
-        });
+            const category = this.categories.flatMap(c => c.children).find(c => c.id === categoryId)
+            return category && problem.tags.includes(category.name)
+          })
+        })
       } else if (this.selectedTags.length > 0) {
         // 保留原有的标签过滤逻辑作为备用
         filteredProblems = filteredProblems.filter(problem => {
-          return this.selectedTags.every(tag => problem.tags.includes(tag));
-        });
+          return this.selectedTags.every(tag => problem.tags.includes(tag))
+        })
       }
 
       if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        
+        const query = this.searchQuery.toLowerCase()
+
         if (/^\d+$/.test(query) && this.isExactSearch) {
-          filteredProblems = filteredProblems.filter(problem => 
+          filteredProblems = filteredProblems.filter(problem =>
             problem.id.toString() === query
-          );
+          )
         } else {
           filteredProblems = filteredProblems.filter(problem => {
             return (
               problem.id.toString().includes(query) ||
               problem.title.toLowerCase().includes(query)
-            );
-          });
+            )
+          })
         }
       }
 
       if (this.selectedDifficulty) {
-        filteredProblems = filteredProblems.filter(problem => 
+        filteredProblems = filteredProblems.filter(problem =>
           problem.difficulty === this.selectedDifficulty
-        );
+        )
       }
 
       if (this.selectedStatus) {
         // 状态筛选
-        console.log('筛选状态:', this.selectedStatus);
-        console.log('筛选前题目数:', filteredProblems.length);
-        
+        console.log('筛选状态:', this.selectedStatus)
+        console.log('筛选前题目数:', filteredProblems.length)
+
         filteredProblems = filteredProblems.filter(problem => {
-          const result = problem.status === this.selectedStatus;
-          return result;
-        });
-        
-        console.log('筛选后题目数:', filteredProblems.length);
+          const result = problem.status === this.selectedStatus
+          return result
+        })
+
+        console.log('筛选后题目数:', filteredProblems.length)
       }
 
-      return filteredProblems;
+      return filteredProblems
     },
-    selectTag(tag) {
+    selectTag (tag) {
       if (this.selectedTags.includes(tag)) {
-        this.selectedTags = this.selectedTags.filter(t => t !== tag);
+        this.selectedTags = this.selectedTags.filter(t => t !== tag)
       } else {
-        this.selectedTags.push(tag);
+        this.selectedTags.push(tag)
       }
-      this.currentPage = 1;
+      this.currentPage = 1
     },
-    resetFilters() {
-      this.selectedTags = [];
-      this.selectedCategories = [];
-      this.selectedDifficulty = '';
-      this.searchQuery = '';
-      this.currentPage = 1;
-      this.expandedCategories = {};
-      this.activeCategory = null;
+    resetFilters () {
+      this.selectedTags = []
+      this.selectedCategories = []
+      this.selectedDifficulty = ''
+      this.searchQuery = ''
+      this.currentPage = 1
+      this.expandedCategories = {}
+      this.activeCategory = null
     },
-    nextPage() {
+    nextPage () {
       if (this.currentPage < this.totalPages) {
-        this.currentPage++;
+        this.currentPage++
       }
     },
-    prevPage() {
+    prevPage () {
       if (this.currentPage > 1) {
-        this.currentPage--;
+        this.currentPage--
       }
     },
-    updateItemsPerPage() {
-      const width = window.innerWidth;
+    updateItemsPerPage () {
+      const width = window.innerWidth
       if (width < 2000) {
-        this.itemsPerPage = 10;
+        this.itemsPerPage = 10
       } else if (width < 3000) {
-        this.itemsPerPage = 15;
+        this.itemsPerPage = 15
       } else {
-        this.itemsPerPage = 20;
+        this.itemsPerPage = 20
       }
-      this.currentPage = 1;
+      this.currentPage = 1
     },
     // 标签分页方法
-    prevTagPage() {
+    prevTagPage () {
       if (this.tagCurrentPage > 1) {
-        this.tagCurrentPage--;
+        this.tagCurrentPage--
       }
     },
-    nextTagPage() {
+    nextTagPage () {
       if (this.tagCurrentPage < this.totalTagPages) {
-        this.tagCurrentPage++;
+        this.tagCurrentPage++
       }
     },
-    toggleExactSearch() {
+    toggleExactSearch () {
       this.isExactSearch = !this.isExactSearch
       this.currentPage = 1
     },
-    nextPlanPage() {
+    nextPlanPage () {
       if (this.currentPlanPage < this.totalPlanPages) {
-        this.currentPlanPage++;
+        this.currentPlanPage++
       }
     },
-    prevPlanPage() {
+    prevPlanPage () {
       if (this.currentPlanPage > 1) {
-        this.currentPlanPage--;
+        this.currentPlanPage--
       }
     },
-    toggleCategory(categoryId) {
+    toggleCategory (categoryId) {
       // 使用Vue的响应式对象更新方式
-      const newExpandedCategories = { ...this.expandedCategories };
-      newExpandedCategories[categoryId] = !newExpandedCategories[categoryId];
-      this.expandedCategories = newExpandedCategories;
-      
+      const newExpandedCategories = { ...this.expandedCategories }
+      newExpandedCategories[categoryId] = !newExpandedCategories[categoryId]
+      this.expandedCategories = newExpandedCategories
+
       // 如果展开了分类，则设置为活跃分类
       if (this.expandedCategories[categoryId]) {
-        this.activeCategory = categoryId;
+        this.activeCategory = categoryId
       } else if (this.activeCategory === categoryId) {
-        this.activeCategory = null;
+        this.activeCategory = null
       }
     },
-    selectSubCategory(categoryId) {
-      const index = this.selectedCategories.indexOf(categoryId);
+    selectSubCategory (categoryId) {
+      const index = this.selectedCategories.indexOf(categoryId)
       if (index > -1) {
         // 如果已选中，则移除
-        this.selectedCategories.splice(index, 1);
+        this.selectedCategories.splice(index, 1)
       } else {
         // 否则添加
-        this.selectedCategories.push(categoryId);
+        this.selectedCategories.push(categoryId)
       }
       // 重置到第一页
-      this.currentPage = 1;
+      this.currentPage = 1
     },
-    getCategoryIcon(category) {
+    getCategoryIcon (category) {
       // 图标映射表
       const iconMap = {
-        'structure': '/imgs/categories/data-structure.png',
-        'algorithm': '/imgs/categories/algorithm.png',
-        'calculator': '/imgs/categories/math.png',
-        'code': '/imgs/categories/code.png',
-        'default': '/imgs/categories/default.png'
-      };
-      
+        structure: '/imgs/categories/data-structure.png',
+        algorithm: '/imgs/categories/algorithm.png',
+        calculator: '/imgs/categories/math.png',
+        code: '/imgs/categories/code.png',
+        default: '/imgs/categories/default.png'
+      }
+
       if (category.icon) {
         // 如果是完整URL路径，直接使用
         if (category.icon.startsWith('http')) {
-          return category.icon;
+          return category.icon
         }
-        
+
         // 如果是已知图标，使用映射
         if (iconMap[category.icon]) {
-          return iconMap[category.icon];
+          return iconMap[category.icon]
         }
-        
+
         // 尝试从/icons/路径获取
-        return `/icons/${category.icon}.svg`;
+        return `/icons/${category.icon}.svg`
       }
-      
+
       // 默认图标
-      return '/imgs/categories/default.png';
+      return '/imgs/categories/default.png'
     },
     // 处理图标加载错误
-    handleIconError(category) {
-      console.log('图标加载失败:', category.name);
+    handleIconError (category) {
+      console.log('图标加载失败:', category.name)
       // 设置为使用emoji类型
-      category.iconType = 'emoji';
-      category.emoji = '📚'; // 默认使用书籍emoji
-    },
+      category.iconType = 'emoji'
+      category.emoji = '📚' // 默认使用书籍emoji
+    }
   },
-  beforeUnmount() {
-    window.removeEventListener('resize', this.updateItemsPerPage);
+  beforeUnmount () {
+    window.removeEventListener('resize', this.updateItemsPerPage)
   },
   watch: {
     // 监听搜索条件变化
-    searchQuery(newVal) {
+    searchQuery (newVal) {
       if (!/^\d+$/.test(newVal.trim())) {
-        this.isExactSearch = false;
+        this.isExactSearch = false
       }
-      this.currentPage = 1;
+      this.currentPage = 1
     },
     // 监听难度选择变化
-    selectedDifficulty() {
-      this.currentPage = 1;
+    selectedDifficulty () {
+      this.currentPage = 1
     },
     // 监听标签选择变化
     selectedTags: {
-      handler() {
-        this.currentPage = 1;
+      handler () {
+        this.currentPage = 1
       },
       deep: true
     },
     // 监听分类搜索，重置展开状态
-    categorySearchQuery() {
+    categorySearchQuery () {
       // 将分类搜索同步到标签搜索以保持兼容性
-      this.tagSearchQuery = this.categorySearchQuery;
-      this.tagCurrentPage = 1;
-      
+      this.tagSearchQuery = this.categorySearchQuery
+      this.tagCurrentPage = 1
+
       // 如果有搜索词，自动展开所有分类
       if (this.categorySearchQuery) {
-        const newExpandedCategories = {};
+        const newExpandedCategories = {}
         this.filteredCategories.forEach(category => {
-          newExpandedCategories[category.id] = true;
-        });
-        this.expandedCategories = newExpandedCategories;
+          newExpandedCategories[category.id] = true
+        })
+        this.expandedCategories = newExpandedCategories
       } else {
         // 如果清空搜索词，折叠所有分类
-        this.expandedCategories = {};
-        this.activeCategory = null;
+        this.expandedCategories = {}
+        this.activeCategory = null
       }
     },
     // 反向同步标签搜索和分类搜索
-    tagSearchQuery() {
+    tagSearchQuery () {
       if (this.categorySearchQuery !== this.tagSearchQuery) {
-        this.categorySearchQuery = this.tagSearchQuery;
+        this.categorySearchQuery = this.tagSearchQuery
       }
     },
-    selectedStatus() {
-      this.currentPage = 1;
-    },
-  },
+    selectedStatus () {
+      this.currentPage = 1
+    }
+  }
 }
 </script>
 
@@ -1149,11 +1149,11 @@ export default {
   .plan-cards {
     grid-template-columns: 1fr; /* 小屏幕显示1列 */
   }
-  
+
   .plan-card {
     padding: 15px;
   }
-  
+
   .plan-icon {
     width: 50px;
     height: 50px;
@@ -1499,17 +1499,17 @@ export default {
   .main-content {
     flex-direction: column;
   }
-  
+
   .categories {
     order: -1;
   }
-  
+
   .tag-list {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 12px;
   }
-  
+
   .category-tag {
     width: calc(50% - 6px);
     padding: 12px 16px;
@@ -1521,15 +1521,15 @@ export default {
   .content {
     padding: 20px;
   }
-  
+
   .search-controls {
     flex-direction: column;
   }
-  
+
   .problem-card {
     flex-direction: column;
   }
-  
+
   .problem-number {
     text-align: left;
   }
@@ -1864,7 +1864,7 @@ export default {
   .sub-categories.expanded {
     max-height: 300px;
   }
-  
+
   .sub-category-card {
     padding: 10px 12px;
     margin: 6px 0;
@@ -1875,11 +1875,11 @@ export default {
   .parent-category-card {
     margin-bottom: 10px;
   }
-  
+
   .category-header {
     padding: 12px;
   }
-  
+
   .sub-categories.expanded {
     padding: 6px 12px 12px;
   }
@@ -1904,4 +1904,4 @@ export default {
 .code-comment {
   color: #6272a4;
 }
-</style> 
+</style>

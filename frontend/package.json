@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
+    "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "serve:no-lint": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
+    "build:no-lint": "vue-cli-service build --skip-plugins @vue/cli-plugin-eslint"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -56,6 +58,9 @@
     "babel-loader": "^8.3.0",
     "css-loader": "^7.1.2",
     "eslint": "^7.32.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^7.0.0",
     "html-webpack-plugin": "^5.5.0",
     "monaco-editor-webpack-plugin": "^7.1.0",

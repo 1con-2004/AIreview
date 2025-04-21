@@ -11,7 +11,6 @@
           <span class="wave-text">编程</span>
           <span class="wave-text">之旅</span>
 
-          
         </div>
         <p class="hero-subtitle">QuizPlanet问知星球🌏：重新定义<strong style="font-size: 1.2em; color: orange;">人工智能时代</strong>编程</p>
         <div class="hero-buttons">
@@ -41,7 +40,7 @@
       <h2 class="section-title">
         <span class="fliping-text">AI 深度感知 , 懂你迫切所需</span>
       </h2>
-      
+
       <!-- AI智能评测 -->
       <div class="feature-row">
         <div class="feature-text">
@@ -108,7 +107,7 @@
       <h2 class="section-title">
         <span class="fade-text">AI , 比你更懂你</span>
       </h2>
-      
+
       <div class="features-grid">
         <!-- 个人中心功能 -->
         <div class="advanced-feature-card">
@@ -174,7 +173,7 @@ export default {
   components: {
     NavBar
   },
-  data() {
+  data () {
     return {
       codeLines: [
         '<span class="code-keyword">#include</span> <span class="code-string">&lt;iostream&gt;</span>',
@@ -193,26 +192,26 @@ export default {
       fullTypingText: 'cout << "Hello, World!" << endl;',
       charIndex: 0,
       isLineComplete: false,
-      showCursor: true  // 控制光标显示
+      showCursor: true // 控制光标显示
     }
   },
   // 组件挂载后初始化动画
-  mounted() {
+  mounted () {
     // 为波浪文字添加延迟动画
     document.querySelectorAll('.wave-text').forEach((text, index) => {
       text.style.animationDelay = `${index * 0.35}s`
     })
-    
+
     // 为翻转文字添加延迟动画
     document.querySelectorAll('.fliping-text').forEach((text, index) => {
       text.style.animationDelay = `${index * 0.3}s`
     })
-    
+
     // 为淡入淡出文字添加延迟动画
     document.querySelectorAll('.fade-text').forEach((text, index) => {
       text.style.animationDelay = `${index * 0.3}s`
     })
-    
+
     // 为下落文字添加延迟动画
     document.querySelectorAll('.drop-text').forEach((text, index) => {
       text.style.animationDelay = `${index * 0.2}s`
@@ -227,124 +226,124 @@ export default {
     this.startTypingAnimation()
   },
   methods: {
-    startTypingAnimation() {
+    startTypingAnimation () {
       this.isTyping = true
       this.typingIndex = 0
       this.displayedLines = []
       this.typeNextLine()
     },
-    typeNextLine() {
+    typeNextLine () {
       if (this.typingIndex < this.codeLines.length) {
         // 如果是第5行（打印Hello World的那行），逐字符显示
         if (this.typingIndex === 4) {
-          this.displayedLines.push('  '); // 添加基础缩进
-          this.charIndex = 0;
-          this.typingText = '';
-          this.isLineComplete = false;
-          this.typeNextChar();
+          this.displayedLines.push('  ') // 添加基础缩进
+          this.charIndex = 0
+          this.typingText = ''
+          this.isLineComplete = false
+          this.typeNextChar()
         } else if (this.typingIndex === this.codeLines.length - 1) {
           // 如果是最后一行，添加光标
-          this.displayedLines.push(this.codeLines[this.typingIndex]);
-          
+          this.displayedLines.push(this.codeLines[this.typingIndex])
+
           // 设置间隔更新光标状态
           const updateLastLineCursor = () => {
             if (this.displayedLines.length >= this.codeLines.length) {
               // 移除可能存在的旧光标
-              let lastLine = this.displayedLines[this.displayedLines.length - 1];
-              lastLine = lastLine.replace(/<span class="code-cursor"><\/span>/g, '');
-              
+              let lastLine = this.displayedLines[this.displayedLines.length - 1]
+              lastLine = lastLine.replace(/<span class="code-cursor"><\/span>/g, '')
+
               // 添加新光标
-              this.displayedLines[this.displayedLines.length - 1] = 
-                lastLine + (this.showCursor ? '<span class="code-cursor"></span>' : '');
+              this.displayedLines[this.displayedLines.length - 1] =
+                lastLine + (this.showCursor ? '<span class="code-cursor"></span>' : '')
             }
-          };
-          
+          }
+
           // 立即执行一次
-          updateLastLineCursor();
-          
+          updateLastLineCursor()
+
           // 设置间隔更新
-          this.cursorInterval = setInterval(updateLastLineCursor, 500);
-          
-          this.typingIndex++;
+          this.cursorInterval = setInterval(updateLastLineCursor, 500)
+
+          this.typingIndex++
           setTimeout(() => {
-            this.typeNextLine();
-          }, 300);
+            this.typeNextLine()
+          }, 300)
         } else {
           // 其他行直接显示整行
-          this.displayedLines.push(this.codeLines[this.typingIndex]);
-          this.typingIndex++;
+          this.displayedLines.push(this.codeLines[this.typingIndex])
+          this.typingIndex++
           setTimeout(() => {
-            this.typeNextLine();
-          }, 300); // 每行代码的键入时间
+            this.typeNextLine()
+          }, 300) // 每行代码的键入时间
         }
       } else {
-        this.isTyping = false;
+        this.isTyping = false
       }
     },
-    typeNextChar() {
+    typeNextChar () {
       if (this.charIndex < this.fullTypingText.length) {
-        this.charIndex++;
-        this.typingText = this.fullTypingText.substring(0, this.charIndex);
-        
+        this.charIndex++
+        this.typingText = this.fullTypingText.substring(0, this.charIndex)
+
         // 构建HTML字符串
-        let code = this.typingText;
-        
+        const code = this.typingText
+
         // 创建DOM元素来解析HTML
-        const tempEl = document.createElement('div');
-        tempEl.textContent = code;
-        
+        const tempEl = document.createElement('div')
+        tempEl.textContent = code
+
         // 获取纯文本内容
-        const plainText = tempEl.textContent;
-        
+        const plainText = tempEl.textContent
+
         // 构建高亮版本，先转义HTML标签
         let highlightedText = plainText
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        
+          .replace(/>/g, '&gt;')
+
         // 按特定顺序应用高亮替换
         // 1. 字符串 (需要优先处理引号内的内容)
-        highlightedText = highlightedText.replace(/"([^"]*)"/g, '<span class="code-string">"$1"</span>');
-        
+        highlightedText = highlightedText.replace(/"([^"]*)"/g, '<span class="code-string">"$1"</span>')
+
         // 2. 关键字
-        const keywords = ['cout', 'endl'];
+        const keywords = ['cout', 'endl']
         keywords.forEach(keyword => {
-          const regex = new RegExp(`\\b${keyword}\\b`, 'g');
-          highlightedText = highlightedText.replace(regex, `<span class="code-keyword">${keyword}</span>`);
-        });
-        
+          const regex = new RegExp(`\\b${keyword}\\b`, 'g')
+          highlightedText = highlightedText.replace(regex, `<span class="code-keyword">${keyword}</span>`)
+        })
+
         // 3. 运算符和其他元素
-        highlightedText = highlightedText.replace(/&lt;&lt;/g, '&lt;&lt;');
-        
+        highlightedText = highlightedText.replace(/&lt;&lt;/g, '&lt;&lt;')
+
         // 更新显示，确保HTML标签被正确解析
         this.$nextTick(() => {
           // 手动插入内容到DOM
-          const codeLineElement = document.querySelector('.code-content .code-line:nth-child(5)');
+          const codeLineElement = document.querySelector('.code-content .code-line:nth-child(5)')
           if (codeLineElement) {
-            codeLineElement.innerHTML = '  ' + highlightedText + (this.showCursor ? '<span class="code-cursor"></span>' : '');
+            codeLineElement.innerHTML = '  ' + highlightedText + (this.showCursor ? '<span class="code-cursor"></span>' : '')
             // 将内容也同步到data中
-            this.displayedLines[4] = '  ' + highlightedText;
+            this.displayedLines[4] = '  ' + highlightedText
           }
-        });
-        
+        })
+
         setTimeout(() => {
-          this.typeNextChar();
-        }, 100);
+          this.typeNextChar()
+        }, 100)
       } else {
-        this.isLineComplete = true;
-        this.typingIndex++;
-        
+        this.isLineComplete = true
+        this.typingIndex++
+
         // 完成后确保光标被移除
         this.$nextTick(() => {
-          const codeLineElement = document.querySelector('.code-content .code-line:nth-child(5)');
+          const codeLineElement = document.querySelector('.code-content .code-line:nth-child(5)')
           if (codeLineElement) {
-            codeLineElement.innerHTML = '  ' + codeLineElement.innerHTML.replace(/<span class="code-cursor"><\/span>/g, '');
+            codeLineElement.innerHTML = '  ' + codeLineElement.innerHTML.replace(/<span class="code-cursor"><\/span>/g, '')
           }
-        });
-        
+        })
+
         setTimeout(() => {
-          this.typeNextLine();
-        }, 300);
+          this.typeNextLine()
+        }, 300)
       }
     }
   }
@@ -945,33 +944,33 @@ export default {
     padding-top: 50px;
     padding-bottom: 50px;
   }
-  
+
   .hero-content {
     margin-bottom: 50px;
     max-width: 100%;
   }
-  
+
   .hero-title {
     justify-content: center;
   }
-  
+
   .hero-buttons {
     justify-content: center;
   }
-  
+
   .code-animation {
     max-width: 100%;
   }
-  
+
   .feature-row {
     flex-direction: column;
     gap: 40px;
   }
-  
+
   .feature-row.reverse {
     flex-direction: column;
   }
-  
+
   .feature-text {
     max-width: 100%;
     text-align: center;
@@ -988,19 +987,19 @@ export default {
   .hero-title {
     font-size: 3rem;
   }
-  
+
   .section-title {
     font-size: 2.5rem;
   }
-  
+
   .feature-text h3 {
     font-size: 2rem;
   }
-  
+
   .cta-title {
     font-size: 2.5rem;
   }
-  
+
   .feature-video-container {
     height: 350px;
   }
@@ -1011,21 +1010,21 @@ export default {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .hero-button {
     width: 100%;
   }
-  
+
   .section-title {
     font-size: 2rem;
   }
-  
+
   .cta-button {
     width: 100%;
   }
-  
+
   .feature-video-container {
     height: 250px;
   }
 }
-</style> 
+</style>

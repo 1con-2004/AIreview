@@ -25,7 +25,7 @@
           </button>
         </div>
       </div>
-      
+
       <!-- 课堂内容区域 -->
       <div class="classroom-content">
         <!-- 老师留言区 -->
@@ -49,7 +49,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 课堂文件区 -->
         <div class="classroom-files-section">
           <div class="section-header">
@@ -83,7 +83,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 讨论区 -->
       <div class="discussion-section">
         <div class="section-header">
@@ -116,10 +116,10 @@
           </template>
         </div>
         <div class="discussion-input">
-          <input 
-            type="text" 
-            v-model="newMessage" 
-            placeholder="输入消息..." 
+          <input
+            type="text"
+            v-model="newMessage"
+            placeholder="输入消息..."
             @keyup.enter="sendMessage"
           >
           <button class="send-btn" @click="sendMessage">
@@ -198,7 +198,7 @@ const getUserInfo = async () => {
     console.log('组件已卸载，取消获取用户信息')
     return
   }
-  
+
   try {
     // 获取学生信息
     const response = await axios.get(`/api/user/student-info/${userInfo.value.id}`)
@@ -217,7 +217,7 @@ const getClassroomInfo = async () => {
     console.log('组件已卸载，取消获取课堂信息')
     return
   }
-  
+
   try {
     loading.value.classroom = true
     const response = await axios.get(`/api/classroom/${classroomCode.value}`)
@@ -237,7 +237,7 @@ const getClassroomMessages = async () => {
     console.log('组件已卸载，取消获取课堂留言')
     return
   }
-  
+
   try {
     loading.value.messages = true
     const response = await axios.get(`/api/classroom/${classroom.value.id}/messages`)
@@ -256,7 +256,7 @@ const getClassroomFiles = async () => {
     console.log('组件已卸载，取消获取课堂文件')
     return
   }
-  
+
   try {
     loading.value.files = true
     const response = await axios.get(`/api/classroom/${classroom.value.id}/files`)
@@ -275,45 +275,45 @@ const getDiscussionMessages = async () => {
     console.log('组件已卸载，取消获取讨论消息')
     return
   }
-  
+
   try {
     // 只在首次加载时显示加载状态
     if (discussionMessages.value.length === 0) {
       loading.value.discussions = true
     }
-    
+
     console.log('获取讨论消息，课堂ID:', classroom.value.id)
     const response = await axios.get(`/api/classroom/${classroom.value.id}/discussions`)
-    
+
     // 再次检查组件是否已卸载（可能在请求过程中被卸载）
     if (isComponentUnmounted.value && !window.liveClassroomActive) {
       console.log('组件在请求过程中被卸载，取消处理讨论消息')
       return
     }
-    
+
     // 只在控制台输出简要信息，避免大量日志
     console.log('获取讨论消息:', response.data.data ? response.data.data.length : 0, '条')
-    
+
     // 确保 discussionMessages 是数组
     const newMessages = Array.isArray(response.data.data) ? response.data.data : []
-    
+
     // 检查是否有新消息（通过比较最后一条消息的ID）
-    const hasNewMessages = 
-      newMessages.length > 0 && 
-      (discussionMessages.value.length === 0 || 
+    const hasNewMessages =
+      newMessages.length > 0 &&
+      (discussionMessages.value.length === 0 ||
        newMessages[newMessages.length - 1].id !== discussionMessages.value[discussionMessages.value.length - 1].id)
-    
+
     // 只有在有新消息时才更新并滚动
     if (hasNewMessages) {
       discussionMessages.value = newMessages
       console.log('更新讨论消息，数量:', discussionMessages.value.length)
-      
+
       // 滚动到底部
       nextTick(() => {
         scrollToBottom()
       })
     }
-    
+
     loading.value.discussions = false
   } catch (error) {
     console.error('获取讨论消息失败:', error)
@@ -324,37 +324,37 @@ const getDiscussionMessages = async () => {
 // 发送消息
 const sendMessage = async () => {
   if (!newMessage.value.trim()) return
-  
+
   // 检查组件是否已卸载
   if (isComponentUnmounted.value || !window.liveClassroomActive) {
     console.log('组件已卸载，取消发送消息')
     return
   }
-  
+
   try {
     console.log('发送消息，课堂ID:', classroom.value.id, '用户ID:', userInfo.value.id)
     const response = await axios.post(`/api/classroom/${classroom.value.id}/discussions`, {
       user_id: userInfo.value.id,
       content: newMessage.value
     })
-    
+
     // 再次检查组件是否已卸载
     if (isComponentUnmounted.value || !window.liveClassroomActive) {
       console.log('组件在请求过程中被卸载，取消处理发送消息响应')
       return
     }
-    
+
     console.log('发送消息响应:', response.data)
-    
+
     // 确保 discussionMessages 是数组，然后添加新消息
     if (!Array.isArray(discussionMessages.value)) {
       discussionMessages.value = []
     }
     discussionMessages.value.push(response.data.data)
     console.log('添加消息后数量:', discussionMessages.value.length)
-    
+
     newMessage.value = ''
-    
+
     // 滚动到底部
     scrollToBottom()
   } catch (error) {
@@ -366,7 +366,7 @@ const sendMessage = async () => {
 // 监听消息变化，自动滚动到底部
 watch(discussionMessages, () => {
   if (isComponentUnmounted.value || !window.liveClassroomActive) return
-  
+
   nextTick(() => {
     scrollToBottom()
   })
@@ -375,7 +375,7 @@ watch(discussionMessages, () => {
 // 滚动到底部
 const scrollToBottom = () => {
   if (isComponentUnmounted.value || !window.liveClassroomActive) return
-  
+
   nextTick(() => {
     const messagesEl = discussionMessagesEl.value || document.querySelector('.discussion-messages')
     if (messagesEl) {
@@ -390,25 +390,25 @@ const scrollToBottom = () => {
 // 获取文件图标
 const getFileIcon = (type) => {
   const iconMap = {
-    'pdf': 'fas fa-file-pdf',
-    'doc': 'fas fa-file-word',
-    'docx': 'fas fa-file-word',
-    'xls': 'fas fa-file-excel',
-    'xlsx': 'fas fa-file-excel',
-    'ppt': 'fas fa-file-powerpoint',
-    'pptx': 'fas fa-file-powerpoint',
-    'jpg': 'fas fa-file-image',
-    'jpeg': 'fas fa-file-image',
-    'png': 'fas fa-file-image',
-    'zip': 'fas fa-file-archive',
-    'rar': 'fas fa-file-archive',
-    'txt': 'fas fa-file-alt',
-    'js': 'fab fa-js',
-    'html': 'fab fa-html5',
-    'css': 'fab fa-css3',
-    'default': 'fas fa-file'
+    pdf: 'fas fa-file-pdf',
+    doc: 'fas fa-file-word',
+    docx: 'fas fa-file-word',
+    xls: 'fas fa-file-excel',
+    xlsx: 'fas fa-file-excel',
+    ppt: 'fas fa-file-powerpoint',
+    pptx: 'fas fa-file-powerpoint',
+    jpg: 'fas fa-file-image',
+    jpeg: 'fas fa-file-image',
+    png: 'fas fa-file-image',
+    zip: 'fas fa-file-archive',
+    rar: 'fas fa-file-archive',
+    txt: 'fas fa-file-alt',
+    js: 'fab fa-js',
+    html: 'fab fa-html5',
+    css: 'fab fa-css3',
+    default: 'fas fa-file'
   }
-  
+
   return iconMap[type] || iconMap.default
 }
 
@@ -440,25 +440,25 @@ const downloadFile = (file) => {
     console.log('组件已卸载，取消下载文件')
     return
   }
-  
+
   try {
     console.log('下载文件:', file.id, file.file_name)
-    
+
     // 创建一个隐藏的a标签用于下载
     const downloadLink = document.createElement('a')
-    
+
     // 设置下载链接
     downloadLink.href = `/api/classroom/files/${file.id}/download`
-    
+
     // 设置下载文件名
     downloadLink.download = file.file_name
-    
+
     // 添加到文档中
     document.body.appendChild(downloadLink)
-    
+
     // 触发点击事件
     downloadLink.click()
-    
+
     // 移除元素
     document.body.removeChild(downloadLink)
   } catch (error) {
@@ -470,37 +470,37 @@ const downloadFile = (file) => {
 // 清除所有定时器的函数
 const clearAllTimers = () => {
   console.log('开始清除所有定时器')
-  
+
   // 设置全局状态为非活动
   window.liveClassroomActive = false
-  
+
   // 清除当前时间定时器
   if (timeTimer.value) {
     clearInterval(timeTimer.value)
     timeTimer.value = null
     console.log('已清除时间定时器')
   }
-  
+
   // 清除讨论消息定时器
   if (discussionTimer.value) {
     clearInterval(discussionTimer.value)
     discussionTimer.value = null
     console.log('已清除讨论消息定时器')
   }
-  
+
   // 清除课堂数据定时器
   if (classroomDataTimer.value) {
     clearInterval(classroomDataTimer.value)
     classroomDataTimer.value = null
     console.log('已清除课堂数据定时器')
   }
-  
+
   // 清除可能存在的其他定时器
-  const highestTimeoutId = setTimeout(";");
+  const highestTimeoutId = setTimeout(';')
   for (let i = 0; i < highestTimeoutId; i++) {
-    clearTimeout(i);
+    clearTimeout(i)
   }
-  
+
   console.log('所有定时器已清除')
 }
 
@@ -531,10 +531,10 @@ const leaveClassroom = () => {
 const initData = async () => {
   // 设置全局状态为活动，确保初始化能正常进行
   window.liveClassroomActive = true
-  
+
   await getUserInfo()
   await getClassroomInfo()
-  
+
   if (classroom.value.id) {
     console.log('初始化课堂数据，课堂ID:', classroom.value.id)
     try {
@@ -543,16 +543,16 @@ const initData = async () => {
         getClassroomFiles(),
         getDiscussionMessages()
       ])
-      
+
       // 再次检查组件是否已卸载
       if (isComponentUnmounted.value) {
         console.log('组件在初始化过程中被卸载，取消设置定时器')
         window.liveClassroomActive = false
         return
       }
-      
+
       console.log('初始化完成，讨论消息数量:', discussionMessages.value.length)
-      
+
       // 设置当前时间定时器
       if (!timeTimer.value) {
         timeTimer.value = setInterval(() => {
@@ -564,7 +564,7 @@ const initData = async () => {
           }
         }, 1000)
       }
-      
+
       // 设置定时器，定期刷新数据
       if (!discussionTimer.value) {
         discussionTimer.value = setInterval(() => {
@@ -576,7 +576,7 @@ const initData = async () => {
           }
         }, 10000) // 每10秒刷新一次讨论消息，减少刷新频率
       }
-      
+
       if (!classroomDataTimer.value) {
         classroomDataTimer.value = setInterval(() => {
           if (!isComponentUnmounted.value && window.liveClassroomActive) {
@@ -597,19 +597,19 @@ const initData = async () => {
 // 组件挂载后初始化数据
 onMounted(() => {
   console.log('组件挂载')
-  
+
   // 先清除可能存在的定时器
   clearAllTimers()
-  
+
   // 重置组件卸载标记
   isComponentUnmounted.value = false
-  
+
   // 设置全局状态为活动
   window.liveClassroomActive = true
-  
+
   // 初始化数据
   initData()
-  
+
   // 使用 nextTick 确保 DOM 已经渲染后设置引用
   nextTick(() => {
     discussionMessagesEl.value = document.querySelector('.discussion-messages')
@@ -979,4 +979,4 @@ onUnmounted(() => {
 ::-webkit-scrollbar-thumb:hover {
   background: #45b6af;
 }
-</style> 
+</style>

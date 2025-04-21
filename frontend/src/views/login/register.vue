@@ -9,7 +9,7 @@
     <div class="login-container">
       <div class="login-box">
         <div class="header-icons">
-          
+
         </div>
 
         <div class="login-content">
@@ -65,31 +65,31 @@
               <h3>用户注册</h3>
               <form @submit.prevent="handleRegister">
                 <div class="form-item">
-                  <input 
-                    type="text" 
-                    v-model="registerForm.username" 
+                  <input
+                    type="text"
+                    v-model="registerForm.username"
                     placeholder="请输入用户名"
                     required
                   >
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="email" 
-                    v-model="registerForm.email" 
+                  <input
+                    type="email"
+                    v-model="registerForm.email"
                     placeholder="请输入邮箱"
                     required
                   >
                 </div>
                 <div class="form-item verification-code">
-                  <input 
-                    type="text" 
-                    v-model="registerForm.code" 
+                  <input
+                    type="text"
+                    v-model="registerForm.code"
                     placeholder="请输入验证码"
                     required
                   >
-                  <button 
-                    type="button" 
-                    class="send-code-btn" 
+                  <button
+                    type="button"
+                    class="send-code-btn"
                     :disabled="countdown > 0"
                     @click="sendVerificationCode"
                   >
@@ -97,25 +97,25 @@
                   </button>
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="password" 
-                    v-model="registerForm.password" 
+                  <input
+                    type="password"
+                    v-model="registerForm.password"
                     placeholder="请输入密码"
                     required
                   >
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="password" 
-                    v-model="registerForm.confirmPassword" 
+                  <input
+                    type="password"
+                    v-model="registerForm.confirmPassword"
                     placeholder="请确认密码"
                     required
                   >
                 </div>
                 <div class="form-item">
-                  <input 
-                    type="tel" 
-                    v-model="registerForm.phone" 
+                  <input
+                    type="tel"
+                    v-model="registerForm.phone"
                     placeholder="请输入手机号（选填）"
                   >
                 </div>
@@ -142,12 +142,6 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Register'
-}
-</script>
-
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -169,19 +163,15 @@ const sendVerificationCode = async () => {
     alert('请输入正确的邮箱地址')
     return
   }
-  
+
   try {
     console.log('开始发送验证码请求')
-    const response = await axios({
+    const response = await axios.request({
       method: 'post',
-      url: 'http://localhost:3000/api/auth/send-email-code',
+      url: '/api/auth/send-email-code',
       data: {
         email: registerForm.email
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
+      }
     })
 
     console.log('收到响应:', response.data)
@@ -236,10 +226,10 @@ const handleRegister = async () => {
     alert('手机号格式不正确')
     return
   }
-  
+
   try {
-    console.log('开始注册请求，表单数据：', registerForm);
-    const response = await axios.post('http://localhost:3000/api/auth/register', {
+    console.log('开始注册请求，表单数据：', registerForm)
+    const response = await axios.post('/api/auth/register', {
       username: registerForm.username,
       password: registerForm.password,
       email: registerForm.email,
@@ -247,7 +237,7 @@ const handleRegister = async () => {
       code: registerForm.code
     })
 
-    console.log('注册响应：', response.data);
+    console.log('注册响应：', response.data)
     if (response.data.success) {
       alert(response.data.message || '注册成功')
       router.push('/login')
@@ -255,7 +245,7 @@ const handleRegister = async () => {
       alert(response.data.message || '注册失败')
     }
   } catch (error) {
-    console.error('注册错误：', error);
+    console.error('注册错误：', error)
     if (error.response?.data?.message) {
       alert(error.response.data.message)
     } else {
@@ -556,17 +546,17 @@ const handleRegister = async () => {
   .login-box {
     padding: 20px;
   }
-  
+
   .feature-card {
     padding: 24px;
   }
-  
+
   .geometric-shape {
     display: none;
   }
-  
+
   .circle {
     opacity: 0.5;
   }
 }
-</style> 
+</style>

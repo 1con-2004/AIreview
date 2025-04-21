@@ -10,22 +10,22 @@
       </div>
       <div class="dialog-content">
         <div class="tabs">
-          <button 
-            class="tab-btn" 
+          <button
+            class="tab-btn"
             :class="{ active: activeTab === 'basic' }"
             @click="activeTab = 'basic'"
           >
             基本信息
           </button>
-          <button 
-            class="tab-btn" 
+          <button
+            class="tab-btn"
             :class="{ active: activeTab === 'testcase' }"
             @click="activeTab = 'testcase'"
           >
             测试用例
           </button>
-          <button 
-            class="tab-btn" 
+          <button
+            class="tab-btn"
             :class="{ active: activeTab === 'solution' }"
             @click="activeTab = 'solution'"
           >
@@ -37,34 +37,34 @@
         <div class="tab-content" v-if="activeTab === 'basic'">
           <div class="form-group">
             <label>题目标题</label>
-            <input 
-              type="text" 
-              v-model="formData.title" 
+            <input
+              type="text"
+              v-model="formData.title"
               placeholder="请输入题目标题"
               class="form-control"
             />
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label>难度等级</label>
               <div class="difficulty-buttons">
-                <button 
-                  class="difficulty-btn easy" 
+                <button
+                  class="difficulty-btn easy"
                   :class="{ active: formData.difficulty === '简单' }"
                   @click="formData.difficulty = '简单'"
                 >
                   简单
                 </button>
-                <button 
-                  class="difficulty-btn medium" 
+                <button
+                  class="difficulty-btn medium"
                   :class="{ active: formData.difficulty === '中等' }"
                   @click="formData.difficulty = '中等'"
                 >
                   中等
                 </button>
-                <button 
-                  class="difficulty-btn hard" 
+                <button
+                  class="difficulty-btn hard"
                   :class="{ active: formData.difficulty === '困难' }"
                   @click="formData.difficulty = '困难'"
                 >
@@ -72,7 +72,7 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="form-group half">
               <label>题目分类</label>
               <select
@@ -81,8 +81,8 @@
               >
                 <option value="" disabled>请选择题目分类</option>
                 <option
-                  v-for="category in categories" 
-                  :key="category.id" 
+                  v-for="category in categories"
+                  :key="category.id"
                   :value="category.id"
                 >
                   {{ category.name }}
@@ -90,13 +90,13 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>题目标签</label>
             <div class="tags-input">
               <div class="tags-container">
-                <span 
-                  v-for="(tag, index) in tags" 
+                <span
+                  v-for="(tag, index) in tags"
                   :key="index"
                   class="tag-item"
                 >
@@ -106,45 +106,45 @@
                   </button>
                 </span>
               </div>
-              <input 
-                type="text" 
-                v-model="tagInput" 
+              <input
+                type="text"
+                v-model="tagInput"
                 placeholder="输入标签，按回车添加"
                 class="tag-control"
                 @keydown.enter.prevent="addTag"
               />
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label>时间限制 (ms)</label>
-              <input 
-                type="number" 
-                v-model.number="formData.time_limit" 
+              <input
+                type="number"
+                v-model.number="formData.time_limit"
                 placeholder="输入时间限制"
                 class="form-control"
                 min="1"
               />
             </div>
-            
+
             <div class="form-group half">
               <label>内存限制 (MB)</label>
-              <input 
-                type="number" 
-                v-model.number="formData.memory_limit" 
+              <input
+                type="number"
+                v-model.number="formData.memory_limit"
                 placeholder="输入内存限制"
                 class="form-control"
                 min="1"
               />
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>题目描述</label>
             <div class="editor-container">
-              <textarea 
-                v-model="formData.description" 
+              <textarea
+                v-model="formData.description"
                 placeholder="请输入题目描述"
                 class="form-control description-editor"
                 rows="10"
@@ -172,8 +172,8 @@
               <div class="testcase-content">
                 <div class="form-group">
                   <label>输入</label>
-                  <textarea 
-                    v-model="testcase.input" 
+                  <textarea
+                    v-model="testcase.input"
                     placeholder="请输入测试用例输入"
                     class="form-control"
                     rows="4"
@@ -181,8 +181,8 @@
                 </div>
                 <div class="form-group">
                   <label>输出</label>
-                  <textarea 
-                    v-model="testcase.output" 
+                  <textarea
+                    v-model="testcase.output"
                     placeholder="请输入测试用例输出"
                     class="form-control"
                     rows="4"
@@ -203,8 +203,8 @@
         <div class="tab-content" v-if="activeTab === 'solution'">
           <div class="form-group">
             <label>解题思路</label>
-            <textarea 
-              v-model="formData.solution.solution_approach" 
+            <textarea
+              v-model="formData.solution.solution_approach"
               placeholder="请输入解题思路"
               class="form-control"
               rows="6"
@@ -213,18 +213,18 @@
           <div class="form-row">
             <div class="form-group half">
               <label>时间复杂度</label>
-              <input 
-                type="text" 
-                v-model="formData.solution.time_complexity" 
+              <input
+                type="text"
+                v-model="formData.solution.time_complexity"
                 placeholder="例如: O(n)"
                 class="form-control"
               />
             </div>
             <div class="form-group half">
               <label>空间复杂度</label>
-              <input 
-                type="text" 
-                v-model="formData.solution.space_complexity" 
+              <input
+                type="text"
+                v-model="formData.solution.space_complexity"
                 placeholder="例如: O(1)"
                 class="form-control"
               />
@@ -239,8 +239,8 @@
                 <div class="form-group">
                   <label>{{ language.language_name || language.name }} 代码实现</label>
                   <div class="language-tag">{{ language.language_name || language.name }}</div>
-                  <textarea 
-                    v-model="getSolutionCode(language.id).standard_solution" 
+                  <textarea
+                    v-model="getSolutionCode(language.id).standard_solution"
                     :placeholder="`请输入 ${language.language_name || language.name} 解决方案代码`"
                     class="form-control code-editor"
                     rows="10"
@@ -299,7 +299,7 @@ const formData = reactive({
   time_limit: props.problem.time_limit || 1000,
   memory_limit: props.problem.memory_limit || 256,
   tags: props.problem.tags || '',
-  testcases: props.problem.testcases || [],  // 使用父组件传递的测试用例
+  testcases: props.problem.testcases || [], // 使用父组件传递的测试用例
   solution: {
     solution_approach: '',
     time_complexity: 'O(n)',
@@ -325,7 +325,7 @@ const loadCategories = async () => {
 const tags = computed({
   get: () => {
     if (!formData.tags) return []
-    return typeof formData.tags === 'string' 
+    return typeof formData.tags === 'string'
       ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       : formData.tags
   },
@@ -356,33 +356,33 @@ const removeTag = (index) => {
 // 添加测试用例
 const addTestcase = () => {
   // 计算新测试用例的序号（如果已有测试用例，则为最大序号+1，否则为1）
-  let orderNum = 1;
+  let orderNum = 1
   if (formData.testcases.length > 0) {
     // 找出当前最大的order_num值
-    const maxOrderNum = Math.max(...formData.testcases.map(tc => Number(tc.order_num) || 0));
-    orderNum = maxOrderNum + 1;
+    const maxOrderNum = Math.max(...formData.testcases.map(tc => Number(tc.order_num) || 0))
+    orderNum = maxOrderNum + 1
   }
-  
+
   formData.testcases.push({
     input: '',
     output: '',
     is_example: formData.testcases.length === 0, // 第一个测试用例默认为示例
     order_num: orderNum // 确保每个测试用例都有唯一的顺序编号
-  });
-  
-  console.log(`添加新测试用例，序号: ${orderNum}，当前测试用例数: ${formData.testcases.length}`);
+  })
+
+  console.log(`添加新测试用例，序号: ${orderNum}，当前测试用例数: ${formData.testcases.length}`)
 }
 
 // 移除测试用例
 const removeTestcase = (index) => {
-  formData.testcases.splice(index, 1);
-  
+  formData.testcases.splice(index, 1)
+
   // 重新排序所有测试用例的order_num
   formData.testcases.forEach((tc, idx) => {
-    tc.order_num = idx + 1;
-  });
-  
-  console.log('移除测试用例后重新排序，当前测试用例数:', formData.testcases.length);
+    tc.order_num = idx + 1
+  })
+
+  console.log('移除测试用例后重新排序，当前测试用例数:', formData.testcases.length)
 }
 
 // 获取或创建指定语言的解决方案代码
@@ -410,10 +410,10 @@ const initSolutionCodes = () => {
 const loadProblemData = async () => {
   try {
     console.log('加载题目详情:', props.problem)
-    
+
     // 加载分类列表
     await loadCategories()
-    
+
     // 如果题目分类是数字ID，确保使用该ID
     if (props.problem.category && !isNaN(Number(props.problem.category))) {
       formData.category = Number(props.problem.category)
@@ -427,10 +427,10 @@ const loadProblemData = async () => {
         console.log('通过分类名称找到分类ID:', formData.category)
       }
     }
-    
+
     // 检查是否已有测试用例数据
-    console.log('父组件传递的测试用例:', props.problem.testcases);
-    
+    console.log('父组件传递的测试用例:', props.problem.testcases)
+
     // 如果父组件没有传递测试用例数据或者测试用例为空，则从API获取
     if (!props.problem.testcases || props.problem.testcases.length === 0) {
       if (formData.testcases.length === 0) {
@@ -440,32 +440,32 @@ const loadProblemData = async () => {
           console.log('开始请求测试用例，题目ID:', props.problem.id)
           const testCasesResponse = await axios.get(`/api/admin/problem-pool/${props.problem.id}/test-cases`)
           console.log('测试用例API响应:', testCasesResponse)
-          
+
           if (testCasesResponse.data && testCasesResponse.data.success && testCasesResponse.data.data) {
             // 转换测试用例格式以适配前端
-            const testCasesData = testCasesResponse.data.data;
-            console.log('原始测试用例数据:', testCasesData);
-            
+            const testCasesData = testCasesResponse.data.data
+            console.log('原始测试用例数据:', testCasesData)
+
             if (testCasesData && testCasesData.length > 0) {
               // 确保每个测试用例都有正确的order_num值
               formData.testcases = testCasesData.map((tc, index) => {
                 // 如果没有order_num或者order_num为0，则使用索引+1作为order_num
-                const orderNum = tc.order_num && tc.order_num > 0 ? tc.order_num : (index + 1);
+                const orderNum = tc.order_num && tc.order_num > 0 ? tc.order_num : (index + 1)
                 return {
                   input: tc.input || '',
                   output: tc.output || '',
                   is_example: tc.is_example === 1 || tc.is_example === true,
                   order_num: orderNum // 确保有有效的order_num
-                };
-              });
-              
+                }
+              })
+
               // 按order_num排序
-              formData.testcases.sort((a, b) => a.order_num - b.order_num);
-              
-              console.log('处理后的测试用例:', formData.testcases);
+              formData.testcases.sort((a, b) => a.order_num - b.order_num)
+
+              console.log('处理后的测试用例:', formData.testcases)
             } else {
-              console.log('测试用例数据为空，添加默认测试用例');
-              addTestcase();
+              console.log('测试用例数据为空，添加默认测试用例')
+              addTestcase()
             }
           } else {
             console.log('没有找到测试用例数据或者数据格式不正确')
@@ -480,17 +480,17 @@ const loadProblemData = async () => {
         }
       }
     }
-    
+
     // 加载编程语言列表
     try {
       console.log('开始请求编程语言列表')
       const languagesResponse = await axios.get('/api/admin/solution-languages')
       console.log('编程语言列表API响应:', languagesResponse)
-      
+
       if (languagesResponse.data && languagesResponse.data.success && languagesResponse.data.data) {
         languages.value = languagesResponse.data.data.filter(lang => [1, 2, 3, 4].includes(lang.id))
         console.log('加载到的编程语言列表:', languages.value)
-        
+
         // 确保每种语言都有解决方案代码
         initSolutionCodes()
       }
@@ -498,21 +498,21 @@ const loadProblemData = async () => {
       console.error('加载编程语言列表失败:', err)
       console.error('错误详情:', err.response ? err.response.data : '无响应')
     }
-    
+
     // 尝试加载解决方案数据
     try {
       // 向后端请求该题目的解决方案
       console.log('开始请求解决方案，题目ID:', props.problem.id)
       const solutionResponse = await axios.get(`/api/admin/problem-pool/${props.problem.id}/solution`)
       console.log('解决方案API响应:', solutionResponse)
-      
+
       if (solutionResponse.data && solutionResponse.data.success && solutionResponse.data.data) {
         const solutionData = solutionResponse.data.data
         // 更新解决方案信息
         formData.solution.solution_approach = solutionData.solution_approach || ''
         formData.solution.time_complexity = solutionData.time_complexity || 'O(n)'
         formData.solution.space_complexity = solutionData.space_complexity || 'O(1)'
-        
+
         // 如果有代码数据
         if (solutionData.code && solutionData.code.length > 0) {
           // 更新每种语言的代码
@@ -545,20 +545,20 @@ const handleImport = async () => {
     activeTab.value = 'basic'
     return
   }
-  
+
   if (!formData.category) {
     alert('请选择题目分类')
     activeTab.value = 'basic'
     return
   }
-  
+
   // 确保至少有一个测试用例
   if (formData.testcases.length === 0) {
     alert('请至少添加一个测试用例')
     activeTab.value = 'testcase'
     return
   }
-  
+
   // 确保所有语言都有解决方案代码
   const missingLanguages = []
   languages.value.forEach(lang => {
@@ -567,17 +567,17 @@ const handleImport = async () => {
       missingLanguages.push(lang.language_name)
     }
   })
-  
+
   if (missingLanguages.length > 0) {
     alert(`请提供以下语言的解决方案代码: ${missingLanguages.join(', ')}`)
     activeTab.value = 'solution'
     return
   }
-  
+
   try {
     // 显示加载状态
     const loadingToast = await showLoadingToast('正在发布题目到题库...')
-    
+
     // 将题目从题目池迁移到正式题库
     const response = await axios.post('/api/admin/problem-pool/import', {
       problem_pool_id: formData.id,
@@ -591,18 +591,18 @@ const handleImport = async () => {
       test_cases: formData.testcases,
       solution: formData.solution
     })
-    
+
     // 关闭加载状态
     loadingToast.close()
-    
+
     if (response.data && response.data.success) {
       // 显示成功消息
       showSuccessToast('题目已成功发布到题库！')
-      
+
       // 关闭对话框并通知父组件
-      emit('import', { 
-        ...formData, 
-        imported: true, 
+      emit('import', {
+        ...formData,
+        imported: true,
         new_problem_id: response.data.new_problem_id,
         // 通知父组件引用次数增加
         reference_count: (props.problem.reference_count || 0) + 1
@@ -643,10 +643,10 @@ onMounted(() => {
   if (formData.testcases.length === 0) {
     addTestcase()
   }
-  
+
   // 初始化加载分类列表
-  loadCategories();
-  
+  loadCategories()
+
   // 加载题目相关数据
   loadProblemData()
 })
@@ -1075,7 +1075,7 @@ label {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .difficulty-buttons {
     flex-direction: column;
     gap: 8px;
@@ -1134,4 +1134,4 @@ label {
   min-height: 150px;
   margin-top: 4px;
 }
-</style> 
+</style>

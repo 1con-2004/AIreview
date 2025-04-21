@@ -29,11 +29,78 @@ app.use((req, res, next) => {
   next();
 });
 
-// 配置 CORS - 从环境变量读取前端地址
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
-  credentials: true
-}));
+// 健康检查API端点
+app.get('/api/health', async (req, res) => {
+  console.log('健康检查请求被调用');
+  try {
+    // 检查Docker可用性
+    const isDockerAvailable = await dockerHelper.checkDockerAvailability();
+    
+    // 如果Docker不可用，获取更详细的诊断信息
+    let dockerDiagnostics = null;
+    if (!isDockerAvailable) {
+      console.log('Docker不可用，进行详细诊断');
+      dockerDiagnostics = await dockerHelper.diagnoseDockerPermissions();
+    }
+    
+    // 返回健康状态
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      dockerAvailable: isDockerAvailable,
+      services: {
+        api: true,
+        judge: isDockerAvailable
+      },
+      diagnostics: isDockerAvailable ? null : dockerDiagnostics
+    });
+  } catch (error) {
+    console.error('健康检查失败:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 详细Docker诊断API端点
+app.get('/api/health/docker', async (req, res) => {
+  console.log('Docker诊断API请求被调用');
+  try {
+    // 获取Docker信息
+    const dockerInfo = await dockerHelper.getDockerInfo();
+    
+    // 获取Docker权限诊断
+    const dockerDiagnostics = await dockerHelper.diagnoseDockerPermissions();
+    
+    // 返回诊断结果
+    res.json({
+      timestamp: new Date().toISOString(),
+      dockerInfo,
+      dockerDiagnostics
+    });
+  } catch (error) {
+    console.error('Docker诊断失败:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// CORS配置
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 允许所有源
+    callback(null, true);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // 配置 session
 app.use(session({

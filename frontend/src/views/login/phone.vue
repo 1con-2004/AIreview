@@ -9,25 +9,25 @@
     <div class="login-container">
       <div class="login-box">
         <div class="header-icons">
-          <svg 
+          <svg
             v-if="isDarkMode"
-            viewBox="0 0 24 24" 
+            viewBox="0 0 24 24"
             class="header-icon theme-icon"
             @click="toggleTheme"
           >
-            <path 
-              fill="currentColor" 
+            <path
+              fill="currentColor"
               d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"
             />
           </svg>
-          <svg 
+          <svg
             v-else
-            viewBox="0 0 24 24" 
+            viewBox="0 0 24 24"
             class="header-icon theme-icon"
             @click="toggleTheme"
           >
-            <path 
-              fill="currentColor" 
+            <path
+              fill="currentColor"
               d="M12,7a5,5,0,1,0,5,5A5,5,0,0,0,12,7ZM12,15a3,3,0,1,1,3-3A3,3,0,0,1,12,15ZM11,5V3a1,1,0,0,1,2,0V5a1,1,0,0,1-2,0Zm0,16v-2a1,1,0,0,1,2,0v2a1,1,0,0,1-2,0ZM19.778,6.636a1,1,0,1,1,1.414-1.414l1.414,1.414a1,1,0,0,1-1.414,1.414ZM1.394,19.02l1.414-1.414a1,1,0,0,1,1.414,1.414L2.808,20.434a1,1,0,0,1-1.414-1.414ZM21,11h2a1,1,0,0,1,0,2H21a1,1,0,0,1,0-2ZM3,11H1a1,1,0,0,1,0-2H3a1,1,0,0,1,0,2Zm16.192,6.606-1.414-1.414a1,1,0,0,1,1.414-1.414l1.414,1.414a1,1,0,0,1-1.414,1.414ZM4.222,6.636,2.808,5.222A1,1,0,0,1,4.222,3.808L5.636,5.222A1,1,0,0,1,4.222,6.636Z"
             />
           </svg>
@@ -86,23 +86,23 @@
               <h3>验证码登录</h3>
               <form @submit.prevent="handlePhoneLogin">
                 <div class="form-item">
-                  <input 
-                    type="tel" 
-                    v-model="phoneForm.phone" 
+                  <input
+                    type="tel"
+                    v-model="phoneForm.phone"
                     placeholder="请输入手机号"
                     required
                   >
                 </div>
                 <div class="form-item verification-code">
-                  <input 
-                    type="text" 
-                    v-model="phoneForm.code" 
+                  <input
+                    type="text"
+                    v-model="phoneForm.code"
                     placeholder="请输入验证码"
                     required
                   >
-                  <button 
-                    type="button" 
-                    class="send-code-btn" 
+                  <button
+                    type="button"
+                    class="send-code-btn"
                     :disabled="countdown > 0"
                     @click="sendVerificationCode"
                   >
@@ -132,12 +132,6 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginPhone'
-}
-</script>
-
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -155,7 +149,7 @@ const sendVerificationCode = async () => {
     alert('请输入正确的手机号')
     return
   }
-  
+
   try {
     countdown.value = 60
     const timer = setInterval(() => {
@@ -479,17 +473,17 @@ onMounted(() => {
   .login-box {
     padding: 20px;
   }
-  
+
   .feature-card {
     padding: 24px;
   }
-  
+
   .geometric-shape {
     display: none;
   }
-  
+
   .circle {
     opacity: 0.5;
   }
 }
-</style> 
+</style>

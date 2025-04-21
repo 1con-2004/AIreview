@@ -3,21 +3,19 @@ FROM node:18-alpine
 # 设置工作目录
 WORKDIR /app
 
-# 安装构建工具和Python (bcrypt依赖)
+# 安装构建工具和Python (bcrypt依赖)，以及Docker CLI
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    bash
-
-# 确保全局安装 yarn
-RUN npm install -g yarn
+    bash \
+    docker-cli
 
 # 复制package.json和package-lock.json
 COPY package*.json ./
 
-# 安装依赖
-RUN yarn install 
+# 安装依赖和nodemon用于开发环境的热重载
+RUN yarn install && yarn global add nodemon
 
 # 复制剩余文件
 COPY . .
@@ -25,14 +23,8 @@ COPY . .
 # 创建必要的目录
 RUN mkdir -p logs uploads temp
 
-# 设置入口点脚本权限
-RUN chmod +x /app/docker-entrypoint.sh
-
 # 暴露端口
 EXPOSE 3000
 
-# 使用bash执行入口点脚本，避免权限问题
-ENTRYPOINT ["/bin/bash", "/app/docker-entrypoint.sh"]
-
-# 启动应用
-CMD ["node", "src/app.js"] 
+# 使用nodemon启动应用以支持热重载
+CMD ["nodemon", "src/app.js"] 

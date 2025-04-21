@@ -7,7 +7,7 @@
         <h1>课堂辅助系统</h1>
         <p>提升教学体验，促进师生互动</p>
       </div>
-      
+
       <div class="classroom-cards">
         <!-- 课堂签到卡片 -->
         <div class="classroom-card" @click="goToAttendance">
@@ -18,7 +18,7 @@
           <p>快速完成课堂签到，记录出勤情况</p>
           <button class="card-btn">立即签到</button>
         </div>
-        
+
         <!-- 进入课堂卡片 -->
         <div class="classroom-card" @click="showClassroomDialog">
           <div class="card-icon">
@@ -30,7 +30,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 进入课堂弹窗 -->
     <div class="modal-backdrop" v-if="showClassModal" @click="closeClassModal"></div>
     <div class="modal" v-if="showClassModal">
@@ -87,7 +87,7 @@ const getUserInfo = async () => {
     const storedUserInfo = localStorage.getItem('userInfo')
     if (storedUserInfo) {
       userInfo.value = JSON.parse(storedUserInfo)
-      
+
       // 获取学生信息
       const response = await axios.get(`/api/user/student-info/${userInfo.value.id}`)
       if (response.data.code === 200 && response.data.data) {
@@ -120,18 +120,18 @@ const enterClassroom = async () => {
     alert('请输入课堂码')
     return
   }
-  
+
   if (!userInfo.value) {
     alert('请先登录')
     return
   }
-  
+
   try {
     // 验证课堂码
     const response = await axios.post('/api/classroom/verify', {
       code: classroomCode.value
     })
-    
+
     if (response.data.code === 200) {
       router.push(`/classroom/live/${classroomCode.value}`)
       closeClassModal()
@@ -417,4 +417,4 @@ onMounted(() => {
 .login-btn:hover {
   background: #45b6af;
 }
-</style> 
+</style>

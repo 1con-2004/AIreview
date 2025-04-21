@@ -29,9 +29,9 @@
         <!-- 左侧题目列表 -->
         <div class="problems-list">
           <div class="problem-cards">
-            <div 
-              v-for="problem in problems" 
-              :key="problem.id" 
+            <div
+              v-for="problem in problems"
+              :key="problem.id"
               class="problem-card"
               :class="{ 'completed': problem.completed }"
               @click="goToProblem(problem.problem_number)"
@@ -85,7 +85,7 @@ export default {
   components: {
     NavBar
   },
-  data() {
+  data () {
     return {
       planId: null,
       planIcon: '',
@@ -98,53 +98,53 @@ export default {
       creatorName: ''
     }
   },
-  async created() {
+  async created () {
     // 从路由参数获取计划ID
-    this.planId = this.$route.params.id;
-    await this.fetchPlanDetails();
-    await this.fetchPlanProblems();
-    await this.fetchUserProgress();
+    this.planId = this.$route.params.id
+    await this.fetchPlanDetails()
+    await this.fetchPlanProblems()
+    await this.fetchUserProgress()
   },
   methods: {
-    async fetchPlanDetails() {
+    async fetchPlanDetails () {
       try {
-        console.log('开始获取计划详情，计划ID:', this.planId);
-        
+        console.log('开始获取计划详情，计划ID:', this.planId)
+
         // 获取学习计划详情
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}`);
-        console.log('获取到的原始响应:', response);
+        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}`)
+        console.log('获取到的原始响应:', response)
 
         if (!response.data || !response.data.success) {
-          console.error('API返回格式不正确:', response.data);
-          throw new Error('获取计划详情失败');
+          console.error('API返回格式不正确:', response.data)
+          throw new Error('获取计划详情失败')
         }
 
-        const plan = response.data.data;
-        console.log('处理后的计划数据:', plan);
-        
+        const plan = response.data.data
+        console.log('处理后的计划数据:', plan)
+
         // 设置默认图标
-        const defaultIcon = '/icons/algorithm.png';
-        
+        const defaultIcon = '/icons/algorithm.png'
+
         // 处理图标路径
-        this.planIcon = plan.icon 
+        this.planIcon = plan.icon
           ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon.startsWith('/') ? plan.icon : `/${plan.icon}`}`)
-          : `http://localhost:8080${defaultIcon}`;
-        
-        this.planTag = plan.tag || '算法';
-        this.planTitle = plan.title || '学习计划';
-        this.description = plan.description || '';
-        this.creatorName = plan.creator_name || '';
-        
+          : `http://localhost:8080${defaultIcon}`
+
+        this.planTag = plan.tag || '算法'
+        this.planTitle = plan.title || '学习计划'
+        this.description = plan.description || ''
+        this.creatorName = plan.creator_name || ''
+
         // 处理学习要点
         try {
-          this.points = Array.isArray(plan.points) 
-            ? plan.points 
-            : (plan.points ? JSON.parse(plan.points) : []);
+          this.points = Array.isArray(plan.points)
+            ? plan.points
+            : (plan.points ? JSON.parse(plan.points) : [])
         } catch (e) {
-          console.warn('解析points失败，使用默认空数组:', e);
-          this.points = [];
+          console.warn('解析points失败，使用默认空数组:', e)
+          this.points = []
         }
-        
+
         console.log('数据处理完成:', {
           planIcon: this.planIcon,
           planTag: this.planTag,
@@ -152,32 +152,32 @@ export default {
           description: this.description,
           points: this.points,
           creatorName: this.creatorName
-        });
+        })
       } catch (error) {
-        console.error('获取计划详情失败:', error);
-        ElMessage.error(error.message || '获取计划详情失败，请稍后重试');
+        console.error('获取计划详情失败:', error)
+        ElMessage.error(error.message || '获取计划详情失败，请稍后重试')
       }
     },
-    
-    async fetchPlanProblems() {
+
+    async fetchPlanProblems () {
       try {
-        console.log('开始获取计划题目，计划ID:', this.planId);
+        console.log('开始获取计划题目，计划ID:', this.planId)
 
         // 获取学习路径的题目列表
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/problems`);
-        console.log('API返回的原始数据:', response.data);
-        
+        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/problems`)
+        console.log('API返回的原始数据:', response.data)
+
         if (!response.data || !response.data.success) {
-          console.error('API返回格式不正确:', response.data);
-          throw new Error('获取计划题目失败');
+          console.error('API返回格式不正确:', response.data)
+          throw new Error('获取计划题目失败')
         }
 
-        const problemsData = response.data.data;
+        const problemsData = response.data.data
         if (!Array.isArray(problemsData)) {
-          console.error('API返回的题目数据不是数组格式:', problemsData);
-          throw new Error('题目数据格式错误');
+          console.error('API返回的题目数据不是数组格式:', problemsData)
+          throw new Error('题目数据格式错误')
         }
-        
+
         this.problems = problemsData.map(problem => ({
           id: problem.id,
           problem_number: problem.problem_number,
@@ -188,152 +188,153 @@ export default {
           section: problem.section || '',
           acceptance_rate: parseFloat(problem.acceptance_rate) || 0,
           total_submissions: parseInt(problem.total_submissions) || 0,
-          tags: Array.isArray(problem.tags) ? problem.tags : 
-                (problem.tags ? problem.tags.split(',').map(tag => tag.trim()) : [])
-        }));
-        
-        console.log('处理后的题目列表:', this.problems);
+          tags: Array.isArray(problem.tags)
+            ? problem.tags
+            : (problem.tags ? problem.tags.split(',').map(tag => tag.trim()) : [])
+        }))
+
+        console.log('处理后的题目列表:', this.problems)
       } catch (error) {
-        console.error('获取计划题目失败:', error);
-        ElMessage.error(error.message || '获取计划题目失败，请稍后重试');
+        console.error('获取计划题目失败:', error)
+        ElMessage.error(error.message || '获取计划题目失败，请稍后重试')
       }
     },
-    
-    async fetchUserProgress() {
+
+    async fetchUserProgress () {
       try {
-        console.log('开始获取用户进度...');
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const token = userInfo.token;
+        console.log('开始获取用户进度...')
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        const token = userInfo.token
         if (!token) {
-          console.log('用户未登录，跳过获取进度');
-          return;
+          console.log('用户未登录，跳过获取进度')
+          return
         }
 
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${token}` }
         try {
           // 先从学习计划进度API获取数据
-          const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/progress`, { headers });
-          
-          console.log('获取到的用户进度数据:', response.data);
-          
+          const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/progress`, { headers })
+
+          console.log('获取到的用户进度数据:', response.data)
+
           if (!response.data || !response.data.success) {
-            throw new Error('获取用户进度失败');
+            throw new Error('获取用户进度失败')
           }
-          
-          this.userProgress = response.data.data;
-          
+
+          this.userProgress = response.data.data
+
           // 更新题目完成状态
           if (this.userProgress?.completed_problems) {
-            const completedSet = new Set(this.userProgress.completed_problems);
+            const completedSet = new Set(this.userProgress.completed_problems)
             this.problems = this.problems.map(problem => ({
               ...problem,
               completed: problem.completed || completedSet.has(problem.id)
-            }));
+            }))
           }
         } catch (error) {
-          console.error('从学习计划获取进度失败，尝试备选方案:', error);
-          
+          console.error('从学习计划获取进度失败，尝试备选方案:', error)
+
           // 备选方案：从用户题目状态API获取完成数据
           try {
             // 获取所有题目ID
-            const problemIds = this.problems.map(p => p.id).filter(id => id);
-            if (problemIds.length === 0) return;
-            
+            const problemIds = this.problems.map(p => p.id).filter(id => id)
+            if (problemIds.length === 0) return
+
             // 方案1：使用问题状态API
             const problemStatusResponse = await axios.get('http://localhost:3000/api/problems/user-status', {
               params: { problem_ids: problemIds.join(',') },
               headers
-            });
-            
+            })
+
             if (problemStatusResponse.data && problemStatusResponse.data.success) {
-              const statusMap = {};
+              const statusMap = {}
               problemStatusResponse.data.data.forEach(item => {
                 if (item.status === 'Accepted') {
-                  statusMap[item.problem_id] = true;
+                  statusMap[item.problem_id] = true
                 }
-              });
-              
+              })
+
               // 更新题目完成状态
               this.problems = this.problems.map(problem => ({
                 ...problem,
                 completed: problem.completed || statusMap[problem.id] || false
-              }));
-              
-              console.log('备选方案1更新的题目状态:', 
-                this.problems.filter(p => p.completed).length, '道已完成');
+              }))
+
+              console.log('备选方案1更新的题目状态:',
+                this.problems.filter(p => p.completed).length, '道已完成')
             }
           } catch (fallbackError) {
-            console.error('备选方案1失败，尝试备选方案2:', fallbackError);
-            
+            console.error('备选方案1失败，尝试备选方案2:', fallbackError)
+
             // 方案2：使用用户问题状态API
             try {
-              const userStatusResponse = await axios.get('http://localhost:3000/api/user/problem-status', { headers });
-              
+              const userStatusResponse = await axios.get('http://localhost:3000/api/user/problem-status', { headers })
+
               if (userStatusResponse.data && userStatusResponse.data.success) {
-                const statusMap = {};
+                const statusMap = {}
                 userStatusResponse.data.data.forEach(item => {
                   if (item.status === 'Accepted') {
-                    statusMap[item.problem_id] = true;
+                    statusMap[item.problem_id] = true
                   }
-                });
-                
+                })
+
                 // 更新题目完成状态
                 this.problems = this.problems.map(problem => ({
                   ...problem,
                   completed: problem.completed || statusMap[problem.id] || false
-                }));
-                
-                console.log('备选方案2更新的题目状态:', 
-                  this.problems.filter(p => p.completed).length, '道已完成');
+                }))
+
+                console.log('备选方案2更新的题目状态:',
+                  this.problems.filter(p => p.completed).length, '道已完成')
               }
             } catch (finalError) {
-              console.error('所有备选方案均失败:', finalError);
+              console.error('所有备选方案均失败:', finalError)
             }
           }
         }
-        
-        console.log('更新后的题目列表:', this.problems);
+
+        console.log('更新后的题目列表:', this.problems)
       } catch (error) {
-        console.error('获取用户进度失败:', error);
+        console.error('获取用户进度失败:', error)
         if (error.response?.status === 401) {
-          localStorage.removeItem('userInfo');
-          ElMessage.error('登录已过期，请重新登录');
+          localStorage.removeItem('userInfo')
+          ElMessage.error('登录已过期，请重新登录')
         }
       }
     },
-    
-    async startLearning() {
+
+    async startLearning () {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const token = userInfo.token;
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        const token = userInfo.token
         if (!token) {
-          ElMessage.error('请先登录再开始学习');
-          return;
+          ElMessage.error('请先登录再开始学习')
+          return
         }
-        
-        const headers = { Authorization: `Bearer ${token}` };
+
+        const headers = { Authorization: `Bearer ${token}` }
         if (!this.userProgress) {
           // 如果还没有进度记录，创建一个
-          await axios.post(`http://localhost:3000/api/learning-plans/${this.planId}/start`, {}, { headers });
+          await axios.post(`http://localhost:3000/api/learning-plans/${this.planId}/start`, {}, { headers })
           // 重新获取进度
-          await this.fetchUserProgress();
+          await this.fetchUserProgress()
         }
-        
+
         // 获取第一个未完成的题目
-        const firstUncompletedProblem = this.problems.find(p => !p.completed);
+        const firstUncompletedProblem = this.problems.find(p => !p.completed)
         if (firstUncompletedProblem) {
-          this.$router.push(`/problems/detail/${firstUncompletedProblem.problem_number}`);
+          this.$router.push(`/problems/detail/${firstUncompletedProblem.problem_number}`)
         } else {
-          this.$router.push(`/problems/detail/${this.problems[0].problem_number}`);
+          this.$router.push(`/problems/detail/${this.problems[0].problem_number}`)
         }
       } catch (error) {
-        console.error('开始学习失败:', error);
-        ElMessage.error('开始学习失败，请确保已登录并稍后重试');
+        console.error('开始学习失败:', error)
+        ElMessage.error('开始学习失败，请确保已登录并稍后重试')
       }
     },
-    
-    goToProblem(problemNumber) {
-      this.$router.push(`/problems/detail/${problemNumber}`);
+
+    goToProblem (problemNumber) {
+      this.$router.push(`/problems/detail/${problemNumber}`)
     }
   }
 }
@@ -660,4 +661,4 @@ export default {
     gap: 4px;
   }
 }
-</style> 
+</style>
