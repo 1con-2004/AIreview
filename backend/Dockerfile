@@ -1,14 +1,14 @@
-FROM node:18
+FROM node:18-alpine
 
 # 设置工作目录
 WORKDIR /app
 
 # 安装构建工具和Python (bcrypt依赖)
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 
 # 复制package.json和package-lock.json
 COPY package*.json ./
