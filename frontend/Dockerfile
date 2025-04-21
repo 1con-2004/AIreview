@@ -5,16 +5,16 @@ WORKDIR /app
 
 # 安装依赖
 COPY package*.json ./
-RUN npm install
+RUN yarn install
 
 # 复制项目文件
 COPY . .
 
 # 构建应用
-RUN npm run build
+RUN yarn build
 
 # 安装全局的serve包来提供静态文件服务
-RUN npm install -g serve
+RUN yarn global add serve
 
 # 暴露端口
 EXPOSE 8080

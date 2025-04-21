@@ -159,3 +159,52 @@ docker-compose restart [服务名]
 ```
 
 如有更多问题，请联系项目维护者。 
+
+## 其他解决方案
+
+### 更换Docker镜像源
+
+1. 创建或编辑 `~/.docker/config.json` 文件：
+```bash
+vim ~/.docker/config.json
+```
+
+2. 添加以下内容（使用Docker官方镜像源或国内其他镜像源）：
+```json
+{
+  "registry-mirrors": [
+    "https://registry.docker-cn.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://hub-mirror.c.163.com"
+  ]
+}
+```
+
+3. 然后重启Docker服务：
+```bash
+osascript -e 'quit app "Docker"'
+open -a Docker
+```
+
+### 手动拉取需要的镜像
+
+```bash
+docker pull node:16-alpine
+```
+
+### 使用其他版本的Node镜像
+
+编辑`backend/Dockerfile`和`frontend/Dockerfile`文件，将：
+```
+FROM node:16-alpine
+```
+
+改为：
+```
+FROM node:18-alpine
+```
+
+完成上述操作后，再次运行：
+```bash
+docker-compose up -d
+```

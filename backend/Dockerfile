@@ -5,7 +5,7 @@ WORKDIR /app
 
 # 安装依赖
 COPY package*.json ./
-RUN npm install
+RUN yarn install
 
 # 安装 Docker CLI 以支持判题功能
 RUN apk add --no-cache docker-cli
