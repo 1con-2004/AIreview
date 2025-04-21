@@ -10,11 +10,14 @@ RUN apk add --no-cache \
     g++ \
     bash
 
+# 确保全局安装 yarn
+RUN npm install -g yarn
+
 # 复制package.json和package-lock.json
 COPY package*.json ./
 
 # 安装依赖
-RUN npm install
+RUN yarn install 
 
 # 复制剩余文件
 COPY . .
