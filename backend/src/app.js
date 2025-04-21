@@ -7,6 +7,7 @@ const multer = require('multer');
 const app = express();
 const apiRouter = require('./api');
 const loginRouter = require('./api/login');
+const registerRouter = require('./api/register');
 const problemRouter = require('./api/problems');
 const communityRouter = require('./api/community');
 const judgeRouter = require('./api/judge');
@@ -28,9 +29,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// 配置 CORS
+// 配置 CORS - 从环境变量读取前端地址
 app.use(cors({
-  origin: 'http://localhost:8080', // 修改为正确的前端地址
+  origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
   credentials: true
 }));
 
@@ -47,6 +48,29 @@ app.use(session({
 
 // 解析 JSON 请求体
 app.use(express.json());
+
+// 添加响应头中间件，确保所有响应使用UTF-8编码
+app.use((req, res, next) => {
+  // 设置所有响应的字符集为UTF-8
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  
+  // 增强JSON.stringify处理中文的能力
+  const originalJson = res.json;
+  res.json = function(obj) {
+    // 确保不处理流和Buffer等特殊对象
+    if (obj && typeof obj === 'object' && !Buffer.isBuffer(obj) && !obj.readable) {
+      console.log('设置响应编码: UTF-8, JSON对象类型:', typeof obj);
+      
+      // 测试中文
+      const testObj = {test: '测试中文'};
+      console.log('中文测试对象:', JSON.stringify(testObj));
+    }
+    
+    return originalJson.call(this, obj);
+  };
+  
+  next();
+});
 
 // 静态文件服务
 const uploadsPath = path.join(__dirname, '../public/uploads');
@@ -98,6 +122,7 @@ const upload = multer({ storage: storage });
 // 使用 API 路由
 app.use('/api', apiRouter);
 app.use('/api/login', loginRouter);
+app.use('/api/register', registerRouter);
 app.use('/api/problems', problemRouter);
 app.use('/api/communities', communityRouter);
 app.use('/api/judge', judgeRouter);

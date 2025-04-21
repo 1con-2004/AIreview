@@ -68,57 +68,119 @@ const updateAllProblemsAcceptanceRate = async () => {
 const getProblemById = async (id, userId) => {
   try {
     // 检查ID是否为有效值
-    if (!id || (isNaN(parseInt(id)) && isNaN(id.toString().padStart(4, '0')))) {
+    if (!id || (isNaN(parseInt(id)) && typeof id !== 'string')) {
       console.error('无效的题目ID:', id);
       return null;
     }
 
-    // 先尝试用 problem_number 精确匹配
-    let [problemRows] = await db.query(
-      'SELECT * FROM problems WHERE problem_number = ?', 
-      [id.toString().padStart(4, '0')]
-    );
+    console.log(`尝试获取题目, ID: ${id}, 类型: ${typeof id}`);
+    
+    // 转换为字符串ID
+    const strId = id.toString();
+    
+    // 先检查表结构是否包含problem_number字段
+    let hasProblemNumberField = true;
+    try {
+      const [columns] = await db.query('SHOW COLUMNS FROM problems');
+      console.log('problems表结构:', columns.map(col => col.Field));
+      hasProblemNumberField = columns.some(col => col.Field === 'problem_number');
+    } catch (err) {
+      console.error('检查表结构失败:', err);
+      hasProblemNumberField = false;
+    }
+    
+    let problemRows = [];
+    
+    // 根据表结构选择查询方式
+    if (hasProblemNumberField) {
+      // 先尝试用 problem_number 精确匹配
+      try {
+        [problemRows] = await db.query(
+          'SELECT * FROM problems WHERE problem_number = ?', 
+          [strId]
+        );
+        console.log(`使用problem_number=${strId}查询结果:`, problemRows.length);
+      } catch (err) {
+        console.error('通过problem_number查询失败:', err);
+      }
+    }
     
     // 如果找不到,再尝试用 id 查询
     if (!problemRows || problemRows.length === 0) {
       // 确保ID是有效数字
       const numericId = parseInt(id);
-      if (isNaN(numericId)) {
-        console.error('无法将题目ID转换为数字:', id);
-        return null;
+      if (!isNaN(numericId)) {
+        try {
+          [problemRows] = await db.query(
+            'SELECT * FROM problems WHERE id = ?', 
+            [numericId]
+          );
+          console.log(`使用id=${numericId}查询结果:`, problemRows.length);
+        } catch (err) {
+          console.error('通过id查询失败:', err);
+        }
       }
-      
-      [problemRows] = await db.query(
-        'SELECT * FROM problems WHERE id = ?', 
-        [numericId]
-      );
     }
     
     if (!problemRows || problemRows.length === 0) {
+      console.log(`未找到ID为${id}的题目`);
       return null;
     }
 
     const problem = problemRows[0];
+    console.log('找到题目:', problem.id, problem.title);
+    
+    // 处理字段缺失的情况
+    if (!problem.problem_number && hasProblemNumberField) {
+      problem.problem_number = `P${problem.id.toString().padStart(3, '0')}`;
+    }
     
     // 如果提供了用户ID，获取用户对这个题目的状态
     if (userId) {
       console.log(`查询用户 ${userId} 对题目 ${problem.id} 的状态`);
-      const [statusRows] = await db.query(
-        `SELECT status 
-         FROM submissions 
-         WHERE user_id = ? AND problem_id = ? 
-         ORDER BY created_at DESC 
-         LIMIT 1`,
-        [userId, problem.id]
+      try {
+        const [statusRows] = await db.query(
+          `SELECT status 
+           FROM submissions 
+           WHERE user_id = ? AND problem_id = ? 
+           ORDER BY created_at DESC 
+           LIMIT 1`,
+          [userId, problem.id]
+        );
+        
+        if (statusRows && statusRows.length > 0) {
+          problem.userStatus = statusRows[0].status;
+          console.log(`题目 ${problem.id} 的用户状态:`, problem.userStatus);
+        } else {
+          problem.userStatus = null;
+          console.log(`用户 ${userId} 没有对题目 ${problem.id} 的提交记录`);
+        }
+      } catch (err) {
+        console.error('获取用户题目状态失败:', err);
+        problem.userStatus = null;
+      }
+    }
+    
+    // 获取题目测试用例
+    try {
+      const [testCases] = await db.query(
+        'SELECT * FROM problem_test_cases WHERE problem_id = ? AND is_example = 1 ORDER BY order_num',
+        [problem.id]
       );
       
-      if (statusRows && statusRows.length > 0) {
-        problem.userStatus = statusRows[0].status;
-        console.log(`题目 ${problem.id} 的用户状态:`, problem.userStatus);
+      if (testCases && testCases.length > 0) {
+        problem.examples = testCases.map(tc => ({
+          input: tc.input,
+          output: tc.output
+        }));
+        console.log(`获取到${testCases.length}个测试用例`);
       } else {
-        problem.userStatus = null;
-        console.log(`用户 ${userId} 没有对题目 ${problem.id} 的提交记录`);
+        problem.examples = [];
+        console.log('未找到测试用例');
       }
+    } catch (err) {
+      console.error('获取测试用例失败:', err);
+      problem.examples = [];
     }
     
     return problem;
@@ -280,17 +342,47 @@ router.get('/all-categories', async (req, res) => {
 // 获取所有标签
 router.get('/tags', async (req, res) => {
   try {
-    const [tags] = await db.query('SELECT DISTINCT tags FROM problems');
-    const tagArray = tags.flatMap(tag => tag.tags ? tag.tags.split(',').map(t => t.trim()) : []);
-    console.log('获取到的标签数据:', tagArray);
-    // 直接返回去重后的标签数组，不包装在 data 字段中
-    res.json([...new Set(tagArray)].filter(Boolean).sort());
+    console.log('开始获取题目标签...');
+    
+    // 1. 先尝试从problems表的tags字段获取
+    let tagArray = [];
+    
+    try {
+      const [tags] = await db.query('SELECT tags FROM problems WHERE tags IS NOT NULL AND tags != ""');
+      console.log('从problems表查询到的标签数据:', tags);
+      
+      // 从tags字段提取标签
+      tagArray = tags.flatMap(tag => {
+        if (tag.tags && typeof tag.tags === 'string') {
+          return tag.tags.split(',').map(t => t.trim()).filter(t => t);
+        }
+        return [];
+      });
+    } catch (dbError) {
+      console.error('查询problems表标签字段失败:', dbError);
+      console.log('尝试检查数据库表结构...');
+      
+      // 检查表结构
+      const [columns] = await db.query('SHOW COLUMNS FROM problems');
+      console.log('problems表结构:', columns.map(col => col.Field));
+      
+      // 如果没有tags字段，使用默认标签
+      if (!columns.find(col => col.Field === 'tags')) {
+        console.log('problems表中没有tags字段，使用默认标签');
+        tagArray = ['哈希表', '数组', '链表', '字符串', '动态规划', '贪心算法'];
+      }
+    }
+    
+    // 去重并排序
+    const uniqueTags = [...new Set(tagArray)].filter(Boolean).sort();
+    console.log('最终返回的标签:', uniqueTags);
+    
+    // 返回标签数组
+    res.json(uniqueTags);
   } catch (error) {
     console.error('获取标签失败:', error);
-    res.status(500).json({
-      code: 500,
-      message: '获取标签失败'
-    });
+    // 出错时返回默认标签
+    res.json(['哈希表', '数组', '链表', '字符串', '动态规划', '贪心算法']);
   }
 });
 
@@ -1554,6 +1646,104 @@ router.put('/:id/test-cases', async (req, res) => {
     res.status(500).json({
       code: 500,
       message: '更新题目测试用例失败'
+    });
+  }
+});
+
+// 获取题目详情
+router.get('/detail/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user ? req.user.id : null;
+  console.log(`接收到题目详情请求, ID: ${id}, 用户ID: ${userId}`);
+  
+  try {
+    // 通过getProblemById函数获取题目信息
+    const problem = await getProblemById(id, userId);
+    
+    if (!problem) {
+      console.log(`未找到ID为${id}的题目`);
+      return res.status(404).json({
+        code: 404,
+        message: '题目不存在'
+      });
+    }
+    
+    console.log(`找到题目: ${problem.id} - ${problem.title}`);
+    
+    // 尝试获取题目的解答
+    let solution = null;
+    try {
+      // 先检查是否存在solution_main表
+      let hasSolutionTable = true;
+      try {
+        await db.query('SELECT 1 FROM solution_main LIMIT 1');
+      } catch (err) {
+        console.log('solution_main表不存在');
+        hasSolutionTable = false;
+      }
+      
+      if (hasSolutionTable) {
+        // 获取解题方案
+        const [mainSolution] = await db.query(
+          'SELECT * FROM solution_main WHERE problem_id = ?',
+          [problem.id]
+        );
+        
+        if (mainSolution && mainSolution.length > 0) {
+          solution = {
+            solution_approach: mainSolution[0].solution_approach,
+            time_complexity: mainSolution[0].time_complexity,
+            space_complexity: mainSolution[0].space_complexity,
+            languages: [],
+            implementations: []
+          };
+          
+          // 获取代码实现
+          const [codeImplementations] = await db.query(`
+            SELECT sc.*, sl.language_name 
+            FROM solution_code sc
+            JOIN solution_languages sl ON sc.language_id = sl.id
+            WHERE sc.solution_id = ?
+          `, [mainSolution[0].id]);
+          
+          if (codeImplementations && codeImplementations.length > 0) {
+            // 创建语言列表
+            const languages = codeImplementations.map(impl => ({
+              id: impl.language_id,
+              name: impl.language_name
+            }));
+            
+            solution.languages = languages;
+            
+            // 创建实现列表
+            solution.implementations = codeImplementations.map(impl => ({
+              id: impl.id,
+              language: impl.language_name,
+              code: impl.standard_solution,
+              version: impl.version
+            }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('获取题目解答失败:', error);
+      // 解答获取失败不影响题目详情的返回
+    }
+    
+    // 添加解答到题目对象
+    problem.solution = solution;
+    
+    console.log(`返回题目详情 ID:${problem.id}, 标题:${problem.title}, 包含解答:${solution !== null}`);
+    
+    res.json({
+      code: 200,
+      data: problem
+    });
+  } catch (error) {
+    console.error('获取题目详情失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取题目详情失败'
     });
   }
 });

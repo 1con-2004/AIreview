@@ -117,10 +117,99 @@ axios.interceptors.request.use(
   }
 );
 
-// 添加响应拦截器
+// 添加响应拦截器，处理响应数据的编码问题
 axios.interceptors.response.use(
   response => {
-    console.log('收到响应:', response.status, response.data);
+    console.log('收到响应:', response.status, response.config?.url);
+    
+    // 处理可能的中文编码问题
+    if (response.data && typeof response.data === 'object') {
+      // 递归处理对象中的字符串值
+      const processStringValues = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        
+        // 处理数组
+        if (Array.isArray(obj)) {
+          return obj.map(item => processStringValues(item));
+        }
+        
+        // 复制对象，避免直接修改原对象
+        const result = {...obj};
+        
+        Object.keys(result).forEach(key => {
+          if (typeof result[key] === 'string') {
+            try {
+              // 判断是否包含ISO-8859-1编码的中文乱码特征
+              if (/æ|ø|å|ð|ñ|ò|ó|ô|õ|ö|È|É|Ê|Ë|è|é|ê|ë|Ì|Í|Î|Ï|ì|í|î|ï/.test(result[key])) {
+                console.log('检测到可能的乱码:', key, result[key]);
+                
+                // 尝试修复乱码
+                try {
+                  // 针对特定的乱码模式进行替换
+                  if(key === 'tags' && typeof result[key] === 'string') {
+                    // 常见标签的乱码映射
+                    const tagMappings = {
+                      'æ•°ç»„': '数组',
+                      'å"ˆå¸Œè¡¨': '哈希表',
+                      'é"¾è¡¨': '链表',
+                      'å­—ç¬¦ä¸²': '字符串',
+                      'åŠ¨æ€è§„åˆ': '动态规划',
+                      'è´ªå¿ƒç®—æ³•': '贪心算法',
+                      'æ·±åº¦ä¼˜å…ˆæœç´¢': '深度优先搜索',
+                      'å¹¿åº¦ä¼˜å…ˆæœç´¢': '广度优先搜索',
+                      'äºŒå‰æ ': '二叉树'
+                    };
+                    
+                    // 按逗号分割标签
+                    const tags = result[key].split(',');
+                    const fixedTags = tags.map(tag => {
+                      const trimmedTag = tag.trim();
+                      return tagMappings[trimmedTag] || trimmedTag;
+                    });
+                    
+                    result[key] = fixedTags.join(',');
+                    console.log('修复后的标签:', result[key]);
+                  } 
+                  // 针对题目描述和标题等其他字段的修复
+                  else if(['title', 'description', 'difficulty'].includes(key)) {
+                    // 尝试将ISO-8859-1编码的字符串转回UTF-8
+                    const isoString = result[key];
+                    // 创建一个字节数组
+                    const bytes = [];
+                    for (let i = 0; i < isoString.length; i++) {
+                      bytes.push(isoString.charCodeAt(i));
+                    }
+                    // 将字节数组转为UTF-8字符串
+                    const decoder = new TextDecoder('utf-8');
+                    const uint8Array = new Uint8Array(bytes);
+                    const decoded = decoder.decode(uint8Array);
+                    
+                    // 如果解码后的字符串包含大量问号或无法识别的字符，则放弃修复
+                    if (decoded.indexOf('') === -1) {
+                      result[key] = decoded;
+                      console.log('修复后的内容:', key, result[key]);
+                    }
+                  }
+                } catch (fixError) {
+                  console.error('修复乱码失败:', fixError);
+                }
+              }
+            } catch (e) {
+              console.error('处理编码时出错:', e);
+            }
+          } else if (result[key] && typeof result[key] === 'object') {
+            // 递归处理嵌套对象
+            result[key] = processStringValues(result[key]);
+          }
+        });
+        
+        return result;
+      };
+      
+      // 处理并替换response.data
+      response.data = processStringValues(response.data);
+    }
+    
     return response;
   },
   error => {

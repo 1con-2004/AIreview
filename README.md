@@ -2,6 +2,28 @@
 
 这是一个基于AI的智能题目评审系统，主要面向高校学生，提供类似LeetCode的刷题平台功能，并集成了AI代码审查和个性化学习路径推荐功能。
 
+## 特点
+
+- 完善的OI判题功能
+- 丰富的学生信息状态展示
+- 多维度的数据分析图表
+- 集成多种AI大模型辅助功能
+- 支持自定义题库和学习路径
+
+## 技术栈
+
+### 前端
+- Vue 3
+- Vue Router
+- Vuex
+- Element Plus
+
+### 后端
+- Node.js + Express
+- MySQL
+- JWT认证
+- Docker（用于判题环境）
+
 ## 目录结构
 
 ```
@@ -237,7 +259,7 @@ MIT License
 # 启动所有服务
 docker-compose up -d
 
-# 查看运行状态
+# 查看运行状态a
 docker-compose ps
 
 # 查看日志
@@ -265,3 +287,70 @@ docker-compose logs -f
 - 生产环境: `docker-compose.prod.yml` (需单独配置)
 
 更多信息请参考[Docker部署指南](./docker-deployment-guide.md)。
+
+## 部署指南
+
+### 环境要求
+- Docker 和 Docker Compose
+- 权限访问Docker套接字（用于判题功能）
+
+### 快速部署
+
+1. 克隆仓库
+```bash
+git clone https://github.com/yourusername/AIreview.git
+cd AIreview
+```
+
+2. 使用Docker Compose启动
+```bash
+docker-compose up -d
+```
+
+3. 访问平台
+- 前端界面: http://localhost:8080
+- 后端API: http://localhost:3000
+
+### 初始账户
+
+系统预设了三种角色的初始账户，可直接使用：
+
+| 用户名 | 密码 | 角色 |
+|-------|------|------|
+| admin | admin123 | 管理员 |
+| teacher | admin123 | 教师 |
+| student | admin123 | 学生 |
+
+## 开发指南
+
+### 前端开发
+```bash
+cd frontend
+yarn install
+yarn serve
+```
+
+### 后端开发
+```bash
+cd backend
+yarn install
+node src/app.js
+```
+
+## 常见问题解决
+
+### 登录问题
+如果遇到登录验证失败，请确保：
+1. 数据库中users表包含refresh_token字段
+2. 使用了更新的密码哈希值（见数据库初始化脚本）
+3. Docker环境已正确配置bcrypt依赖
+
+### 判题系统问题
+如判题功能不可用，请检查：
+1. Docker服务是否正常运行
+2. 后端容器是否有权限访问Docker套接字
+3. 查看后端日志获取详细错误信息
+
+## 贡献
+
+欢迎通过Issue或Pull Request贡献代码或提供建议。

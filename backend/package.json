@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "dev:local": "nodemon -r dotenv/config src/app.js dotenv_config_path=.env.local",
     "generate-hash": "node src/utils/generateHash.js",
     "init-db:win": "mysql -u %DB_USER% -p%DB_PASSWORD% < src/database/init.sql",
     "init-db:unix": "mysql -u $DB_USER -p$DB_PASSWORD < src/database/init.sql",
