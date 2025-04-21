@@ -47,7 +47,7 @@
         <div class="feature-text">
           <h3 class="drop-text">满血DeepSeek R1模型 , 助力代码分析</h3>
           <p class="feature-description">
-          搭载<strong style="font-size: 1.2em; color: orange;">满血DeepSeek R1模型</strong> , 以突破性的多模态算法构建代码解析矩阵，深度解构每一行代码的语法逻辑 <br>
+          搭载<strong style="font-size: 1.2em; color: orange;">满血DeepSeek R1模型</strong> , 以突破性的深度思考功能构建代码解析矩阵，深度解构每一行代码的语法逻辑 <br>
           <strong style="font-size: 1.2em; color: orange;">毫秒级</strong>智能扫描 , 精准定位潜在语法隐患、复杂逻辑断层 <br>
           无论是细微的语法瑕疵、复杂的逻辑漏洞，还是关键的性能瓶颈，<strong style="font-size: 1.2em; color: orange;">DeepSeek R1 模型</strong>都能敏锐洞察
           </p>

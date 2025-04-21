@@ -345,3 +345,68 @@
 - 结合ECharts图表库和Element Plus组件库，实现数据可视化和表格展示。
 - 添加用户身份验证和权限控制，确保数据安全和访问控制。
 
+{ 2023.7.29 } 改动: 增加Docker部署支持，实现跨平台一键部署
+
+主要改动文件:
+
+1. - 项目根目录
+    |- docker-compose.yml
+      |- description: 定义了前端、后端和数据库的容器配置，实现服务编排
+
+    |- docker-deployment-guide.md
+      |- description: 详细说明了Docker部署的步骤、常见问题及解决方案
+
+    |- README.md
+      |- description: 添加了Docker部署相关说明
+
+2. - backend
+    |- Dockerfile
+      |- description: 定义后端容器的构建步骤
+
+    |- .dockerignore
+      |- description: 排除不需要包含在后端Docker镜像中的文件
+
+    |- .env
+      |- description: 更新环境变量配置，适配Docker环境
+    
+    |- src
+      |- services
+        |- judge
+          |- docker-helper.js
+            |- description: 添加Docker辅助脚本，支持判题功能与宿主机Docker通信
+
+      |- app.js
+        |- description: 修改启动脚本，添加Docker环境初始化逻辑
+
+3. - frontend
+    |- Dockerfile
+      |- description: 定义前端容器的构建步骤
+
+    |- .dockerignore
+      |- description: 排除不需要包含在前端Docker镜像中的文件
+
+4. - 数据库文件
+    |- init.sql
+      |- description: 添加数据库初始化脚本，用于Docker容器启动时自动创建表结构和初始数据
+
+主要改动逻辑:
+
+- 添加了Docker配置文件，实现前端、后端和数据库的容器化部署
+- 通过挂载宿主机Docker socket，解决了判题系统需要创建容器的问题
+- 修改环境变量配置，使其适配Docker网络环境
+- 添加了数据库初始化脚本，确保数据库表结构在部署时自动创建
+- 添加了详细的部署文档，指导用户完成Docker部署
+
+问题出现原因:
+
+- 团队成员使用不同操作系统（Windows、macOS）开发和部署项目时遇到环境差异问题
+- 项目判题部分依赖Docker容器，需要在容器内访问宿主机Docker
+- 本地部署复杂，需要手动配置环境，容易出错
+
+解决问题使用的简要方案:
+
+- 使用Docker容器化技术，将所有组件（前端、后端、数据库）打包成容器
+- 通过Docker Compose编排服务，实现一键部署
+- 通过挂载Docker socket解决判题系统需要访问宿主机Docker的问题
+- 提供详细的部署文档和重置方案，方便团队成员使用
+

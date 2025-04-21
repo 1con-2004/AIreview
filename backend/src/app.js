@@ -20,6 +20,7 @@ const testCaseRouter = require('./routes/testCase');
 const authRoutes = require('./routes/auth');
 const statisticsRoutes = require('./routes/statistics');
 const learningPathRoutes = require('./api/learning-path');
+const dockerHelper = require('./services/judge/docker-helper');
 
 // 添加请求日志中间件
 app.use((req, res, next) => {
@@ -165,6 +166,18 @@ app.use((err, req, res, next) => {
         error: err.message
     });
 });
+
+// 在app.listen之前添加初始化代码
+// 初始化Docker环境
+(async () => {
+  try {
+    await dockerHelper.initializeDockerEnvironment();
+    console.log('Docker环境初始化成功，判题系统已就绪');
+  } catch (error) {
+    console.error('Docker环境初始化失败:', error.message);
+    console.warn('判题系统可能无法正常工作，请检查Docker配置');
+  }
+})();
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;

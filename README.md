@@ -224,3 +224,44 @@ yarn serve
 ## 许可证
 
 MIT License
+
+## Docker 部署说明
+
+本项目支持通过Docker进行一键部署，适用于Windows、macOS和Linux系统。详细的部署指南请参考[Docker部署指南](./docker-deployment-guide.md)。
+
+### 快速开始
+
+确保已安装Docker和Docker Compose后，只需执行以下命令：
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看运行状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+```
+
+### 服务组成
+
+- 前端（Vue 3 + Element Plus）: 端口8080
+- 后端（Node.js + Express）: 端口3000
+- 数据库（MySQL）: 端口3306
+- 判题系统: 使用Docker容器运行代码，支持C/C++、Python、Java
+
+### 跨平台兼容性
+
+通过Docker容器化，解决了以下跨平台问题：
+
+1. 依赖包差异: 所有依赖都在容器内安装，避免了Windows和macOS之间的差异
+2. 路径名称: 容器内路径统一使用Unix风格，避免了Windows和macOS路径格式不同的问题
+3. 环境配置: 容器提供统一的运行环境，无需担心宿主机系统差异
+
+### 开发与生产环境
+
+- 开发环境: `docker-compose.yml`
+- 生产环境: `docker-compose.prod.yml` (需单独配置)
+
+更多信息请参考[Docker部署指南](./docker-deployment-guide.md)。
