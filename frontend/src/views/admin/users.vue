@@ -273,26 +273,25 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
+// 导入API工具函数
+import apiService, { getResourceUrl } from '@/utils/api'
 
-// 修改为直接使用配置常量
-const API_BASE_URL = 'http://localhost:3000'
-
-// 获取完整的头像URL
+// 获取完整的头像URL，使用getResourceUrl函数
 const getAvatarUrl = (avatar) => {
-  if (!avatar) return 'http://localhost:3000/uploads/avatars/default-avatar.png'
+  if (!avatar) return getResourceUrl('uploads/avatars/default-avatar.png')
   if (avatar.startsWith('http')) return avatar
 
   // 处理数据库中存储的路径，确保使用正确的URL格式
   // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
-  // 需要转换为 http://localhost:3000/uploads/avatars/filename.jpeg
+  // 使用getResourceUrl处理
   if (avatar.includes('public/uploads/avatars/')) {
     // 提取文件名
     const fileName = avatar.split('/').pop()
-    return `${API_BASE_URL}/uploads/avatars/${fileName}`
+    return getResourceUrl(`uploads/avatars/${fileName}`)
   }
 
   // 处理其他情况
-  return `${API_BASE_URL}${avatar}`
+  return getResourceUrl(avatar)
 }
 
 // 角色数据
@@ -392,7 +391,8 @@ const fetchUsers = async () => {
     })
 
     const token = localStorage.getItem('token')
-    const response = await axios.get('/api/user/admin/list', {
+    // 使用apiService替代原有的axios请求
+    const response = await apiService.get('user/admin/list', {
       params: {
         page: currentPage.value,
         pageSize: pageSize.value,
@@ -404,13 +404,13 @@ const fetchUsers = async () => {
       }
     })
 
-    console.log('获取用户列表响应:', response.data)
+    console.log('获取用户列表响应:', response)
 
-    if (response.data.code === 200) {
-      users.value = response.data.data.list
-      totalUsers.value = response.data.data.total
+    if (response.code === 200) {
+      users.value = response.data.list
+      totalUsers.value = response.data.total
     } else {
-      throw new Error(response.data.message || '获取用户列表失败')
+      throw new Error(response.message || '获取用户列表失败')
     }
   } catch (error) {
     console.error('获取用户列表错误:', error)
@@ -423,19 +423,20 @@ const fetchRoleStats = async () => {
   try {
     console.log('开始获取角色统计')
     const token = localStorage.getItem('token')
-    const response = await axios.get('/api/user/admin/role-stats', {
+    // 使用apiService替代原有的axios请求
+    const response = await apiService.get('user/admin/role-stats', {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
 
-    console.log('角色统计响应:', response.data)
+    console.log('角色统计响应:', response)
 
-    if (response.data.code === 200) {
-      roleCount.value = response.data.data.stats
-      totalUsers.value = response.data.data.total
+    if (response.code === 200) {
+      roleCount.value = response.data.stats
+      totalUsers.value = response.data.total
     } else {
-      throw new Error(response.data.message || '获取角色统计失败')
+      throw new Error(response.message || '获取角色统计失败')
     }
   } catch (error) {
     console.error('获取角色统计错误:', error)
@@ -529,8 +530,9 @@ const handleSaveEdit = async () => {
 
     saveLoading.value = true
     const token = localStorage.getItem('token')
-    const response = await axios.put(
-      `/api/user/admin/update/${currentEditUser.value.id}`,
+    // 使用apiService替代原有的axios请求
+    const response = await apiService.put(
+      `user/admin/update/${currentEditUser.value.id}`,
       editForm.value,
       {
         headers: {
@@ -539,14 +541,14 @@ const handleSaveEdit = async () => {
       }
     )
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('保存成功')
       editDialogVisible.value = false
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.data.message || '保存失败')
+      throw new Error(response.message || '保存失败')
     }
   } catch (error) {
     console.error('保存失败:', error)
@@ -634,7 +636,8 @@ const handleSaveAdd = async () => {
 
     console.log('准备添加新用户:', addForm.value)
     const token = localStorage.getItem('token')
-    const response = await axios.post('/api/user/add', {
+    // 使用apiService替代原有的axios请求
+    const response = await apiService.post('user/add', {
       username: addForm.value.username,
       password: addForm.value.password,
       email: addForm.value.email,
@@ -646,16 +649,16 @@ const handleSaveAdd = async () => {
       }
     })
 
-    console.log('添加用户响应:', response.data)
+    console.log('添加用户响应:', response)
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('添加用户成功')
       addDialogVisible.value = false
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.data.message || '添加用户失败')
+      throw new Error(response.message || '添加用户失败')
     }
   } catch (error) {
     console.error('添加用户失败:', error)
@@ -703,19 +706,20 @@ const deleteUser = async (userId) => {
   try {
     deleteLoading.value = true
     const token = localStorage.getItem('token')
-    const response = await axios.delete(`/api/user/admin/delete/${userId}`, {
+    // 使用apiService替代原有的axios请求
+    const response = await apiService.delete(`user/admin/delete/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('用户删除成功')
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.data.message || '删除用户失败')
+      throw new Error(response.message || '删除用户失败')
     }
   } catch (error) {
     console.error('删除用户失败:', error)
