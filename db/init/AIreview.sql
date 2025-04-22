@@ -1,17 +1,17 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : 本机下的数据库
+ Source Server         : Docker下的数据库
  Source Server Type    : MySQL
- Source Server Version : 80039 (8.0.39)
- Source Host           : localhost:3306
+ Source Server Version : 80042 (8.0.42)
+ Source Host           : localhost:3307
  Source Schema         : AIreview
 
  Target Server Type    : MySQL
- Target Server Version : 80039 (8.0.39)
+ Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 21/04/2025 11:55:00
+ Date: 23/04/2025 00:59:55
 */
 
 SET NAMES utf8mb4;
@@ -61,7 +61,7 @@ CREATE TABLE `classroom_discussions` (
   KEY `fk_discussion_user` (`user_id`),
   CONSTRAINT `fk_discussion_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_discussion_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂讨论表';
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂讨论表';
 
 -- ----------------------------
 -- Records of classroom_discussions
@@ -72,6 +72,8 @@ INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`,
 INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`, `created_at`) VALUES (3, 1, 1, 'hi', '2025-03-06 09:58:56');
 INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`, `created_at`) VALUES (4, 1, 1, 'hi', '2025-03-06 09:58:58');
 INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`, `created_at`) VALUES (5, 1, 1, '你好', '2025-03-06 10:02:01');
+INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`, `created_at`) VALUES (6, 1, 1, '1', '2025-04-22 16:18:55');
+INSERT INTO `classroom_discussions` (`id`, `classroom_id`, `user_id`, `content`, `created_at`) VALUES (7, 1, 1, '2', '2025-04-22 16:22:20');
 COMMIT;
 
 -- ----------------------------
@@ -89,7 +91,7 @@ CREATE TABLE `classroom_files` (
   PRIMARY KEY (`id`),
   KEY `fk_file_classroom` (`classroom_id`),
   CONSTRAINT `fk_file_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂文件表';
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂文件表';
 
 -- ----------------------------
 -- Records of classroom_files
@@ -101,6 +103,7 @@ INSERT INTO `classroom_files` (`id`, `classroom_id`, `file_name`, `file_path`, `
 INSERT INTO `classroom_files` (`id`, `classroom_id`, `file_name`, `file_path`, `file_size`, `file_type`, `upload_time`) VALUES (15, 1, '测试头像PDF.pdf', '4ba56be06d58e59261e7a41b7d42c9bb.pdf', 13417, 'pdf', '2025-03-06 09:47:17');
 INSERT INTO `classroom_files` (`id`, `classroom_id`, `file_name`, `file_path`, `file_size`, `file_type`, `upload_time`) VALUES (16, 1, '测试表格.xlsx', 'b89cc1e3f96f60e621d8129d42da90bc.xlsx', 9313, 'xlsx', '2025-03-06 09:47:29');
 INSERT INTO `classroom_files` (`id`, `classroom_id`, `file_name`, `file_path`, `file_size`, `file_type`, `upload_time`) VALUES (17, 1, '测试word.docx', '9687d8a258e02dae0924cd0bce5708a0.docx', 10174, 'docx', '2025-03-06 09:47:35');
+INSERT INTO `classroom_files` (`id`, `classroom_id`, `file_name`, `file_path`, `file_size`, `file_type`, `upload_time`) VALUES (18, 1, '测试头像4.png', 'dd5c9916fc67e50926e86dd6737d649a.png', 7537, 'png', '2025-04-22 16:18:18');
 COMMIT;
 
 -- ----------------------------
@@ -115,7 +118,7 @@ CREATE TABLE `classroom_messages` (
   PRIMARY KEY (`id`),
   KEY `fk_message_classroom` (`classroom_id`),
   CONSTRAINT `fk_message_classroom` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂留言表';
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课堂——课堂留言表';
 
 -- ----------------------------
 -- Records of classroom_messages
@@ -127,6 +130,7 @@ INSERT INTO `classroom_messages` (`id`, `classroom_id`, `content`, `created_at`)
 INSERT INTO `classroom_messages` (`id`, `classroom_id`, `content`, `created_at`) VALUES (4, 1, '新2', '2025-03-06 10:16:48');
 INSERT INTO `classroom_messages` (`id`, `classroom_id`, `content`, `created_at`) VALUES (5, 1, '新3', '2025-03-06 10:16:51');
 INSERT INTO `classroom_messages` (`id`, `classroom_id`, `content`, `created_at`) VALUES (6, 1, '新4', '2025-03-06 10:16:55');
+INSERT INTO `classroom_messages` (`id`, `classroom_id`, `content`, `created_at`) VALUES (7, 1, '1', '2025-04-22 14:45:46');
 COMMIT;
 
 -- ----------------------------
@@ -152,7 +156,7 @@ CREATE TABLE `classrooms` (
 -- Records of classrooms
 -- ----------------------------
 BEGIN;
-INSERT INTO `classrooms` (`id`, `classroom_code`, `teacher_id`, `title`, `description`, `status`, `created_at`, `updated_at`) VALUES (1, 'BWXHW', 1, 'JAVA', 'JAVA', 1, '2025-03-06 08:11:19', '2025-04-04 20:13:45');
+INSERT INTO `classrooms` (`id`, `classroom_code`, `teacher_id`, `title`, `description`, `status`, `created_at`, `updated_at`) VALUES (1, 'BWXHW', 1, 'JAVA', 'JAVA', 1, '2025-03-06 08:11:19', '2025-04-22 16:17:30');
 COMMIT;
 
 -- ----------------------------
@@ -257,21 +261,21 @@ CREATE TABLE `learning_path_directions` (
   KEY `tag` (`tag`),
   CONSTRAINT `learning_path_directions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `learning_path_directions_ibfk_2` FOREIGN KEY (`tag`) REFERENCES `learning_path_weakness_analysis` (`tag`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=136 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_directions
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (127, 1, '树', 'https://search.bilibili.com/all?keyword=编程%E6%A0%91', '树编程教学视频集锦', '哔哩哔哩', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (128, 1, '树', 'https://www.douyin.com/search/编程%E6%A0%91', '树相关短视频教程', '抖音', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (129, 1, '树', 'https://so.csdn.net/so/search?q=编程%E6%A0%91', '树学习资料大全', 'CSDN', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (130, 1, '广度优先搜索', 'https://search.bilibili.com/all?keyword=编程%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2', '广度优先搜索编程教学视频集锦', '哔哩哔哩', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (131, 1, '广度优先搜索', 'https://www.douyin.com/search/编程%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2', '广度优先搜索相关短视频教程', '抖音', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (132, 1, '广度优先搜索', 'https://so.csdn.net/so/search?q=编程%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2', '广度优先搜索学习资料大全', 'CSDN', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (133, 1, '判断', 'https://search.bilibili.com/all?keyword=编程%E5%88%A4%E6%96%AD', '判断编程教学视频集锦', '哔哩哔哩', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (134, 1, '判断', 'https://www.douyin.com/search/编程%E5%88%A4%E6%96%AD', '判断相关短视频教程', '抖音', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (135, 1, '判断', 'https://so.csdn.net/so/search?q=编程%E5%88%A4%E6%96%AD', '判断学习资料大全', 'CSDN', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (145, 1, '判断', 'https://search.bilibili.com/all?keyword=编程%E5%88%A4%E6%96%AD', '判断编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (146, 1, '判断', 'https://www.douyin.com/search/编程%E5%88%A4%E6%96%AD', '判断相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (147, 1, '判断', 'https://so.csdn.net/so/search?q=编程%E5%88%A4%E6%96%AD', '判断学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (148, 1, '序列', 'https://search.bilibili.com/all?keyword=编程%E5%BA%8F%E5%88%97', '序列编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (149, 1, '序列', 'https://www.douyin.com/search/编程%E5%BA%8F%E5%88%97', '序列相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (150, 1, '序列', 'https://so.csdn.net/so/search?q=编程%E5%BA%8F%E5%88%97', '序列学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (151, 1, '数学', 'https://search.bilibili.com/all?keyword=编程%E6%95%B0%E5%AD%A6', '数学编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (152, 1, '数学', 'https://www.douyin.com/search/编程%E6%95%B0%E5%AD%A6', '数学相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (153, 1, '数学', 'https://so.csdn.net/so/search?q=编程%E6%95%B0%E5%AD%A6', '数学学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -291,15 +295,19 @@ CREATE TABLE `learning_path_recommend` (
   KEY `tag` (`tag`),
   CONSTRAINT `learning_path_recommend_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `learning_path_recommend_ibfk_2` FOREIGN KEY (`tag`) REFERENCES `learning_path_weakness_analysis` (`tag`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_recommend
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (65, 1, '判断', '0024', '偶数判断', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (66, 1, '判断', '0010', '偶数判断', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (67, 1, '判断', '0005', '质数判断', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (73, 1, '递归', '0031', '合并两个有序链表', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (74, 1, '递归', '0023', '斐波那契数列计算', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (75, 1, '递归', '0004', '阶乘计算', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (76, 1, '字符串', '0030', '最长回文子串', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (77, 1, '字符串', '0022', '字符串反转', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (78, 1, '字符串', '0008', '字符串拼接', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (79, 1, '序列', '0026', '最长连续序列1', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -317,18 +325,17 @@ CREATE TABLE `learning_path_weakness_analysis` (
   KEY `user_id` (`user_id`),
   KEY `idx_tag` (`tag`),
   CONSTRAINT `learning_path_weakness_analysis_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_weakness_analysis
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (66, 1, '树', '学习 \"树\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (67, 1, '广度优先搜索', '学习 \"广度优先搜索\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (68, 1, '判断', '学习 \"判断\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-20 10:14:34', '2025-04-20 10:14:34');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (69, 1, '字符串', '🌟 **字符串核心思路** 🌟\n- 字符串是字符序列，常用双引号`\"\"`表示。\n- 操作包括连接、查找、替换、切片等。\n\n🔍 **关键点** 🔍\n- **索引**：从0开始，负数表示从末尾开始。\n- **切片**：`str[start:end]`，不包含`end`。\n- **方法**：`str.upper()`, `str.lower()`, `str.count()`等。\n\n📚 **常见解题技巧** 📚\n- **连接**：`+`号连接字符串。\n- **查找**：`str.find()`，返回索引，未找到返回-1。\n- **替换**：`str.replace(old, new)`。\n- **切片与拼接**：灵活运用切片和拼接进行复杂操作。\n\n🎯 **记住这些要点** 🎯\n- 索引和切片是基础。\n- 方法丰富，但用法简单。\n- 多练习，理解应用场景。', '2025-04-20 10:14:39', '2025-04-20 10:14:39');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (70, 1, '递归', '🔍 **递归核心思路**:\n- 递归就是函数调用自己，解决一个问题时，将问题分解成更小的子问题。\n\n🔧 **关键点**:\n- 明确递归基准条件：当子问题不能再分解时，直接返回结果。\n- 递归步骤：每次递归调用都要向基准条件靠近，并解决子问题。\n\n🎯 **常见解题技巧**:\n- **分解问题**：将大问题拆分成小问题，逐步解决。\n- **自底向上**：先解决小问题，逐步构建大问题的解。\n- **可视化**：用图表或流程图帮助理解递归过程。\n\n👉 **要点列表**:\n- 递归函数必须有一个明确的退出条件。\n- 递归过程中，每次调用都要向退出条件靠近。\n- 避免无限递归，确保每层递归都有进展。\n\n👍 **记住**：递归是强大的，但要小心使用，避免性能问题。', '2025-04-20 10:14:40', '2025-04-20 10:14:40');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (71, 1, '序列', '🌟 序列算法核心思路 🌟\n- **理解序列概念**：序列是一系列有序的元素，如数字、字母等。\n- **核心思路**：通过循环、递归等方式对序列进行操作，如排序、查找等。\n\n🔍 关键点\n- **数据结构**：熟悉数组、链表等数据结构。\n- **算法选择**：根据需求选择合适的算法，如快速排序、二分查找等。\n- **边界条件**：注意处理边界情况，避免错误。\n\n🛠 常见解题技巧\n- **分而治之**：将大问题分解为小问题，逐步解决。\n- **递归思维**：理解递归原理，解决复杂问题。\n- **模拟实践**：多写代码实践，加深理解。\n\n📝 要点总结\n- 理解序列基本概念\n- 掌握常见数据结构\n- 选择合适算法\n- 注意边界条件\n- 多实践，多总结', '2025-04-20 10:14:40', '2025-04-20 10:14:40');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (74, 1, '递归', '🌟 递归核心思路 🌟\n- 重复自己解决问题\n- 每次调用解决一小部分\n- 最终解决整个问题\n\n🔍 关键点\n- 明确递归终止条件\n- 每次递归缩小问题规模\n- 递归调用自身\n\n📝 常见解题技巧\n- 分解问题：将大问题拆成小问题\n- 模拟递归过程：画出递归树\n- 避免重复计算：使用缓存或记忆化搜索\n\n📌 递归要点\n- 确定递归基\n- 确定递归关系\n- 避免无限递归\n\n🚀 快速掌握递归，让你的代码更简洁高效！🚀', '2025-04-22 16:45:14', '2025-04-22 16:45:14');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (75, 1, '字符串', '🌟 **字符串核心思路**：\n- 字符串是字符序列，用于存储文本信息。\n- 操作包括拼接、查找、替换等。\n\n🔍 **关键点**：\n- **索引**：从0开始，正向递增。\n- **长度**：`len()` 函数获取。\n- **遍历**：使用 `for` 循环逐个字符处理。\n\n🎯 **常见解题技巧**：\n- **拼接**：使用 `+` 运算符或 `join()` 方法。\n- **查找**：`in` 关键字判断子字符串。\n- **替换**：`replace()` 方法或正则表达式。\n- **分割**：`split()` 方法按指定分隔符分割字符串。\n\n🔧 **实践要点**：\n- 熟练使用索引和切片。\n- 掌握常用字符串函数。\n- 理解正则表达式的简单应用。\n\n📚 **总结**：\n- 字符串处理是编程的基础技能。\n- 多练习，逐步提高处理复杂字符串的能力。', '2025-04-22 16:45:16', '2025-04-22 16:45:16');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (76, 1, '序列', '🌟 序列算法核心思路 🌟\n- **理解序列**：序列是一系列按特定顺序排列的元素。\n- **核心操作**：遍历、查找、排序、搜索等。\n\n🔍 关键点\n- **顺序性**：元素排列有固定顺序。\n- **类型**：数字序列、字符序列、字符串序列等。\n\n🛠️ 常见解题技巧\n- **遍历**：使用循环结构逐一访问序列元素。\n- **查找**：根据条件筛选或定位特定元素。\n- **排序**：使用冒泡、选择、插入等算法排序序列。\n- **搜索**：使用二分查找优化查找效率。\n\n📌 快速记忆\n- 遍历：for 循环、while 循环\n- 查找：if-else 条件判断\n- 排序：冒泡、选择、插入\n- 搜索：二分查找\n\n🎯 算法实例\n- 数字序列求和\n- 字符串查找子串\n- 排序数组元素\n- 二分查找目标值', '2025-04-22 16:45:16', '2025-04-22 16:45:16');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (77, 1, '判断', '学习 \"判断\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (78, 1, '数学', '学习 \"数学\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -348,7 +355,7 @@ CREATE TABLE `learning_plan_problems` (
   KEY `idx_problem_id` (`problem_id`),
   CONSTRAINT `fk_lpp_plan_id` FOREIGN KEY (`plan_id`) REFERENCES `learning_plans` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_lpp_problem_id` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=90 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='学习计划-题目关联表';
+) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='学习计划-题目关联表';
 
 -- ----------------------------
 -- Records of learning_plan_problems
@@ -385,13 +392,6 @@ INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_nu
 INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (37, 3, 15, '0015', 2, '数学进阶', '2025-02-03 11:33:12');
 INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (38, 3, 19, '0019', 3, '数学进阶', '2025-02-03 11:33:12');
 INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (40, 3, 29, '0025', 5, '数据结构', '2025-02-03 11:33:12');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (47, 1, 1, '0001', 1, '基础算法', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (48, 1, 2, '0002', 2, '基础算法', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (49, 1, 3, '0003', 3, '字符串处理', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (50, 1, 4, '0004', 4, '数学问题', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (51, 1, 5, '0005', 5, '数学问题', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (52, 1, 7, '0007', 6, '最小值', '2025-02-27 16:30:28');
-INSERT INTO `learning_plan_problems` (`id`, `plan_id`, `problem_id`, `problem_number`, `order_index`, `section`, `created_at`) VALUES (53, 1, 8, '0008', 7, '字符串', '2025-02-27 16:30:28');
 COMMIT;
 
 -- ----------------------------
@@ -419,7 +419,6 @@ CREATE TABLE `learning_plans` (
 -- Records of learning_plans
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_plans` (`id`, `title`, `description`, `icon`, `tag`, `difficulty_level`, `estimated_days`, `points`, `created_at`, `updated_at`, `user_id`) VALUES (1, '面试经典 150 题', '通过所有面试高频考点并掌握所有知识点', '/icons/1740723442948-632588890.png', '面试必刷', '中等', 30, '[\"涵盖 150 道经典面试高频题\",\"采用分类式题目，让入门更轻松\",\"适合有 6 个月以上刷题经验的用户\",\"建议每天完成 3-4 道题目\"]', '2025-02-03 11:19:23', '2025-02-28 14:17:22', 1);
 INSERT INTO `learning_plans` (`id`, `title`, `description`, `icon`, `tag`, `difficulty_level`, `estimated_days`, `points`, `created_at`, `updated_at`, `user_id`) VALUES (2, '动态规划（基础版）', '更细的知识点拆分，让入门更轻松', '/icons/algorithm.png', '算法入门', '简单', 15, '[\"系统学习动态规划基础\",\"从易到难的题目编排\",\"配套详细的解题思路\",\"适合算法学习初期的用户\"]', '2025-02-03 11:19:23', '2025-02-05 13:23:10', 1);
 INSERT INTO `learning_plans` (`id`, `title`, `description`, `icon`, `tag`, `difficulty_level`, `estimated_days`, `points`, `created_at`, `updated_at`, `user_id`) VALUES (3, 'LeetCode 热题 100', '力扣最受刷题发烧友欢迎的 100 题', '/icons/hot.png', '热门精选', '中等', 25, '[\"精选最热门的 100 道题目\",\"覆盖多个算法知识点\",\"题目难度分布合理\",\"适合系统提升算法能力\"]', '2025-02-03 11:19:23', '2025-02-05 13:23:10', 1);
 INSERT INTO `learning_plans` (`id`, `title`, `description`, `icon`, `tag`, `difficulty_level`, `estimated_days`, `points`, `created_at`, `updated_at`, `user_id`) VALUES (4, 'SQL 50 题', '面试必刷的 SQL 精选题目', '/icons/sql.png', 'SQL专题', '中等', 20, '[\"覆盖 SQL 常见面试题型\",\"从基础到高级查询\",\"包含多表联查和性能优化\",\"适合数据库开发岗位面试\"]', '2025-02-03 11:19:23', '2025-02-05 13:23:10', 1);
@@ -657,15 +656,15 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool`;
 CREATE TABLE `problem_pool` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `problem_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '题目标题',
-  `difficulty` enum('简单','中等','困难') COLLATE utf8mb4_general_ci NOT NULL COMMENT '难度等级',
-  `tags` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '标签，多个标签用逗号分隔',
-  `description` text COLLATE utf8mb4_general_ci COMMENT '题目描述',
+  `problem_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '题目标题',
+  `difficulty` enum('简单','中等','困难') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '难度等级',
+  `tags` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '标签，多个标签用逗号分隔',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '题目描述',
   `time_limit` int DEFAULT '1000' COMMENT '时间限制(ms)',
   `memory_limit` int DEFAULT '256' COMMENT '内存限制(MB)',
-  `category` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '题目分类，如算法、数据结构等',
-  `source` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '题目来源',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '题目分类，如算法、数据结构等',
+  `source` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '题目来源',
   `create_user_id` int DEFAULT NULL COMMENT '创建者ID',
   `reference_count` int DEFAULT '0' COMMENT '被引用次数',
   `status` tinyint(1) DEFAULT '1' COMMENT '状态：1-启用，0-禁用',
@@ -681,7 +680,7 @@ CREATE TABLE `problem_pool` (
 -- Records of problem_pool
 -- ----------------------------
 BEGIN;
-INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (2, '0002', '合并两个有序链表', '简单', '链表,递归', '将两个升序链表合并为一个新的升序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。', 1000, 256, '8', '原创', 1, 1, 1, '2025-04-11 16:43:41', '2025-04-11 17:08:03');
+INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (2, '0002', '合并两个有序链表', '简单', '链表,递归', '将两个升序链表合并为一个新的升序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。', 1000, 256, '8', '原创', 1, 2, 1, '2025-04-11 16:43:41', '2025-04-22 14:45:17');
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (3, '0003', '最长回文子串', '中等', '字符串,动态规划', '给你一个字符串 s，找到 s 中最长的回文子串。', 1500, 512, '4', '原创', 1, 3, 1, '2025-04-11 16:43:41', '2025-04-16 22:33:52');
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (4, '0004', '买卖股票的最佳时机', '简单', '数组,动态规划', '给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。你只能选择某一天买入这只股票，并选择在未来的某一个不同的日子卖出该股票。设计一个算法来计算你所能获取的最大利润。', 1000, 256, '5', '原创', 1, 1, 1, '2025-04-11 16:43:41', '2025-04-11 17:08:03');
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (5, '0005', '二叉树的层序遍历', '中等', '树,广度优先搜索', '给你一个二叉树，请你返回其按层序遍历得到的节点值。（即逐层地，从左到右访问所有节点）。', 1000, 256, '9', '原创', 1, 3, 1, '2025-04-11 16:43:41', '2025-04-20 11:05:04');
@@ -693,8 +692,8 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool_categories`;
 CREATE TABLE `problem_pool_categories` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '分类名称',
-  `description` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类描述',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '分类名称',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类描述',
   `parent_id` int DEFAULT NULL COMMENT '父分类ID',
   `order_num` int DEFAULT '0' COMMENT '排序序号',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -726,7 +725,7 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool_solution_code`;
 CREATE TABLE `problem_pool_solution_code` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `solution_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `solution_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `pool_solution_id` int NOT NULL COMMENT '题目池解决方案ID',
   `language_id` int NOT NULL COMMENT '编程语言ID',
   `standard_solution` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '具体语言实现',
@@ -770,8 +769,8 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool_solutions`;
 CREATE TABLE `problem_pool_solutions` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `solution_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `problem_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `solution_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `problem_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `problem_pool_id` int NOT NULL COMMENT '题目池ID',
   `solution_approach` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '通用解题思路',
   `time_complexity` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '时间复杂度',
@@ -801,10 +800,10 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool_test_cases`;
 CREATE TABLE `problem_pool_test_cases` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `problem_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `problem_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `problem_pool_id` int NOT NULL COMMENT '题目池ID',
-  `input` text COLLATE utf8mb4_general_ci NOT NULL,
-  `output` text COLLATE utf8mb4_general_ci NOT NULL,
+  `input` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `output` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `is_example` tinyint(1) DEFAULT '0' COMMENT '是否为显示样例',
   `order_num` int DEFAULT '0' COMMENT '测试用例顺序',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -840,7 +839,7 @@ COMMIT;
 DROP TABLE IF EXISTS `problem_pool_usage`;
 CREATE TABLE `problem_pool_usage` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `problem_number` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `problem_number` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `problem_pool_id` int NOT NULL COMMENT '题目池ID',
   `user_id` int NOT NULL COMMENT '使用该题目的老师ID',
   `problem_id` int NOT NULL COMMENT '最终发布的题目ID',
@@ -881,7 +880,7 @@ CREATE TABLE `problem_test_cases` (
   PRIMARY KEY (`id`),
   KEY `problem_id` (`problem_id`),
   CONSTRAINT `fk_problem_test_cases` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——题目测试样例表';
+) ENGINE=InnoDB AUTO_INCREMENT=94 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——题目测试样例表';
 
 -- ----------------------------
 -- Records of problem_test_cases
@@ -930,9 +929,9 @@ INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`,
 INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (79, 42, '0030', 'babad', 'bab', 1, 1, '2025-04-16 22:33:52', '2025-04-16 22:54:48');
 INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (80, 42, '0030', 'cbbd', 'bb', 1, 2, '2025-04-16 22:33:52', '2025-04-16 22:54:48');
 INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (81, 42, '0030', 'a', 'a', 1, 3, '2025-04-16 22:33:52', '2025-04-18 08:27:42');
-INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (82, 43, '0031', '[3,9,20,null,null,15,7]', '[[3],[9,20],[15,7]]', 1, 1, '2025-04-20 11:05:04', '2025-04-20 11:05:04');
-INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (83, 43, '0031', '[1]', '[[1]]', 1, 2, '2025-04-20 11:05:04', '2025-04-20 11:05:04');
-INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (84, 43, '0031', '[]', '[]', 0, 3, '2025-04-20 11:05:04', '2025-04-20 11:05:04');
+INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (91, 44, '0031', '[1,2,4]\n[1,3,4]', '[1,1,2,3,4,4]', 1, 1, '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (92, 44, '0031', '[]\n[]', '[]', 1, 2, '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `problem_test_cases` (`id`, `problem_id`, `problem_number`, `input`, `output`, `is_example`, `order_num`, `created_at`, `updated_at`) VALUES (93, 44, '0031', '[]\n[0]', '[0]', 0, 3, '2025-04-22 14:45:17', '2025-04-22 14:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -954,13 +953,13 @@ CREATE TABLE `problems` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_problem_number` (`problem_number`),
   CONSTRAINT `check_submissions` CHECK ((`accepted_submissions` <= `total_submissions`))
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb3 COMMENT='题目——题目详细表';
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb3 COMMENT='题目——题目详细表';
 
 -- ----------------------------
 -- Records of problems
 -- ----------------------------
 BEGIN;
-INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 160, 90.63, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 145);
+INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 161, 90.68, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 146);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (2, '0002', '寻找最大值', '简单', 300, 84.00, '基础,数组', '给定一个整数数组，找出其中的最大值。第一行输入一个整数n表示数组长度，第二行输入n个整数表示数组元素。', 1000, 256, 252);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (3, '0003', '字符串反转', '中等', 240, 94.58, '字符串', '将一个字符串进行反转。', 1000, 256, 227);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (4, '0004', '阶乘计算', '中等', 151, 65.56, '数学,递归', '计算一个正整数的阶乘。', 1000, 256, 99);
@@ -990,7 +989,7 @@ INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_su
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (34, '0028', 'ceshi2', '困难', 0, 0.00, '双指针,数组', '11', 1000, 256, 0);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (38, '0029', '二叉树的层序遍历1', '简单', 2, 0.00, '树,广度优先搜索', '给你一个二叉树，请你返回其按层序遍历得到的节点值。（即逐层地，从左到右访问所有节点）。', 1000, 256, 0);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (42, '0030', '最长回文子串', '中等', 0, 0.00, '字符串,动态规划', '给你一个字符串 s，找到 s 中最长的回文子串。', 1500, 512, 0);
-INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (43, '0031', '二叉树的层序遍历', '中等', 0, 0.00, '树,广度优先搜索', '给你一个二叉树，请你返回其按层序遍历得到的节点值。（即逐层地，从左到右访问所有节点）。', 1000, 256, 0);
+INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (44, '0031', '合并两个有序链表', '简单', 0, 0.00, '链表,递归', '将两个升序链表合并为一个新的升序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。', 1000, 256, 0);
 COMMIT;
 
 -- ----------------------------
@@ -1010,7 +1009,7 @@ CREATE TABLE `solution_code` (
   KEY `fk_code_language` (`language_id`),
   CONSTRAINT `fk_code_language` FOREIGN KEY (`language_id`) REFERENCES `solution_languages` (`id`),
   CONSTRAINT `fk_code_main` FOREIGN KEY (`solution_id`) REFERENCES `solution_main` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=168 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答代码';
+) ENGINE=InnoDB AUTO_INCREMENT=172 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答代码';
 
 -- ----------------------------
 -- Records of solution_code
@@ -1136,10 +1135,10 @@ INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solut
 INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (161, 41, 4, '#include <iostream>\n#include <string>\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    string longestPalindrome(string s) {\n        int n = s.size();\n        if (n < 2) return s;\n        \n        int maxLen = 1;\n        int begin = 0;\n        vector<vector<bool>> dp(n, vector<bool>(n, false));\n        \n        // 所有单个字符都是回文\n        for (int i = 0; i < n; i++) {\n            dp[i][i] = true;\n        }\n        \n        // 检查长度为2及以上的子串\n        for (int L = 2; L <= n; L++) {\n            for (int i = 0; i < n; i++) {\n                int j = i + L - 1;\n                if (j >= n) break;\n                \n                if (s[i] != s[j]) {\n                    dp[i][j] = false;\n                } else {\n                    if (j - i < 3) {\n                        dp[i][j] = true;\n                    } else {\n                        dp[i][j] = dp[i+1][j-1];\n                    }\n                }\n                \n                if (dp[i][j] && j - i + 1 > maxLen) {\n                    maxLen = j - i + 1;\n                    begin = i;\n                }\n            }\n        }\n        \n        return s.substr(begin, maxLen);\n    }\n};', '1.0', '2025-04-16 22:33:52', '2025-04-16 22:33:52');
 INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (162, 41, 3, '// Java 解决方案\npublic String longestPalindrome(String s) {\n    if (s == null || s.length() < 1) return \"\";\n    \n    int start = 0, end = 0;\n    \n    for (int i = 0; i < s.length(); i++) {\n        int len1 = expandAroundCenter(s, i, i);\n        int len2 = expandAroundCenter(s, i, i + 1);\n        int len = Math.max(len1, len2);\n        if (len > end - start) {\n            start = i - (len - 1) / 2;\n            end = i + len / 2;\n        }\n    }\n    \n    return s.substring(start, end + 1);\n}\n\nprivate int expandAroundCenter(String s, int left, int right) {\n    while (left >= 0 && right < s.length() && s.charAt(left) == s.charAt(right)) {\n        left--;\n        right++;\n    }\n    return right - left - 1;\n}', '1.0', '2025-04-16 22:33:52', '2025-04-16 22:33:52');
 INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (163, 41, 2, '# Python 简化解决方案\ndef longestPalindrome(s):\n    # 实现寻找最长回文子串的算法\n    # 返回最长回文子串\n    pass', '1.0', '2025-04-16 22:33:52', '2025-04-16 22:33:52');
-INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (164, 42, 1, '// C 简化解决方案\nint** levelOrder(struct TreeNode* root, int* returnSize, int** returnColumnSizes) {\n    // 实现二叉树层序遍历的C语言代码\n    // 返回层序遍历结果\n}', '1.0', '2025-04-20 11:05:04', '2025-04-20 11:05:04');
-INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (165, 42, 4, '#include <iostream>\n#include <vector>\n#include <queue>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n};\n\nclass Solution {\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root) {\n        vector<vector<int>> result;\n        if (!root) return result;\n        \n        queue<TreeNode*> q;\n        q.push(root);\n        \n        while (!q.empty()) {\n            int levelSize = q.size();\n            vector<int> currentLevel;\n            \n            for (int i = 0; i < levelSize; i++) {\n                TreeNode* node = q.front();\n                q.pop();\n                \n                currentLevel.push_back(node->val);\n                \n                if (node->left) q.push(node->left);\n                if (node->right) q.push(node->right);\n            }\n            \n            result.push_back(currentLevel);\n        }\n        \n        return result;\n    }\n};', '1.0', '2025-04-20 11:05:04', '2025-04-20 11:05:04');
-INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (166, 42, 3, '// Java 简化解决方案\npublic List<List<Integer>> levelOrder(TreeNode root) {\n    // 使用队列实现二叉树层序遍历\n    // 返回二维列表表示层序遍历结果\n    return new ArrayList<>();\n}', '1.0', '2025-04-20 11:05:04', '2025-04-20 11:05:04');
-INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (167, 42, 2, '# Python 简化解决方案\ndef levelOrder(root):\n    # 使用队列实现二叉树层序遍历\n    # 返回二维数组表示层序遍历结果\n    pass', '1.0', '2025-04-20 11:05:04', '2025-04-20 11:05:04');
+INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (168, 43, 1, '// C 解决方案\nstruct ListNode* mergeTwoLists(struct ListNode* l1, struct ListNode* l2) {\n    struct ListNode dummy;\n    struct ListNode* tail = &dummy;\n    \n    while (l1 && l2) {\n        if (l1->val <= l2->val) {\n            tail->next = l1;\n            l1 = l1->next;\n        } else {\n            tail->next = l2;\n            l2 = l2->next;\n        }\n        tail = tail->next;\n    }\n    \n    tail->next = l1 ? l1 : l2;\n    return dummy.next;\n}', '1.0', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (169, 43, 4, '#include <iostream>\nusing namespace std;\n\nstruct ListNode {\n    int val;\n    ListNode *next;\n    ListNode() : val(0), next(nullptr) {}\n    ListNode(int x) : val(x), next(nullptr) {}\n    ListNode(int x, ListNode *next) : val(x), next(next) {}\n};\n\nclass Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n        if (!list1) return list2;\n        if (!list2) return list1;\n        \n        if (list1->val < list2->val) {\n            list1->next = mergeTwoLists(list1->next, list2);\n            return list1;\n        } else {\n            list2->next = mergeTwoLists(list1, list2->next);\n            return list2;\n        }\n    }\n};', '1.0', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (170, 43, 3, '// Java 解决方案\npublic ListNode mergeTwoLists(ListNode l1, ListNode l2) {\n    ListNode dummy = new ListNode(0);\n    ListNode tail = dummy;\n    \n    while (l1 != null && l2 != null) {\n        if (l1.val <= l2.val) {\n            tail.next = l1;\n            l1 = l1.next;\n        } else {\n            tail.next = l2;\n            l2 = l2.next;\n        }\n        tail = tail.next;\n    }\n    \n    tail.next = (l1 != null) ? l1 : l2;\n    return dummy.next;\n}', '1.0', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `solution_code` (`id`, `solution_id`, `language_id`, `standard_solution`, `version`, `created_at`, `updated_at`) VALUES (171, 43, 2, '# Python 解决方案\ndef mergeTwoLists(l1, l2):\n    dummy = ListNode(0)\n    tail = dummy\n    \n    while l1 and l2:\n        if l1.val <= l2.val:\n            tail.next = l1\n            l1 = l1.next\n        else:\n            tail.next = l2\n            l2 = l2.next\n        tail = tail.next\n    \n    tail.next = l1 if l1 else l2\n    return dummy.next', '1.0', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -1172,7 +1171,7 @@ DROP TABLE IF EXISTS `solution_main`;
 CREATE TABLE `solution_main` (
   `id` int NOT NULL AUTO_INCREMENT,
   `problem_id` int NOT NULL COMMENT '题目ID',
-  `problem_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `problem_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `solution_approach` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '通用解题思路',
   `time_complexity` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '平均时间复杂度',
   `space_complexity` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '平均空间复杂度',
@@ -1181,7 +1180,7 @@ CREATE TABLE `solution_main` (
   PRIMARY KEY (`id`),
   KEY `fk_main_problem` (`problem_id`),
   CONSTRAINT `fk_main_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答方案、时空复杂度';
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答方案、时空复杂度';
 
 -- ----------------------------
 -- Records of solution_main
@@ -1217,7 +1216,7 @@ INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_app
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (35, 34, '0028', '对应题目0029', '11', '11', '2025-02-25 19:00:52', '2025-04-16 22:44:58');
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (37, 38, '0029', '使用队列实现广度优先搜索，逐层处理二叉树节点。', 'O(n)', 'O(n)', '2025-04-14 09:37:43', '2025-04-16 22:54:48');
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (41, 42, '0030', '动态规划方法：利用状态转移方程 P(i,j)=(P(i+1,j−1) and S[i]==S[j])，逐步找到最长回文子串。', 'O(n²)', 'O(n²)', '2025-04-16 22:33:52', '2025-04-16 22:54:48');
-INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (42, 43, NULL, '使用队列实现广度优先搜索，逐层处理二叉树节点。', 'O(n)', 'O(n)', '2025-04-20 11:05:04', '2025-04-20 11:05:04');
+INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (43, 44, NULL, '使用递归或迭代方法，比较两个链表的头节点，选择较小的一个作为新链表的头，然后递归处理剩余部分。', 'O(n+m)', 'O(1)', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
 COMMIT;
 
 -- ----------------------------
@@ -1227,11 +1226,11 @@ DROP TABLE IF EXISTS `student_info`;
 CREATE TABLE `student_info` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL COMMENT '关联用户ID',
-  `student_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '学号',
-  `real_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '真实姓名',
-  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '院系',
-  `major` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '专业',
-  `grade` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '年级',
+  `student_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '学号',
+  `real_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '真实姓名',
+  `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '院系',
+  `major` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '专业',
+  `grade` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '年级',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `class_id` int DEFAULT NULL COMMENT '关联班级ID',
@@ -1248,7 +1247,7 @@ CREATE TABLE `student_info` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (1, 1, '202313008218', '吴益通', '人文学院', '舞蹈学', '2023', '2025-03-04 14:44:14', '2025-03-05 09:16:48', 3);
-INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (24, 11, '202313008221', '张伟', '理工学院', '计算机科学与技术', '2023', '2025-04-18 01:16:17', NULL, 1);
+INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (24, 11, '202313008221', '张伟', '理工学院', '计算机科学与技术', '2023', '2025-04-18 01:16:17', '2025-04-22 14:45:35', 1);
 INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (25, 12, '202313008222', '李娜', '理工学院', '软件工程', '2023', '2025-04-18 01:16:17', NULL, 2);
 INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (26, 13, '202313008223', '王强', '理工学院', '数据科学与大数据技术', '2023', '2025-04-18 01:16:17', NULL, 3);
 INSERT INTO `student_info` (`id`, `user_id`, `student_no`, `real_name`, `department`, `major`, `grade`, `created_at`, `updated_at`, `class_id`) VALUES (27, 14, '202313008224', '赵敏', '理工学院', '人工智能', '2023', '2025-04-18 01:16:17', NULL, 5);
@@ -1292,7 +1291,7 @@ CREATE TABLE `submissions` (
   KEY `fk_submission_problem` (`problem_id`),
   CONSTRAINT `fk_submission_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`),
   CONSTRAINT `fk_submission_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——用户提交记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——用户提交记录表';
 
 -- ----------------------------
 -- Records of submissions
@@ -1403,6 +1402,7 @@ INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `cod
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (115, 1, 2, '0002', 'import java.util.*;\n\nclass Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        int max = Integer.MIN_VALUE;\n        while(n-- > 0) {\n            max = Math.max(max, sc.nextInt());\n        }\n        System.out.println(max);\n    }\n}', 'Java', 102, 892, NULL, '2025-04-19 10:31:55', 'Accepted', '2025-04-19 10:31:59');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (116, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 1727, 596, NULL, '2025-04-19 10:48:36', 'Accepted', '2025-04-19 10:48:48');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (117, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    printf(\"5\");\n    return 0;\n}', 'C', 647, 600, '答案错误（隐藏用例）\n请检查您的代码逻辑是否正确。', '2025-04-20 10:12:44', 'Wrong Answer', '2025-04-20 10:12:49');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (118, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 314, 3, NULL, '2025-04-22 12:20:36', 'Accepted', '2025-04-22 12:20:48');
 COMMIT;
 
 -- ----------------------------
@@ -1426,7 +1426,7 @@ CREATE TABLE `user_profile` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_profile_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb3 COMMENT='全局——用户显示资料表';
+) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb3 COMMENT='全局——用户显示资料表';
 
 -- ----------------------------
 -- Records of user_profile
@@ -1443,7 +1443,7 @@ INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (29, 13, 'bobsmith', '鲍勃', 'public/uploads/avatars/avatar-1744910090N-000000003.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (30, 14, 'alicewang', '艾丽丝', 'public/uploads/avatars/avatar-1744910092N-000000004.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (31, 15, 'mikebrown', '迈克', 'public/uploads/avatars/avatar-1744910093N-000000005.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
-INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (32, 16, 'sarahlee', '莎拉', 'public/uploads/avatars/avatar-1744910094N-000000006.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
+INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (32, 16, 'sarahlee', '莎拉', 'public/uploads/avatars/avatar-1744910094N-000000006.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-22 14:19:16');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (33, 17, 'davidzhou', '大卫', 'public/uploads/avatars/avatar-1744910096N-000000007.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (34, 18, 'lindachen', '琳达', 'public/uploads/avatars/avatar-1744910097N-000000008.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (35, 19, 'tomwilson', '汤姆', 'public/uploads/avatars/avatar-1744910098N-000000009.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
@@ -1497,7 +1497,7 @@ CREATE TABLE `user_visits` (
   UNIQUE KEY `uk_user_date` (`user_id`,`visit_date`),
   KEY `idx_visit_date` (`visit_date`),
   CONSTRAINT `fk_visit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=337 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=355 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
 
 -- ----------------------------
 -- Records of user_visits
@@ -1538,7 +1538,8 @@ INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `v
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (273, 1, '2025-04-18', '2025-04-18 00:23:09', 21);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (294, 1, '2025-04-19', '2025-04-19 09:44:40', 38);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (332, 1, '2025-04-20', '2025-04-20 01:51:46', 4);
-INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (336, 1, '2025-04-21', '2025-04-21 11:07:18', 1);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (336, 1, '2025-04-21', '2025-04-21 11:07:18', 4);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (340, 1, '2025-04-22', '2025-04-22 03:19:13', 15);
 COMMIT;
 
 -- ----------------------------
@@ -1547,16 +1548,16 @@ COMMIT;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '123456',
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '123456',
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '手机号',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `status` tinyint(1) DEFAULT '1',
-  `token` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `role` enum('normal','vip','super_vip','teacher','admin') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '用户角色',
   `role_expire_time` timestamp NULL DEFAULT NULL COMMENT '角色过期时间（针对会员）',
-  `refresh_token` text COLLATE utf8mb4_unicode_ci,
+  `refresh_token` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`),
   UNIQUE KEY `uk_phone` (`phone`),
@@ -1567,12 +1568,12 @@ CREATE TABLE `users` (
 -- Records of users
 -- ----------------------------
 BEGIN;
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (1, 'admin', '$2b$10$WuykF1MPbs1MJWHGvoZyL.5krLatNrJN6823dLDPCWzYm96Nh0DUi', 'admin@example.com', NULL, '2025-01-22 12:15:35', 1, NULL, 'admin', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDUyMDQ4MjUsImV4cCI6MTc0NTgwOTYyNSwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.Ih0T-256ZsNCAKxCJgPplJsQEjKwiC8LqAAqoPQrNGI');
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (1, 'admin', '$2b$10$SMRZ1RWfh.lR1YqyYgsw6uwnPyLnScDXqN3RMGVr3iGSAmXmm6ex2', 'admin@example.com', NULL, '2025-01-22 12:15:35', 1, NULL, 'admin', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDUzMTE4NDQsImV4cCI6MTc0NTkxNjY0NCwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.bnawTxPN_ziGoAo6kOm0QYcqjNp9iO4HG3uB2PN9krQ');
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (3, 'test', 'test123', '123@qq.com', NULL, '2025-01-24 10:03:39', 1, NULL, 'teacher', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (6, 'student1', '$2b$10$kti7yxUgaM9A3Mngg4VAk.aXB0F/4cd7MFTq0MYMgT42HiYSXvWsK', 'xuesheng@qq.com', NULL, '2025-02-05 11:53:55', 1, NULL, 'normal', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (7, 'VIP1', '$2b$10$pw2KRFpKOgR8SDm/si.UmuCVI0k5Yv5pbX8cv30D2KM7T8XooJETK', 'vip1@qq.com', NULL, '2025-02-05 11:57:34', 1, NULL, 'vip', NULL, NULL);
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (8, 'student', '$2b$10$nru7E2W1IQkM2bjMQmBlhuv19FAsdRYRvaWngRwHj4dGgWHCQz8vm', '13377238689@163.com', NULL, '2025-03-08 10:58:41', 1, NULL, 'normal', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDUwNTQ3NTMsImV4cCI6MTc0NTY1OTU1MywiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.gh2MK7zeJ0d-0TJa1VoHSP6g8s-LA6co-ejMVCqXmcs');
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (9, 'teacher', '$2b$10$jrVuQ6u6D89wzZpD4eVyQ.OTyVmHFmiH0LSKDLF9usHnCQJdQh3ae', '17324042932@163.com', '17324042932', '2025-03-08 11:01:51', 1, NULL, 'teacher', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDQ4MTk4NTgsImV4cCI6MTc0NTQyNDY1OCwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.HFMmvVsm9GBBSJ42HWe3spFVV62hYAbGYjBLTtIu3G8');
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (8, 'student', '$2b$10$nru7E2W1IQkM2bjMQmBlhuv19FAsdRYRvaWngRwHj4dGgWHCQz8vm', '13377238689@163.com', NULL, '2025-03-08 10:58:41', 1, NULL, 'normal', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDUzMDQ5MDksImV4cCI6MTc0NTkwOTcwOSwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.NYPsBJedQLvTGVX__K7WtLsEh9CXRbzSl0LfGL3ifYw');
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (9, 'teacher', '$2b$10$jrVuQ6u6D89wzZpD4eVyQ.OTyVmHFmiH0LSKDLF9usHnCQJdQh3ae', '17324042932@163.com', '17324042932', '2025-03-08 11:01:51', 1, NULL, 'teacher', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDUzMDQ5MTgsImV4cCI6MTc0NTkwOTcxOCwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.YdGzbJvQEhswoEqA_2JPNnnCs-mlGNsP_JOdouOPCRo');
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (11, 'johndoe', '$2b$10$WuykF1MPbs1MJWHGvoZyL.5krLatNrJN6823dLDPCWzYm96Nh0DUi', 'johndoe@example.com', NULL, '2025-04-18 01:15:40', 1, NULL, 'admin', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (12, 'janedoe', '$2b$10$WuykF1MPbs1MJWHGvoZyL.5krLatNrJN6823dLDPCWzYm96Nh0DUi', 'janedoe@example.com', NULL, '2025-04-18 01:15:40', 1, NULL, 'teacher', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (13, 'bobsmith', '$2b$10$WuykF1MPbs1MJWHGvoZyL.5krLatNrJN6823dLDPCWzYm96Nh0DUi', 'bobsmith@example.com', NULL, '2025-04-18 01:15:40', 1, NULL, 'normal', NULL, NULL);
@@ -1600,441 +1601,5 @@ COMMIT;
 -- ----------------------------
 DROP VIEW IF EXISTS `problem_stats`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `problem_stats` AS select `p`.`problem_number` AS `problem_number`,count(distinct `s`.`id`) AS `total_submissions`,count(distinct (case when (`s`.`status` = 'Accepted') then `s`.`id` end)) AS `accepted_submissions`,round(((count(distinct (case when (`s`.`status` = 'Accepted') then `s`.`id` end)) * 100.0) / nullif(count(distinct `s`.`id`),0)),2) AS `acceptance_rate` from (`problems` `p` left join `submissions` `s` on((`p`.`problem_number` = `s`.`problem_id`))) group by `p`.`problem_number`;
-
--- ----------------------------
--- View structure for problem_success_rates
--- ----------------------------
-DROP VIEW IF EXISTS `problem_success_rates`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `problem_success_rates` AS select `ups`.`problem_id` AS `problem_id`,count(0) AS `total_attempts`,sum((case when (`ups`.`status` = 'Accepted') then 1 else 0 end)) AS `accepted_count`,round(((sum((case when (`ups`.`status` = 'Accepted') then 1 else 0 end)) * 100.0) / nullif(count(0),0)),2) AS `success_rate` from `user_problem_status` `ups` group by `ups`.`problem_id`;
-
--- ----------------------------
--- View structure for user_learning_overview
--- ----------------------------
-DROP VIEW IF EXISTS `user_learning_overview`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `user_learning_overview` AS select `u`.`id` AS `user_id`,`u`.`username` AS `username`,count(distinct `s`.`problem_id`) AS `total_problems_solved`,(avg((case when (`s`.`status` = 'AC') then 1 else 0 end)) * 100) AS `success_rate`,max(`aa`.`overall_score`) AS `latest_ability_score`,max(`rls`.`daily_practice_time`) AS `max_daily_practice_time` from (((`users` `u` left join `submissions` `s` on((`u`.`id` = `s`.`user_id`))) left join `ability_assessments` `aa` on((`u`.`id` = `aa`.`user_id`))) left join `recent_learning_stats` `rls` on((`u`.`id` = `rls`.`user_id`))) group by `u`.`id`,`u`.`username`;
-
--- ----------------------------
--- View structure for v_knowledge_mastery
--- ----------------------------
-DROP VIEW IF EXISTS `v_knowledge_mastery`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_knowledge_mastery` AS select `knowledge_mastery_details`.`user_id` AS `user_id`,count(0) AS `total_knowledge_points`,avg(`knowledge_mastery_details`.`mastery_level`) AS `avg_mastery` from `knowledge_mastery_details` group by `knowledge_mastery_details`.`user_id`;
-
--- ----------------------------
--- View structure for v_learning_days
--- ----------------------------
-DROP VIEW IF EXISTS `v_learning_days`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_learning_days` AS select `learning_records`.`user_id` AS `user_id`,count(distinct cast(`learning_records`.`created_at` as date)) AS `learning_days` from `learning_records` group by `learning_records`.`user_id`;
-
--- ----------------------------
--- View structure for v_learning_path_stats
--- ----------------------------
-DROP VIEW IF EXISTS `v_learning_path_stats`;
-CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_learning_path_stats` AS select `u`.`id` AS `user_id`,`u`.`username` AS `username`,`lp`.`id` AS `path_id`,`lp`.`path_name` AS `path_name`,`lp`.`description` AS `path_description`,`lp`.`current_stage` AS `current_stage`,`lp`.`total_stages` AS `total_stages`,round(((`lp`.`current_stage` / `lp`.`total_stages`) * 100),2) AS `progress`,`lp`.`is_completed` AS `is_completed`,`lp`.`created_at` AS `start_date`,`lp`.`updated_at` AS `last_updated` from (`users` `u` left join `learning_paths` `lp` on((`u`.`id` = `lp`.`user_id`))) where (`lp`.`updated_at` = (select max(`learning_paths`.`updated_at`) from `learning_paths` where (`learning_paths`.`user_id` = `u`.`id`)));
-
--- ----------------------------
--- Procedure structure for cleanup_old_data
--- ----------------------------
-DROP PROCEDURE IF EXISTS `cleanup_old_data`;
-delimiter ;;
-CREATE PROCEDURE `cleanup_old_data`()
-BEGIN
-    -- 删除30天前的实时数据
-    DELETE FROM recent_learning_stats 
-    WHERE stats_date < DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for create_new_learning_path
--- ----------------------------
-DROP PROCEDURE IF EXISTS `create_new_learning_path`;
-delimiter ;;
-CREATE PROCEDURE `create_new_learning_path`(IN p_user_id INT,
-    IN p_stages TEXT,
-    IN p_suggestion TEXT)
-BEGIN
-    -- 1. 将该用户现有的活跃路径设置为非活跃
-    UPDATE learning_paths 
-    SET status = 'inactive' 
-    WHERE user_id = p_user_id 
-    AND status = 'active';
-    
-    -- 2. 插入新的学习路径
-    INSERT INTO learning_paths (
-        user_id, 
-        stages, 
-        progress, 
-        created_at, 
-        suggestion,
-        status
-    ) VALUES (
-        p_user_id,
-        p_stages,
-        0,
-        NOW(),
-        p_suggestion,
-        'active'
-    );
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for get_learning_path_problems
--- ----------------------------
-DROP PROCEDURE IF EXISTS `get_learning_path_problems`;
-delimiter ;;
-CREATE PROCEDURE `get_learning_path_problems`(IN p_user_id INT)
-BEGIN
-    SELECT 
-        p.*,
-        COALESCE(psr.success_rate, 0) as success_rate,
-        CASE WHEN ups.status = 'Accepted' THEN true ELSE false END as completed,
-        lps.stage_order,
-        kp.name as knowledge_point
-    FROM learning_paths lp
-    JOIN learning_path_stages lps ON lp.id = lps.learning_path_id
-    JOIN problems p ON lps.problem_id = p.problem_number
-    LEFT JOIN problem_success_rates psr ON p.problem_number = psr.problem_id
-    LEFT JOIN user_problem_status ups ON p.problem_number = ups.problem_id AND ups.user_id = p_user_id
-    LEFT JOIN knowledge_points kp ON p.knowledge_point_id = kp.id
-    WHERE lp.user_id = p_user_id AND lp.status = 'active'
-    ORDER BY lps.stage_order;
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for populate_problem_category_relations
--- ----------------------------
-DROP PROCEDURE IF EXISTS `populate_problem_category_relations`;
-delimiter ;;
-CREATE PROCEDURE `populate_problem_category_relations`()
-BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE problem_id INT;
-    DECLARE problem_tags VARCHAR(255);
-    DECLARE tag_cursor CURSOR FOR SELECT id, tags FROM problems WHERE tags IS NOT NULL AND tags != '';
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-    TRUNCATE TABLE problem_category_relations;
-    
-    OPEN tag_cursor;
-    
-    read_loop: LOOP
-        FETCH tag_cursor INTO problem_id, problem_tags;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-        BEGIN
-            DECLARE tag_name VARCHAR(50);
-            DECLARE tag_position INT;
-            DECLARE tag_length INT;
-            DECLARE remaining_tags VARCHAR(255);
-            
-            SET remaining_tags = problem_tags;
-            
-            tag_loop: WHILE LENGTH(remaining_tags) > 0 DO
-                SET tag_position = LOCATE(',', remaining_tags);
-                
-                IF tag_position > 0 THEN
-                    SET tag_name = TRIM(SUBSTRING(remaining_tags, 1, tag_position - 1));
-                    SET remaining_tags = SUBSTRING(remaining_tags, tag_position + 1);
-                ELSE
-                    SET tag_name = TRIM(remaining_tags);
-                    SET remaining_tags = '';
-                END IF;
-                INSERT IGNORE INTO problem_category_relations (problem_id, category_id)
-                SELECT problem_id, id FROM problem_categories WHERE name = tag_name;
-            END WHILE tag_loop;
-        END;
-    END LOOP;
-    
-    CLOSE tag_cursor;
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for record_learning_activity
--- ----------------------------
-DROP PROCEDURE IF EXISTS `record_learning_activity`;
-delimiter ;;
-CREATE PROCEDURE `record_learning_activity`(IN p_user_id INT,
-    IN p_activity_type VARCHAR(50),
-    IN p_problem_id VARCHAR(10),
-    IN p_additional_info JSON)
-BEGIN
-    INSERT INTO learning_activities (user_id, activity_type, problem_id, additional_info)
-    VALUES (p_user_id, p_activity_type, p_problem_id, p_additional_info);
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for update_ability_assessment
--- ----------------------------
-DROP PROCEDURE IF EXISTS `update_ability_assessment`;
-delimiter ;;
-CREATE PROCEDURE `update_ability_assessment`(IN p_user_id INT)
-BEGIN
-    DECLARE v_learning_efficiency DECIMAL(4,2);
-    DECLARE v_knowledge_application DECIMAL(4,2);
-    DECLARE v_overall_score DECIMAL(4,2);
-    
-    -- 计算学习效率（基于平均解题时间和提交次数）
-    SELECT 
-        AVG(
-            CASE 
-                WHEN solution_time <= 300 AND submission_count <= 2 THEN 100
-                WHEN solution_time <= 600 AND submission_count <= 3 THEN 85
-                WHEN solution_time <= 900 AND submission_count <= 4 THEN 70
-                ELSE 55
-            END
-        ) INTO v_learning_efficiency
-    FROM user_problem_status
-    WHERE user_id = p_user_id 
-    AND status = 'completed'
-    AND solution_time IS NOT NULL;
-    
-    -- 计算知识应用能力（基于知识点掌握度和题目难度）
-    SELECT 
-        AVG(mastery_level) INTO v_knowledge_application
-    FROM knowledge_mastery_details
-    WHERE user_id = p_user_id;
-    
-    -- 计算总体评分（学习效率占40%，知识应用能力占60%）
-    SET v_overall_score = (v_learning_efficiency * 0.4) + (v_knowledge_application * 0.6);
-    
-    -- 插入或更新能力评估记录
-    INSERT INTO ability_assessments 
-        (user_id, learning_efficiency, knowledge_application, overall_score, assessment_date)
-    VALUES 
-        (p_user_id, v_learning_efficiency, v_knowledge_application, v_overall_score, CURDATE())
-    ON DUPLICATE KEY UPDATE
-        learning_efficiency = v_learning_efficiency,
-        knowledge_application = v_knowledge_application,
-        overall_score = v_overall_score;
-        
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for update_learning_potential
--- ----------------------------
-DROP PROCEDURE IF EXISTS `update_learning_potential`;
-delimiter ;;
-CREATE PROCEDURE `update_learning_potential`(IN p_user_id INT)
-BEGIN
-    -- 声明所有变量
-    DECLARE v_problem_solving DECIMAL(5,2);
-    DECLARE v_learning_speed DECIMAL(5,2);
-    DECLARE v_knowledge_coverage DECIMAL(5,2);
-    DECLARE v_practice_consistency DECIMAL(5,2);
-    
-    -- 计算解题能力（基于成功提交率）
-    SELECT 
-        COALESCE((COUNT(CASE WHEN status = 'AC' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 0)
-    INTO v_problem_solving
-    FROM submissions
-    WHERE user_id = p_user_id
-    AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);
-    
-    -- 计算学习速度（基于平均解题时间）
-    SELECT 
-        COALESCE(100 - AVG(TIMESTAMPDIFF(MINUTE, created_at, submit_time)), 0)
-    INTO v_learning_speed
-    FROM submissions
-    WHERE user_id = p_user_id
-    AND status = 'AC'
-    AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);
-    
-    -- 计算知识覆盖度
-    SELECT 
-        COALESCE((COUNT(DISTINCT p.type) * 100.0 / NULLIF((SELECT COUNT(DISTINCT type) FROM problems), 0)), 0)
-    INTO v_knowledge_coverage
-    FROM submissions s
-    JOIN problems p ON s.problem_id = p.id
-    WHERE s.user_id = p_user_id
-    AND s.status = 'AC';
-    
-    -- 计算练习持续性
-    SELECT 
-        COALESCE((COUNT(DISTINCT DATE(created_at)) * 100.0 / 30), 0)
-    INTO v_practice_consistency
-    FROM submissions
-    WHERE user_id = p_user_id
-    AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);
-    
-    -- 插入或更新分析结果
-    INSERT INTO learning_potential_analysis
-    (user_id, analysis_date, problem_solving, learning_speed, knowledge_coverage, practice_consistency, analysis_text)
-    VALUES
-    (p_user_id, CURRENT_DATE, 
-     v_problem_solving,
-     v_learning_speed,
-     v_knowledge_coverage,
-     v_practice_consistency,
-     CONCAT('基于最近30天的学习数据分析：\n',
-            '解题能力: ', v_problem_solving, '%\n',
-            '学习速度: ', v_learning_speed, '%\n',
-            '知识覆盖: ', v_knowledge_coverage, '%\n',
-            '练习持续性: ', v_practice_consistency, '%'))
-    ON DUPLICATE KEY UPDATE
-    problem_solving = VALUES(problem_solving),
-    learning_speed = VALUES(learning_speed),
-    knowledge_coverage = VALUES(knowledge_coverage),
-    practice_consistency = VALUES(practice_consistency),
-    analysis_text = VALUES(analysis_text);
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for update_problem_stats
--- ----------------------------
-DROP PROCEDURE IF EXISTS `update_problem_stats`;
-delimiter ;;
-CREATE PROCEDURE `update_problem_stats`()
-BEGIN
-    UPDATE problems p
-    JOIN problem_stats ps ON p.problem_number = ps.problem_number
-    SET 
-        p.total_submissions = ps.total_submissions,
-        p.acceptance_rate = ps.acceptance_rate;
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Procedure structure for update_user_ability_assessment
--- ----------------------------
-DROP PROCEDURE IF EXISTS `update_user_ability_assessment`;
-delimiter ;;
-CREATE PROCEDURE `update_user_ability_assessment`(IN p_user_id INT)
-BEGIN
-    DECLARE v_learning_efficiency DECIMAL(4,2);
-    DECLARE v_knowledge_application DECIMAL(4,2);
-    
-    -- 计算学习效率（基于最近30天的提交记录）
-    SELECT 
-        (COUNT(CASE WHEN status = 'AC' THEN 1 END) / COUNT(*)) * 100 
-    INTO v_learning_efficiency
-    FROM submissions 
-    WHERE user_id = p_user_id 
-    AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY);
-    
-    -- 计算知识应用能力（基于不同类型题目的解决情况）
-    SELECT 
-        (COUNT(DISTINCT p.type) / (SELECT COUNT(DISTINCT type) FROM problems)) * 100
-    INTO v_knowledge_application
-    FROM submissions s
-    JOIN problems p ON s.problem_id = p.id
-    WHERE s.user_id = p_user_id 
-    AND s.status = 'AC';
-    
-    -- 插入新的能力评估记录
-    INSERT INTO ability_assessments 
-        (user_id, learning_efficiency, knowledge_application, overall_score, assessment_date)
-    VALUES 
-        (p_user_id, 
-         v_learning_efficiency, 
-         v_knowledge_application, 
-         (v_learning_efficiency + v_knowledge_application) / 2,
-         CURRENT_DATE);
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Event structure for cleanup_event
--- ----------------------------
-DROP EVENT IF EXISTS `cleanup_event`;
-delimiter ;;
-CREATE EVENT `cleanup_event`
-ON SCHEDULE
-EVERY '1' DAY STARTS '2025-01-25 09:21:12'
-DO CALL cleanup_old_data()
-;;
-delimiter ;
-
--- ----------------------------
--- Triggers structure for table problem_pool_usage
--- ----------------------------
-DROP TRIGGER IF EXISTS `after_pool_usage_insert`;
-delimiter ;;
-CREATE TRIGGER `AIreview`.`after_pool_usage_insert` AFTER INSERT ON `problem_pool_usage` FOR EACH ROW BEGIN
-    UPDATE problem_pool
-    SET reference_count = reference_count + 1
-    WHERE id = NEW.problem_pool_id;
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Triggers structure for table problems
--- ----------------------------
-DROP TRIGGER IF EXISTS `update_problem_categories`;
-delimiter ;;
-CREATE TRIGGER `AIreview`.`update_problem_categories` AFTER UPDATE ON `problems` FOR EACH ROW BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE tag_name VARCHAR(50);
-    DECLARE tag_position INT;
-    DECLARE remaining_tags VARCHAR(255);
-    IF NEW.tags <> OLD.tags OR (NEW.tags IS NOT NULL AND OLD.tags IS NULL) OR (NEW.tags IS NULL AND OLD.tags IS NOT NULL) THEN
-        DELETE FROM problem_category_relations WHERE problem_id = NEW.id;
-        IF NEW.tags IS NOT NULL AND NEW.tags <> '' THEN
-            SET remaining_tags = NEW.tags;
-            
-            tag_loop: WHILE LENGTH(remaining_tags) > 0 DO
-                SET tag_position = LOCATE(',', remaining_tags);
-                
-                IF tag_position > 0 THEN
-                    SET tag_name = TRIM(SUBSTRING(remaining_tags, 1, tag_position - 1));
-                    SET remaining_tags = SUBSTRING(remaining_tags, tag_position + 1);
-                ELSE
-                    SET tag_name = TRIM(remaining_tags);
-                    SET remaining_tags = '';
-                END IF;
-                INSERT IGNORE INTO problem_category_relations (problem_id, category_id)
-                SELECT NEW.id, id FROM problem_categories WHERE name = tag_name;
-            END WHILE tag_loop;
-        END IF;
-    END IF;
-END
-;;
-delimiter ;
-
--- ----------------------------
--- Triggers structure for table problems
--- ----------------------------
-DROP TRIGGER IF EXISTS `insert_problem_categories`;
-delimiter ;;
-CREATE TRIGGER `AIreview`.`insert_problem_categories` AFTER INSERT ON `problems` FOR EACH ROW BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE tag_name VARCHAR(50);
-    DECLARE tag_position INT;
-    DECLARE remaining_tags VARCHAR(255);
-    IF NEW.tags IS NOT NULL AND NEW.tags <> '' THEN
-        SET remaining_tags = NEW.tags;
-        
-        tag_loop: WHILE LENGTH(remaining_tags) > 0 DO
-            SET tag_position = LOCATE(',', remaining_tags);
-            
-            IF tag_position > 0 THEN
-                SET tag_name = TRIM(SUBSTRING(remaining_tags, 1, tag_position - 1));
-                SET remaining_tags = SUBSTRING(remaining_tags, tag_position + 1);
-            ELSE
-                SET tag_name = TRIM(remaining_tags);
-                SET remaining_tags = '';
-            END IF;
-            INSERT IGNORE INTO problem_category_relations (problem_id, category_id)
-            SELECT NEW.id, id FROM problem_categories WHERE name = tag_name;
-        END WHILE tag_loop;
-    END IF;
-END
-;;
-delimiter ;
 
 SET FOREIGN_KEY_CHECKS = 1;

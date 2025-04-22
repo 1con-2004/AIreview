@@ -722,3 +722,19 @@ CREATE TABLE IF NOT EXISTS `problems` (
   - 简化localStorage存储逻辑，确保token直接保存到localStorage
   - 在多个位置设置请求头的Authorization字段，确保请求始终带有token
   - 添加完善的诊断和调试功能，方便后续问题排查
+
+- **操作时间**：2024.3.26
+
+- **操作描述**：通过 Navicat 修改数据库后的同步操作
+
+- **操作步骤**：
+  1. 使用 `docker-compose restart db` 重启数据库容器
+  2. 使用 `docker-compose restart backend` 重启后端服务以确保数据同步
+
+- **注意事项**：
+  - 建议优先使用项目提供的 API 或后端接口进行数据修改
+  - 如使用 Navicat 直接修改，需要在修改后执行重启命令以确保更改生效
+  - 如遇到同步问题，可使用 `docker-compose down` 和 `docker-compose up -d` 完全重启所有服务
+
+- **验证方法**：
+  可通过 `docker exec -it aireview-db mysql -uroot -proot AIreview` 连接数据库验证更改

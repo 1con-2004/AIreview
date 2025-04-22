@@ -2,13 +2,240 @@
 
 这是一个基于AI的智能题目评审系统，主要面向高校学生，提供类似LeetCode的刷题平台功能，并集成了AI代码审查和个性化学习路径推荐功能。
 
-## 特点
+## 功能特点
 
 - 完善的OI判题功能
 - 丰富的学生信息状态展示
 - 多维度的数据分析图表
 - 集成多种AI大模型辅助功能
 - 支持自定义题库和学习路径
+
+## 目录结构
+
+```
+├── frontend/          # 前端代码（Vue3）
+├── backend/           # 后端代码（Node.js）
+├── 数据库文件/         # 数据库相关文件
+├── nginx/             # Nginx配置文件
+└── docs/              # 项目文档
+```
+
+## 部署方式
+
+本项目支持两种部署方式：
+1. **Docker部署**（推荐）：适合所有平台，无需手动配置环境
+2. **本地部署**：需要手动安装依赖和配置环境
+
+## 快速部署指南（Docker方式）
+
+### Windows系统部署
+
+1. **安装Docker Desktop**
+   - 下载地址：[Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+   - 安装完成后，确保Docker已成功启动（系统托盘中可以看到Docker图标）
+
+2. **一键部署项目**
+   - 双击运行项目根目录中的 `start-windows.bat` 脚本
+   - 脚本会自动创建必要的目录、配置文件并启动Docker容器
+
+3. **访问应用**
+   - 前端访问地址：http://localhost
+   - 后端API地址：http://localhost/api
+   - 健康检查：http://localhost/health
+
+4. **常见问题处理**
+   - 如果遇到权限相关错误，请尝试以管理员身份运行 `start-windows.bat`
+   - 如果80端口被占用，可以编辑 `docker-compose.yml` 文件，将 `"80:80"` 修改为 `"8080:80"`，然后通过 http://localhost:8080 访问
+
+### Mac系统部署
+
+1. **安装Docker Desktop**
+   - 下载地址：[Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
+   - 安装完成后，启动Docker应用
+
+2. **一键部署项目**
+   - 打开终端，进入项目根目录
+   - 执行以下命令设置脚本权限并启动：
+     ```bash
+     chmod +x start-containers.sh
+     ./start-containers.sh
+     ```
+
+3. **访问应用**
+   - 前端访问地址：http://localhost
+   - 后端API地址：http://localhost/api
+   - 健康检查：http://localhost/health
+
+4. **开发者模式（热重载）**
+   - 如果您需要进行开发并实时查看更改效果，请使用：
+     ```bash
+     chmod +x mac-quick-reload.sh
+     ./mac-quick-reload.sh
+     ```
+   - 按照脚本提示选择需要的功能（如监控前端源码变化、后端文件变化等）
+
+### Linux系统部署
+
+1. **安装Docker和Docker Compose**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt update
+   sudo apt install docker.io docker-compose
+   
+   # CentOS/RHEL
+   sudo yum install docker docker-compose
+   ```
+
+2. **启动Docker服务**
+   ```bash
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   ```
+
+3. **设置Docker权限**
+   ```bash
+   sudo chmod +x fix-docker-permissions.sh
+   sudo ./fix-docker-permissions.sh
+   ```
+   注意：运行此脚本后，需要重新登录系统或开启新的终端窗口才能使组权限生效
+
+4. **一键部署项目**
+   ```bash
+   chmod +x start-containers.sh
+   ./start-containers.sh
+   ```
+
+5. **访问应用**
+   - 前端访问地址：http://localhost
+   - 后端API地址：http://localhost/api
+   - 健康检查：http://localhost/health
+
+## Docker常用维护命令
+
+1. **查看容器状态**
+   ```bash
+   docker-compose ps
+   ```
+
+2. **查看容器日志**
+   ```bash
+   # 查看所有容器日志
+   docker-compose logs
+   
+   # 查看特定容器日志（如后端）
+   docker-compose logs backend
+   
+   # 实时查看日志
+   docker-compose logs -f
+   ```
+
+3. **重启容器**
+   ```bash
+   # 重启所有容器
+   docker-compose restart
+   
+   # 重启特定容器
+   docker-compose restart backend
+   ```
+
+4. **停止所有容器**
+   ```bash
+   docker-compose down
+   ```
+
+5. **清理Docker环境**
+   如果发现Docker环境中积累了太多未使用的镜像或卷，可以使用以下命令清理：
+   ```bash
+   # Windows系统
+   docker-cleanup.bat
+   
+   # Mac/Linux系统
+   chmod +x docker-cleanup.sh
+   ./docker-cleanup.sh
+   ```
+
+## 项目使用的Docker容器
+
+本项目使用多容器架构，主要包含以下容器：
+- `aireview-nginx`: 提供前端静态资源服务和API反向代理（端口80）
+- `aireview-backend`: 运行Node.js后端服务（内部端口3000）
+- `aireview-db`: MySQL数据库服务（端口3307）
+
+## 本地开发相关（高级用户）
+
+### 日志管理
+
+项目提供了日志级别管理脚本，可以控制后端输出的日志详细程度：
+
+```bash
+chmod +x log-manager.sh
+./log-manager.sh
+```
+
+日志级别说明：
+- 0级: 静默模式 - 不输出任何日志
+- 1级: 错误模式 - 只输出错误和警告日志
+- 2级: 标准模式 - 输出常规操作日志
+- 3级: 调试模式 - 输出详细调试日志
+- 4级: 详细模式 - 输出所有日志
+
+### 前端开发热重载
+
+对于前端开发人员，可以使用热重载脚本实时查看代码更改效果：
+
+```bash
+chmod +x frontend-hot-reload.sh
+./frontend-hot-reload.sh
+```
+
+## 常见问题
+
+1. **80端口被占用**
+   - 修改 `docker-compose.yml` 文件，将 `"80:80"` 修改为其他端口，如 `"8080:80"`
+   - 重新启动容器：`docker-compose up -d`
+   - 使用新端口访问：http://localhost:8080
+
+2. **Docker权限问题**
+   - Windows系统：确保以管理员身份运行命令提示符或PowerShell
+   - Mac/Linux系统：运行 `sudo ./fix-docker-permissions.sh`
+
+3. **无法连接数据库**
+   - 检查数据库容器是否正常运行：`docker-compose ps`
+   - 查看数据库容器日志：`docker-compose logs db`
+   - 如需直接连接数据库（调试用）：
+     - 主机：localhost
+     - 端口：3307 （3307不行就尝试3306）
+     - 用户名：root
+     - 密码：root
+     - 数据库名：AIreview
+
+4. **文件上传失败**
+   - 检查 `uploads` 目录权限
+   - Windows系统：`icacls uploads /grant Everyone:(OI)(CI)F`
+   - Mac/Linux系统：`chmod -R 777 uploads`
+
+5. **手动在Navicat修改数据库内容不更新**
+   - 这种情况是正常的。当你在 Navicat 中直接修改 Docker 容器中的数据库时，可能需要手动刷新或重启相关服务来使更改生效
+   - 在项目根目录终端使用命令`docker-compose restart aireview-db` 重启Docker容器会解决大部分问题
+   - 如果问题没有解决 手动重启后端服务 `docker-compose restart backend`
+
+## 登录信息
+
+- 默认管理员账号: admin
+- 默认密码: admin123
+- 更多其他账户信息参考[其他账号文档](docs/accounts.md)
+
+
+## 技术支持
+
+如遇到问题，请：
+1. 检查常见问题解决方案
+2. 查看容器日志寻找错误信息
+3. 提交Issue或联系管理员
+
+## 许可证
+
+MIT License
 
 ## 技术栈
 
@@ -23,15 +250,6 @@
 - MySQL
 - JWT认证
 - Docker（用于判题环境）
-
-## 目录结构
-
-```
-├── frontend/          # 前端代码（Vue3）
-├── backend/           # 后端代码（Node.js）
-├── 数据库文件/         # 数据库相关文件
-└── docs/             # 项目文档
-```
 
 ## 环境要求
 
@@ -150,80 +368,6 @@ yarn serve
 ```
 前端服务将在 http://localhost:8080 启动
 
-## 常见问题解决
-
-### Windows 系统常见问题
-
-1. MySQL连接问题：
-   - 确保MySQL服务已启动
-   - 检查环境变量中的MySQL路径
-   - 确保.env文件中的数据库配置正确
-
-2. 文件权限问题：
-   - 以管理员身份运行命令行
-   - 确保项目目录具有写入权限
-
-### Mac/Linux 系统常见问题
-
-1. MySQL权限问题：
-   ```bash
-   sudo mysql -u root
-   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '你的密码';
-   FLUSH PRIVILEGES;
-   ```
-
-2. 目录权限问题：
-   ```bash
-   chmod -R 755 uploads/
-   chmod -R 755 temp/
-   ```
-
-### 其他常见问题
-
-1. 端口占用：
-   - 修改.env文件中的PORT值
-   - 或关闭占用端口的程序：
-     ```bash
-     # 查找占用端口的进程
-     lsof -i :3000
-     # 关闭进程
-     kill <进程ID>
-     ```
-
-2. 依赖安装失败：
-   ```bash
-   # 清除yarn缓存
-   yarn cache clean
-   # 删除现有的node_modules和yarn.lock
-   rm -rf node_modules yarn.lock
-   # 重新安装依赖
-   yarn install
-   ```
-
-3. 模块找不到错误：
-   - 确保已经安装所有依赖：
-     ```bash
-     cd backend
-     rm -rf node_modules yarn.lock
-     yarn install
-     ```
-   - 检查 package.json 中是否包含所需的依赖
-   - 检查 node_modules 目录是否存在
-
-4. 数据库连接错误：
-   - 确保MySQL服务已启动
-   - 检查 .env 文件中的数据库配置是否正确
-   - 确保数据库用户有正确的权限
-
-5. 文件上传错误：
-   - 检查上传目录是否存在且有正确的权限
-   - Windows用户确保以管理员权限运行
-   - Mac/Linux用户确保目录权限正确：
-     ```bash
-     chmod -R 755 backend/public/uploads
-     chmod -R 755 backend/public/icons
-     ```
-
 ## 开发建议
 
 1. 代码编辑器配置：
@@ -246,10 +390,6 @@ yarn serve
 ## 许可证
 
 MIT License
-
-## Docker 部署说明
-
-本项目支持通过Docker进行一键部署，适用于Windows、macOS和Linux系统。详细的部署指南请参考[Docker部署指南](./docker-deployment-guide.md)。
 
 ### 快速开始
 
@@ -392,3 +532,42 @@ docker-compose up -d
 ./docker-cleanup.sh
 ```
 此脚本将清理所有未使用的Docker镜像、容器和卷，解决每次重建Docker产生的资源浪费问题。
+
+# AIreview 项目部署指南 (Windows)
+
+## 前置要求
+- 安装 Docker Desktop for Windows
+- 确保已启用 WSL 2（Windows Subsystem for Linux）
+
+## 部署步骤
+1. 安装Docker Desktop for Windows
+   - 下载地址：https://www.docker.com/products/docker-desktop/
+   - 安装后启动Docker Desktop
+
+2. 确保Docker正在运行
+   - 检查任务栏中是否有Docker图标
+   - 图标为绿色表示Docker正常运行
+
+3. 一键部署项目
+   - 双击运行 `start-windows.bat` 文件
+   - 脚本将自动创建必要的目录和配置
+   - 启动所有Docker容器
+
+4. 验证部署
+   - 打开浏览器，访问 http://localhost
+   - 如果网站正常显示，则部署成功
+
+## 常见问题
+
+### 端口冲突
+如果80端口被占用，可能会导致服务启动失败。解决方法：
+1. 编辑 `docker-compose.yml` 文件
+2. 将 `80:80` 修改为 `8080:80`
+3. 重新启动容器
+4. 使用 http://localhost:8080 访问
+
+### Docker服务未启动
+确保Docker Desktop已正常启动，系统托盘中能看到Docker图标且为绿色。
+
+### 权限问题
+如果遇到权限相关错误，请尝试以管理员身份运行 `start-windows.bat`。
