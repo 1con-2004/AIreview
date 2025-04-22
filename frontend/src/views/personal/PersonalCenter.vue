@@ -368,15 +368,14 @@ const checkIsStudent = async () => {
 const fetchLearningPath = async (forceRefresh = false) => {
   learningPathLoading.value = true
   try {
-    // 并行请求所有学习路径数据
-    const [weaknessRes, directionsRes, recommendRes] = await Promise.all([
-      axios.get('/api/learning-path/weakness', { params: { refresh: forceRefresh } }),
-      axios.get('/api/learning-path/directions', { params: { refresh: forceRefresh } }),
-      axios.get('/api/learning-path/recommend', { params: { refresh: forceRefresh } })
-    ])
-
+    // 将并行请求改为串行请求，避免数据库死锁
+    // 1. 首先请求弱点分析
+    const weaknessRes = await axios.get('/api/learning-path/weakness', { params: { refresh: forceRefresh } })
     weaknessAnalysis.value = weaknessRes.data.data || []
-
+    
+    // 2. 然后请求学习方向
+    const directionsRes = await axios.get('/api/learning-path/directions', { params: { refresh: forceRefresh } })
+    
     // 处理学习方向数据，按标签分组
     const directions = directionsRes.data.data || []
     const groupedDirections = {}
@@ -410,7 +409,9 @@ const fetchLearningPath = async (forceRefresh = false) => {
       tag,
       items
     }))
-
+    
+    // 3. 最后请求推荐题目
+    const recommendRes = await axios.get('/api/learning-path/recommend', { params: { refresh: forceRefresh } })
     recommendProblems.value = recommendRes.data.data || []
   } catch (error) {
     console.error('获取学习路径数据失败:', error)
@@ -424,8 +425,14 @@ const fetchLearningPath = async (forceRefresh = false) => {
 // 刷新学习路径
 const refreshLearningPath = async () => {
   refreshLoading.value = true
-  await fetchLearningPath(true)
-  ElMessage.success('学习路径已刷新')
+  // 添加延迟，确保之前的请求已完成
+  try {
+    await fetchLearningPath(true)
+    ElMessage.success('学习路径已刷新')
+  } catch (error) {
+    console.error('刷新学习路径失败:', error)
+    ElMessage.error('刷新学习路径失败，请稍后再试')
+  }
 }
 
 // 打开外部学习资源

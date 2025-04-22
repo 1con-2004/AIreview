@@ -20,16 +20,23 @@ router.get('/weakness', authenticateToken, async (req, res) => {
   
   console.log(`[${requestId}] 获取用户弱点分析，用户ID: ${userId}, 强制刷新: ${forceRefresh}`);
   
+  // 开始事务，避免死锁
+  let connection;
   try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
     // 如果不是强制刷新, 首先检查用户是否有已存在的弱点分析数据
     if (!forceRefresh) {
-      const [existingAnalysis] = await pool.query(
+      const [existingAnalysis] = await connection.query(
         'SELECT * FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC LIMIT 3',
         [userId]
       );
       
       if (existingAnalysis.length > 0) {
         console.log(`[${requestId}] 找到${existingAnalysis.length}条已存在的弱点分析数据`);
+        await connection.commit();
+        connection.release();
         return res.json({
           success: true,
           data: existingAnalysis
@@ -38,14 +45,14 @@ router.get('/weakness', authenticateToken, async (req, res) => {
     } else {
       // 强制刷新时, 删除旧的弱点分析数据
       console.log(`[${requestId}] 强制刷新模式, 删除旧的弱点分析数据`);
-      await pool.query('DELETE FROM learning_path_weakness_analysis WHERE user_id = ?', [userId]);
+      await connection.query('DELETE FROM learning_path_weakness_analysis WHERE user_id = ?', [userId]);
     }
     
     // 如果没有已存在的数据或需要强制刷新，则计算用户不熟悉的标签
     console.log(`[${requestId}] 未找到现有弱点分析数据或需要刷新, 开始计算用户不熟悉的标签`);
     
     // 1. 获取用户提交记录并计算各标签的通过率
-    const [submissions] = await pool.query(`
+    const [submissions] = await connection.query(`
       SELECT p.problem_number, p.tags, 
              COUNT(CASE WHEN s.status = 'Accepted' THEN 1 END) as accepted_count,
              COUNT(*) as total_submissions
@@ -92,6 +99,8 @@ router.get('/weakness', authenticateToken, async (req, res) => {
     // 4. 如果没有弱点标签，直接返回空数组
     if (weakTags.length === 0) {
       console.log(`[${requestId}] 未发现弱点标签，返回空数组`);
+      await connection.commit();
+      connection.release();
       return res.json({
         success: true,
         data: []
@@ -123,7 +132,7 @@ router.get('/weakness', authenticateToken, async (req, res) => {
         console.log(`[${requestId}] 智谱AI返回标签 ${weakTag.tag} 的思路`);
         
         // 将数据保存到数据库
-        const [result] = await pool.query(
+        const [result] = await connection.query(
           'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
           [userId, weakTag.tag, aiResponse]
         );
@@ -140,7 +149,7 @@ router.get('/weakness', authenticateToken, async (req, res) => {
         // 出错时返回一个默认解释，不使用emoji和复杂格式
         const defaultIdea = `"${weakTag.tag}"是编程中的重要概念\n\n掌握它可以帮助你提高解题能力和代码质量。\n\n核心要点：\n- 理解基本原理和实现方式\n- 掌握常见应用场景\n- 学习典型解题策略\n\n常见误区：\n- 不理解基础概念\n- 缺乏系统练习\n\n建议多做与此相关的练习题，理解其核心思想和应用场景！`;
         
-        const [result] = await pool.query(
+        const [result] = await connection.query(
           'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
           [userId, weakTag.tag, defaultIdea]
         );
@@ -159,17 +168,35 @@ router.get('/weakness', authenticateToken, async (req, res) => {
     const analysisResults = await Promise.all(analysisPromises);
     console.log(`[${requestId}] 所有标签分析完成，共 ${analysisResults.length} 个`);
     
+    // 提交事务
+    await connection.commit();
+    
     res.json({
       success: true,
       data: analysisResults
     });
   } catch (error) {
     console.error(`[${requestId}] 获取弱点分析失败:`, error);
+    
+    // 如果连接存在，则回滚事务
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error(`[${requestId}] 事务回滚失败:`, rollbackError);
+      }
+    }
+    
     res.status(500).json({
       success: false,
       message: '获取弱点分析失败',
       error: error.message
     });
+  } finally {
+    // 释放连接
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
