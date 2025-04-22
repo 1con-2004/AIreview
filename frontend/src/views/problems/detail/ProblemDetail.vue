@@ -375,14 +375,76 @@
                 </div>
 
                 <div v-else class="analysis-result-content">
-                  <!-- 错误分析部分 -->
-                  <div v-if="aiAnalysisResult.errors?.length" class="analysis-section error-section">
-                    <div class="section-header">
-                      <div class="section-title">
-                        <i class="el-icon-warning-outline"></i>
-                        <span>错误分析</span>
+                  <!-- AI分析结果显示容器 -->
+                  <div class="analysis-section" 
+                       style="background: linear-gradient(135deg, rgba(32, 36, 64, 0.8) 0%, rgba(40, 48, 90, 0.9) 100%); border: 1px solid rgba(65, 132, 255, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(78, 205, 255, 0.1), inset 0 0 20px rgba(78, 255, 228, 0.05); transition: all 0.3s ease; position: relative; overflow: hidden;">
+                    <!-- 科技感装饰元素 -->
+                    <div style="position: absolute; top: -5px; right: -5px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(78, 205, 255, 0.15) 0%, rgba(78, 205, 255, 0) 70%); border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: -30px; left: 30%; width: 160px; height: 160px; background: radial-gradient(circle, rgba(76, 175, 180, 0.1) 0%, rgba(0, 0, 0, 0) 70%); border-radius: 50%;"></div>
+                    
+                    <div class="section-header" style="display: flex; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+                      <div style="background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
+                      <div class="section-title" style="display: flex; align-items: center;">
+                        <i class="el-icon-info" style="color: #4facfe; margin-right: 8px; font-size: 20px;"></i>
+                        <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI 代码分析</span>
                       </div>
-                      <div class="error-summary">
+                    </div>
+                    
+                    <div style="background: rgba(22, 24, 42, 0.7); border-radius: 12px; padding: 20px; margin-top: 16px; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2); border: 1px solid rgba(78, 205, 255, 0.15); position: relative; z-index: 1;">
+                      <!-- 科技感装饰线条 -->
+                      <div style="position: absolute; top: 0; left: 20px; width: 80%; height: 1px; background: linear-gradient(90deg, rgba(78, 205, 255, 0.2) 0%, rgba(78, 205, 255, 0) 100%);"></div>
+                      <div style="position: absolute; bottom: 0; right: 20px; width: 60%; height: 1px; background: linear-gradient(90deg, rgba(78, 205, 255, 0) 0%, rgba(78, 205, 255, 0.2) 100%);"></div>
+                      
+                      <div v-if="!aiAnalysisResult" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; min-height: 200px;">
+                        <div style="width: 80px; height: 80px; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="url(#paint0_linear)"/>
+                            <path d="M13 7H11V13H17V11H13V7Z" fill="url(#paint1_linear)"/>
+                            <defs>
+                              <linearGradient id="paint0_linear" x1="2" y1="12" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#4facfe"/>
+                                <stop offset="1" stop-color="#00f2fe"/>
+                              </linearGradient>
+                              <linearGradient id="paint1_linear" x1="11" y1="10" x2="17" y2="10" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#4facfe"/>
+                                <stop offset="1" stop-color="#00f2fe"/>
+                              </linearGradient>
+                            </defs>
+                          </svg>
+                        </div>
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">等待AI分析</h3>
+                        <p style="font-size: 16px; color: #a6accd; max-width: 400px; margin-bottom: 24px; line-height: 1.5;">请点击右侧编辑器上方的<span style="color: #4facfe; font-weight: 500;">「AI分析」</span>按钮，对您的代码进行智能分析。</p>
+                        <div style="display: flex; align-items: center; justify-content: center; background: rgba(78, 205, 255, 0.1); border-radius: 8px; padding: 12px 16px; border: 1px dashed rgba(78, 205, 255, 0.3);">
+                          <i class="el-icon-info-filled" style="color: #4facfe; margin-right: 8px; font-size: 16px;"></i>
+                          <span style="color: #e6edf3; font-size: 14px;">AI分析将帮您查找代码中的问题并提供优化建议</span>
+                        </div>
+                      </div>
+                      
+                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="typeof aiAnalysisResult === 'string'" v-html="highlightInlineCode(aiAnalysisResult)"></pre>
+                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.rawAnalysis" v-html="highlightInlineCode(aiAnalysisResult.rawAnalysis)"></pre>
+                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.performance && aiAnalysisResult.performance.explanation" v-html="highlightInlineCode(aiAnalysisResult.performance.explanation)"></pre>
+                      <div v-else style="color: #ff6b6b; text-align: center; padding: 20px;">
+                        <i class="el-icon-warning-outline" style="font-size: 24px; margin-right: 8px;"></i>
+                        <span>请先点击「AI分析」按钮，DeepSeek将会对对您的代码进行智能分析</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 错误分析部分 - 仅当存在结构化错误数据时显示 -->
+                  <div v-if="aiAnalysisResult && aiAnalysisResult.errors && aiAnalysisResult.errors.length" class="analysis-section error-section" 
+                       style="background: linear-gradient(135deg, rgba(64, 36, 40, 0.8) 0%, rgba(90, 40, 48, 0.9) 100%); border: 1px solid rgba(255, 82, 82, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 82, 82, 0.1), inset 0 0 20px rgba(255, 82, 82, 0.05); position: relative; overflow: hidden;">
+                    <!-- 科技感装饰元素 -->
+                    <div style="position: absolute; top: -5px; right: -5px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(255, 82, 82, 0.15) 0%, rgba(255, 82, 82, 0) 70%); border-radius: 50%;"></div>
+                    
+                    <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; position: relative; z-index: 1;">
+                      <div style="display: flex; align-items: center;">
+                        <div style="background: linear-gradient(90deg, #ff5252 0%, #ff8585 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
+                        <div class="section-title" style="display: flex; align-items: center;">
+                          <i class="el-icon-warning-outline" style="color: #ff5252; margin-right: 8px; font-size: 20px;"></i>
+                          <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #ff5252 0%, #ff8585 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">错误分析</span>
+                        </div>
+                      </div>
+                      <div class="error-summary" style="background: rgba(255, 82, 82, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 14px; color: #ff8585; border: 1px solid rgba(255, 82, 82, 0.3);">
                         发现 {{ aiAnalysisResult.errors.length }} 个问题
                       </div>
                     </div>
@@ -410,14 +472,21 @@
                     </div>
                   </div>
 
-                  <!-- 逻辑分析部分 -->
-                  <div v-if="aiAnalysisResult.improvements?.length" class="analysis-section logic-section">
-                    <div class="section-header">
-                      <div class="section-title">
-                        <i class="el-icon-warning"></i>
-                        <span>逻辑分析</span>
+                  <!-- 逻辑分析部分 - 仅当存在结构化改进数据时显示 -->
+                  <div v-if="aiAnalysisResult && aiAnalysisResult.improvements && aiAnalysisResult.improvements.length" class="analysis-section logic-section"
+                       style="background: linear-gradient(135deg, rgba(32, 48, 64, 0.8) 0%, rgba(40, 60, 90, 0.9) 100%); border: 1px solid rgba(100, 180, 255, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(100, 180, 255, 0.1), inset 0 0 20px rgba(100, 180, 255, 0.05); position: relative; overflow: hidden;">
+                    <!-- 科技感装饰元素 -->
+                    <div style="position: absolute; top: -5px; right: -5px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(100, 180, 255, 0.15) 0%, rgba(100, 180, 255, 0) 70%); border-radius: 50%;"></div>
+                    
+                    <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; position: relative; z-index: 1;">
+                      <div style="display: flex; align-items: center;">
+                        <div style="background: linear-gradient(90deg, #64b4ff 0%, #94c9ff 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
+                        <div class="section-title" style="display: flex; align-items: center;">
+                          <i class="el-icon-warning" style="color: #64b4ff; margin-right: 8px; font-size: 20px;"></i>
+                          <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #64b4ff 0%, #94c9ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">逻辑分析</span>
+                        </div>
                       </div>
-                      <div class="logic-summary">
+                      <div class="logic-summary" style="background: rgba(100, 180, 255, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 14px; color: #94c9ff; border: 1px solid rgba(100, 180, 255, 0.3);">
                         {{ aiAnalysisResult.improvements.length }} 条逻辑问题
                       </div>
                     </div>
@@ -434,38 +503,7 @@
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- 添加原始AI分析显示，当没有结构化内容时显示 -->
-                  <div v-if="!aiAnalysisResult.errors?.length && !aiAnalysisResult.improvements?.length && aiAnalysisResult.performance?.explanation" 
-                    class="analysis-section" 
-                    style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; transition: all 0.3s ease;">
-                    <div class="section-header">
-                      <div class="section-title">
-                        <i class="el-icon-info"></i>
-                        <span>AI 分析结果</span>
-                      </div>
-                    </div>
-                    <div style="background: rgba(30, 30, 46, 0.5); border-radius: 8px; padding: 16px; margin-top: 16px;">
-                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;">{{ aiAnalysisResult.performance.explanation }}</pre>
-                    </div>
-                  </div>
-                  
-                  <!-- 添加一个直接显示原始代码分析结果的容器，用于处理Docker环境下的响应格式 -->
-                  <div v-if="aiAnalysisResult.rawAnalysis" 
-                    class="analysis-section" 
-                    style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; transition: all 0.3s ease;">
-                    <div class="section-header">
-                      <div class="section-title">
-                        <i class="el-icon-info"></i>
-                        <span>AI 代码分析</span>
-                      </div>
-                    </div>
-                    <div style="background: rgba(30, 30, 46, 0.5); border-radius: 8px; padding: 16px; margin-top: 16px;">
-                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;">{{ aiAnalysisResult.rawAnalysis }}</pre>
-                    </div>
-                  </div>
                 </div>
-                
               </div>
             </div>
           </div>
@@ -1127,6 +1165,82 @@ export default defineComponent({
       }
     }
 
+    // 统一处理AI分析结果的函数
+    const processAiAnalysisResponse = (response) => {
+      // 初始化分析结果变量
+      let analysis = '';
+      
+      // 检查响应格式
+      if (response && response.data && response.data.success === true) {
+        console.log('处理AI分析响应 - 响应成功');
+        
+        // 从response.data.data获取分析内容（现在是字符串）
+        if (typeof response.data.data === 'string') {
+          analysis = response.data.data;
+          console.log('从response.data.data获取分析结果字符串');
+        } else if (response.data.data) {
+          // 处理可能的对象格式
+          if (response.data.data.codeAnalysis) {
+            // 旧格式响应
+            analysis = response.data.data.codeAnalysis;
+            console.log('从response.data.data.codeAnalysis获取分析结果');
+          } else {
+            // 其他对象格式
+            analysis = JSON.stringify(response.data.data);
+            console.log('response.data.data是对象，转为字符串');
+          }
+        } else {
+          // 处理data为null或undefined的情况
+          console.warn('response.data.data为空');
+          analysis = '分析结果不可用';
+        }
+      } else if (response && response.data && typeof response.data === 'string') {
+        // 直接返回字符串
+        analysis = response.data;
+        console.log('响应直接返回字符串');
+      } else {
+        console.warn('AI分析响应格式异常:', JSON.stringify(response.data, null, 2));
+        // 尝试从各种可能的位置提取数据
+        if (response?.data?.data) {
+          if (typeof response.data.data === 'string') {
+            analysis = response.data.data;
+          } else {
+            analysis = JSON.stringify(response.data.data);
+          }
+        } else if (response?.data?.message) {
+          analysis = response.data.message;
+        } else if (typeof response?.data === 'string') {
+          analysis = response.data;
+        } else {
+          analysis = '分析结果不可用';
+        }
+      }
+      
+      // 检查分析内容是否是被双引号包围的JSON字符串（表示过度转义）
+      if (typeof analysis === 'string' && analysis.startsWith('"') && analysis.endsWith('"') && analysis.length > 2) {
+        try {
+          // 尝试去除额外的转义
+          const unescaped = JSON.parse(analysis);
+          if (typeof unescaped === 'string') {
+            console.log('修复了过度转义的分析结果');
+            analysis = unescaped;
+          }
+        } catch (error) {
+          console.warn('尝试解析转义字符串失败:', error);
+          // 保持原样
+        }
+      }
+      
+      // 确保analysis有值
+      if (!analysis || analysis === 'undefined' || analysis === 'null') {
+        analysis = '无法获取分析结果，请重试';
+      }
+      
+      console.log('最终分析文本前50个字符:', analysis.substring(0, 50) + '...');
+      
+      return analysis;
+    }
+
     const clearConsole = () => {
       consoleOutput.value = ''
       runStatus.value = ''
@@ -1613,7 +1727,7 @@ export default defineComponent({
 
     // 获取AI分析结果
     const getAiAnalysis = async () => {
-      if (!code.value.trim()) {
+      if (!code.value) {
         ElMessage.warning('请先输入代码')
         return
       }
@@ -1651,164 +1765,50 @@ export default defineComponent({
         if (sessionStorageToken) possibleTokens.push(sessionStorageToken);
         if (sessionStorageSimpleToken) possibleTokens.push(sessionStorageSimpleToken);
         
-        // 使用第一个有效的token
-        if (possibleTokens.length > 0) {
-          accessToken = possibleTokens[0];
-          console.log('从localStorage直接获取到令牌');
-        }
-
+        // 使用第一个可用的token
+        accessToken = possibleTokens.find(token => token) || '';
+        
         if (!accessToken) {
           isAnalyzing.value = false
           ElMessage.error('请先登录')
           return
         }
 
-        console.log('添加认证令牌到请求头');
-        
         // 立即切换到左侧AI分析标签页
         activeTab.value = 'aiAnalysis'
-
-        const response = await apiService.post(
-          'ai/analyze-code',
-          {
-            code: code.value,
-            language: selectedLanguageForCode.value,
-            problemId: route.params.id
-          },
-          {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          }
-        )
-
-        console.log('收到响应:', response.status);
-        console.log('前端接收的原始响应对象结构:', typeof response, Object.keys(response));
-        console.log('前端接收的响应data属性类型:', typeof response.data);
-        console.log('完整响应对象JSON字符串:', JSON.stringify(response.data, null, 2));
         
-        // 正确处理响应数据
-        if (response && response.data && response.data.success === true) {
-          // 初始化分析结果变量
-          let analysis = '';
-          
-          console.log('response数据检查: data.success=true');
-          
-          // 在这里添加详细的数据结构检查
-          if (response.data.data) {
-            console.log('data存在，类型:', typeof response.data.data);
-            
-            // 检查data.data是否是对象且包含codeAnalysis属性
-            if (typeof response.data.data === 'object' && response.data.data.codeAnalysis) {
-              analysis = response.data.data.codeAnalysis;
-              console.log('从data.data.codeAnalysis获取分析结果, 值类型:', typeof analysis);
-            } 
-            // 如果data.data本身是字符串
-            else if (typeof response.data.data === 'string') {
-              analysis = response.data.data;
-              console.log('直接从data.data字符串获取分析结果');
-            }
-            // 如果data.data是对象但没有codeAnalysis属性
-            else if (typeof response.data.data === 'object') {
-              // 将对象转为字符串
-              analysis = JSON.stringify(response.data.data);
-              console.log('data.data是对象但无codeAnalysis属性，转为字符串');
-            }
-          } else {
-            // 如果data.data不存在，尝试使用整个响应对象
-            analysis = JSON.stringify(response.data);
-            console.log('data.data不存在，使用整个响应对象');
-          }
-          
-          // 对分析结果进行最终检查
-          if (!analysis || analysis === 'undefined' || analysis === 'null') {
-            analysis = '无法获取分析结果，请重试';
-            console.log('分析结果无效，使用默认提示');
-          }
-          
-          console.log('最终处理后的AI分析内容:', analysis.substring(0, 50) + '...');
-
-          // 创建一个备用的分析结果，以防无法解析结构化数据
-          let fallbackAnalysis = {
-            errors: [],
-            improvements: [],
-            performance: {
-              explanation: analysis
-            },
-            rawAnalysis: analysis
-          }
-
-          // 尝试提取错误和改进建议
-          try {
-            // 提取错误和改进建议
-            const errors = extractErrors(analysis);
-            console.log('提取的错误数量:', errors.length);
-            
-            const improvements = extractImprovements(analysis);
-            console.log('提取的改进建议数量:', improvements.length);
-
-            // 确保即使正则表达式无法匹配，也能展示AI分析结果
-            if (errors.length === 0 && improvements.length === 0 && analysis) {
-              // 如果没有提取到结构化信息但有分析内容，创建一个通用显示
-              improvements.push({
-                icon: 'el-icon-info',
-                title: 'AI分析结果',
-                description: analysis
-              });
-              console.log('未提取到结构化数据，创建通用显示');
-            }
-
-            // 更新optimizationInsights
-            optimizationInsights.value = improvements;
-
-            // 更新aiAnalysisResult
-            aiAnalysisResult.value = {
-              errors: errors,
-              improvements: improvements,
-              performance: extractPerformance(analysis),
-              rawAnalysis: analysis
-            };
-            
-            console.log('成功更新AI分析结果到界面');
-          } catch (parseError) {
-            console.warn('解析AI分析结果失败，使用备用显示:', parseError);
-            // 使用备用分析结果
-            aiAnalysisResult.value = fallbackAnalysis;
-          }
-
-          ElMessage.success('代码分析完成');
+        console.log('尝试使用token进行AI分析:', accessToken ? '找到token' : '未找到token');
+        
+        const response = await analyzeCode({
+          code: code.value,
+          language: selectedLanguageForCode.value,
+          problemId: route.params.id
+        }, accessToken);
+        
+        console.log('AI分析原始响应:', response);
+        
+        // 使用统一的函数处理AI分析结果
+        const analysis = processAiAnalysisResponse(response);
+        console.log('处理后的AI分析结果类型:', typeof analysis);
+        console.log('处理后的AI分析结果前50个字符:', analysis.substring(0, 50));
+        
+        // 直接使用字符串结果
+        if (typeof analysis === 'string') {
+          aiAnalysisResult.value = analysis;
+          console.log('设置AI分析结果为字符串');
         } else {
-          // 添加更详细的错误日志
-          console.warn('AI分析响应未包含预期数据:', JSON.stringify(response.data, null, 2));
-          
-          if (response && response.data) {
-            console.log('response存在且data存在');
-            // 尝试从各种可能的地方获取数据
-            const possibleData = 
-              (response.data.data && response.data.data.codeAnalysis) || 
-              response.data.data || 
-              response.data.message || 
-              '分析结果不可用';
-            
-            console.log('最终提取到的数据:', typeof possibleData);
-            
-            // 创建一个通用的分析结果
-            aiAnalysisResult.value = {
-              errors: [],
-              improvements: [{
-                icon: 'el-icon-info',
-                title: 'AI分析结果',
-                description: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
-              }],
-              performance: {
-                explanation: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
-              },
-              rawAnalysis: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
-            };
-            
-            ElMessage.success('代码分析完成(非标准格式)');
-          } else {
-            ElMessage.error(response?.data?.message || '分析失败');
-          }
+          // 如果不是字符串，尝试创建结构化数据
+          const structuredResult = {
+            errors: extractErrors(analysis),
+            improvements: extractImprovements(analysis),
+            performance: extractPerformance(analysis),
+            rawAnalysis: analysis // 保存原始分析文本
+          };
+          aiAnalysisResult.value = structuredResult;
+          console.log('设置AI分析结果为结构化数据');
         }
+        
+        ElMessage.success('代码分析完成');
       } catch (error) {
         console.error('AI分析失败:', error)
         // 添加更详细的错误处理
@@ -1855,17 +1855,50 @@ export default defineComponent({
             langKey = 'c' // 默认使用C语言高亮
           }
 
-          // 使用Prism.js高亮代码
-          const highlighted = Prism.highlight(
-            code,
-            Prism.languages[langKey],
-            langKey
-          )
+          // 检测是否是单词或函数，如`scanf`、`printf`等
+          let highlightedCode;
+          if (code.trim().match(/^[a-zA-Z0-9_]+$/)) {
+            // 对于单个代码单词或函数，添加特殊处理
+            const keyword = code.trim();
+            // 使用语言相关的关键字颜色
+            if (langKey === 'c' || langKey === 'cpp') {
+              // C/C++常用函数
+              const cFunctions = ['printf', 'scanf', 'malloc', 'free', 'sizeof', 'strcpy', 'strlen', 'memcpy'];
+              const cppFunctions = ['cout', 'cin', 'endl', 'vector', 'string', 'map', 'set'];
+              const cKeywords = ['int', 'char', 'float', 'double', 'void', 'return', 'if', 'else', 'for', 'while', 'switch', 'case'];
+              
+              if (cFunctions.includes(keyword) || cppFunctions.includes(keyword)) {
+                highlightedCode = `<span class="token function">${keyword}</span>`;
+              } else if (cKeywords.includes(keyword)) {
+                highlightedCode = `<span class="token keyword">${keyword}</span>`;
+              } else {
+                highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey);
+              }
+            } else if (langKey === 'python') {
+              // Python常用函数和方法
+              const pyFunctions = ['print', 'input', 'len', 'range', 'int', 'str', 'list', 'dict', 'set', 'tuple'];
+              const pyKeywords = ['def', 'class', 'if', 'else', 'elif', 'for', 'while', 'import', 'from', 'as', 'return'];
+              
+              if (pyFunctions.includes(keyword)) {
+                highlightedCode = `<span class="token function">${keyword}</span>`;
+              } else if (pyKeywords.includes(keyword)) {
+                highlightedCode = `<span class="token keyword">${keyword}</span>`;
+              } else {
+                highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey);
+              }
+            } else {
+              highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey);
+            }
+          } else {
+            // 对于复杂代码片段使用完整的语法高亮
+            highlightedCode = Prism.highlight(code, Prism.languages[langKey], langKey);
+          }
+          
           // 返回带有样式的HTML
-          return `<code class="inline-code">${highlighted}</code>`
+          return `<code class="inline-code" style="background: rgba(40, 44, 52, 0.5); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${highlightedCode}</code>`;
         } catch (error) {
           console.error('代码高亮失败:', error)
-          return `<code class="inline-code">${code}</code>`
+          return `<code class="inline-code" style="background: rgba(40, 44, 52, 0.5); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${code}</code>`;
         }
       })
     }
@@ -1891,103 +1924,15 @@ export default defineComponent({
           problemId: route.params.id
         }, accessToken) // 传递accessToken到analyzeCode函数
 
-        console.log('handleAiAnalysis函数收到analyzeCode响应:', response);
-        console.log('handleAiAnalysis - 响应数据类型:', typeof response.data);
-        console.log('handleAiAnalysis - 完整响应:', JSON.stringify(response.data, null, 2));
+        console.log('handleAiAnalysis - 收到analyzeCode响应');
         
         // 立即切换到左侧AI分析标签页
         activeTab.value = 'aiAnalysis'
 
-        // 使用与getAiAnalysis相同的处理逻辑
-        if (response.data && response.data.success === true) {
-          // 初始化分析结果变量
-          let analysis = '';
-          
-          console.log('handleAiAnalysis - 数据检查通过: success=true');
-          
-          // 在这里添加详细的数据结构检查
-          if (response.data.data) {
-            console.log('handleAiAnalysis - data存在，类型:', typeof response.data.data);
-            
-            // 检查data.data是否是对象且包含codeAnalysis属性
-            if (typeof response.data.data === 'object' && response.data.data.codeAnalysis) {
-              analysis = response.data.data.codeAnalysis;
-              console.log('handleAiAnalysis - 从data.data.codeAnalysis获取分析结果');
-            } 
-            // 如果data.data本身是字符串
-            else if (typeof response.data.data === 'string') {
-              analysis = response.data.data;
-              console.log('handleAiAnalysis - 直接从data.data字符串获取分析结果');
-            }
-            // 如果data.data是对象但没有codeAnalysis属性
-            else if (typeof response.data.data === 'object') {
-              // 将对象转为字符串
-              analysis = JSON.stringify(response.data.data);
-              console.log('handleAiAnalysis - data.data是对象但无codeAnalysis属性，转为字符串');
-            }
-          } else {
-            // 如果data.data不存在，尝试使用整个响应对象
-            analysis = JSON.stringify(response.data);
-            console.log('handleAiAnalysis - data.data不存在，使用整个响应对象');
-          }
-          
-          // 对分析结果进行最终检查
-          if (!analysis || analysis === 'undefined' || analysis === 'null') {
-            analysis = '无法获取分析结果，请重试';
-            console.log('handleAiAnalysis - 分析结果无效，使用默认提示');
-          }
-          
-          console.log('handleAiAnalysis - 最终分析内容片段:', analysis.substring(0, 30) + '...');
-
-          // 尝试提取错误和改进建议
-          try {
-            // 提取错误和改进建议
-            const errors = extractErrors(analysis);
-            console.log('handleAiAnalysis - 提取的错误数量:', errors.length);
-            
-            const improvements = extractImprovements(analysis);
-            console.log('handleAiAnalysis - 提取的改进建议数量:', improvements.length);
-
-            // 确保有内容显示
-            if (errors.length === 0 && improvements.length === 0 && analysis) {
-              improvements.push({
-                icon: 'el-icon-info',
-                title: 'AI分析结果',
-                description: analysis
-              });
-              console.log('handleAiAnalysis - 未提取到结构化数据，创建通用显示');
-            }
-
-            // 更新aiAnalysisResult
-            aiAnalysisResult.value = {
-              errors,
-              improvements,
-              performance: extractPerformance(analysis),
-              rawAnalysis: analysis
-            };
-            
-            ElMessage.success('代码分析完成');
-          } catch (error) {
-            console.error('handleAiAnalysis - 解析结果失败:', error);
-            // 创建一个简单的展示结果
-            aiAnalysisResult.value = {
-              errors: [],
-              improvements: [{
-                icon: 'el-icon-info',
-                title: 'AI分析结果',
-                description: analysis
-              }],
-              performance: {
-                explanation: analysis
-              },
-              rawAnalysis: analysis
-            };
-            ElMessage.success('代码分析完成(简化展示)');
-          }
-        } else {
-          console.warn('handleAiAnalysis - AI分析响应未包含预期数据');
-          ElMessage.error('分析失败：数据格式异常');
-        }
+        // 使用统一的处理函数处理AI分析结果
+        aiAnalysisResult.value = processAiAnalysisResponse(response);
+        
+        ElMessage.success('代码分析完成');
       } catch (error) {
         console.error('AI分析失败:', error);
         ElMessage.error('AI分析失败：' + (error.message || '未知错误'));
@@ -5871,5 +5816,29 @@ pre {
   outline: none;
   border: none;
   box-shadow: none !important;
+}
+
+/* 添加脉冲动画效果 */
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+}
+
+.submission-header {
+  padding: 20px;
+  background-color: #2d2d3f;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 </style>

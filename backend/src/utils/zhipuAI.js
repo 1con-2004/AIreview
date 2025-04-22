@@ -94,8 +94,8 @@ class ZhipuAI {
                 let result = response.data.choices[0].message.content;
                 
                 // 清理可能的markdown代码块标记
-                result = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                console.log('清理后的AI响应:', result);
+                //result = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                //console.log('清理后的AI响应:', result);
                 
                 return result;
             }

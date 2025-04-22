@@ -91,46 +91,33 @@ ${code}
       });
     }
     
-    // 解析AI响应
-    let analysis;
-    try {
-      // 直接返回完整分析内容
-      analysis = {
-        codeAnalysis: aiResponse || '未获取到分析内容'
-      };
-      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI响应解析成功, 内容长度: ${aiResponse?.length || 0}`);
-    } catch (error) {
-      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 解析AI响应失败:`, error);
-      return res.status(500).json({
-        success: false,
-        message: '解析AI响应失败: ' + (error.message || '未知错误')
-      });
+    // 简化响应结构，直接返回分析文本作为data
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI响应解析成功, 内容长度: ${aiResponse?.length || 0}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析前50个字符:`, aiResponse.substring(0, 50));
+    
+    // 检查AI响应是否被过度转义(以\"开头的JSON字符串)
+    let cleanResponse = aiResponse;
+    if (typeof aiResponse === 'string' && aiResponse.startsWith('"') && aiResponse.endsWith('"')) {
+      try {
+        // 尝试解析JSON字符串
+        cleanResponse = JSON.parse(aiResponse);
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 检测到过度转义，已进行处理`);
+      } catch (e) {
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] JSON解析失败，使用原始响应:`, e.message);
+      }
     }
-
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析完成，准备返回结果`);
     
-    // 添加数据结构调试日志
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 返回的数据结构:`, JSON.stringify({
-      success: true,
-      data: analysis
-    }, null, 2));
-    
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis对象类型:`, typeof analysis);
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis对象键:`, Object.keys(analysis));
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis.codeAnalysis类型:`, typeof analysis.codeAnalysis);
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis.codeAnalysis前50个字符:`, analysis.codeAnalysis.substring(0, 50));
-    
+    // 构建简化的响应对象
     const responseObj = {
       success: true,
-      data: analysis
+      data: cleanResponse  // 使用处理后的响应
     };
     
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应success类型:`, typeof responseObj.success);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应data类型:`, typeof responseObj.data);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应data前50个字符:`, typeof responseObj.data === 'string' ? responseObj.data.substring(0, 50) : '非字符串类型');
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析完成，准备返回结果`);
     
     return res.json(responseObj);
-    
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析结束=========`);
   } catch (error) {
     console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 代码分析失败:`, error);
     
@@ -163,7 +150,5 @@ ${code}
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析异常结束=========`);
   }
 });
-
-
 
 module.exports = router; 
