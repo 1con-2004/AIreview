@@ -1267,12 +1267,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         [newProblemNumber, currProblemId]
       );
       
-      // 更新problem_category_relations表中的problem_number
-      await connection.query(
-        'UPDATE problem_category_relations SET problem_number = ? WHERE problem_id = ?',
-        [newProblemNumber, currProblemId]
-      );
-      
       // 更新solution_main表中的problem_number
       await connection.query(
         'UPDATE solution_main SET problem_number = ? WHERE problem_id = ?',
@@ -1345,12 +1339,6 @@ router.post('/reorder', authenticateToken, async (req, res) => {
         // 更新learning_plan_problems表中的problem_number
         await db.query(
           'UPDATE learning_plan_problems SET problem_number = ? WHERE problem_id = ?',
-          [newProblemNumber, problemId]
-        );
-        
-        // 更新problem_category_relations表中的problem_number
-        await db.query(
-          'UPDATE problem_category_relations SET problem_number = ? WHERE problem_id = ?',
           [newProblemNumber, problemId]
         );
         

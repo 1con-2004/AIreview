@@ -29,9 +29,24 @@
 
 由于使用了不同的密钥来生成和验证JWT令牌，导致在后端验证前端传来的令牌时验证失败，从而返回401未授权错误，前端展示为"请先登录"的提示。
 
+# 后续更新记录
+
+{ 2024.4.22 } 修改了以下文件：
+   - `frontend/src/views/admin/problems.vue`，优化了token获取逻辑，解决了问题管理页面中编辑题目时出现的403 Forbidden问题。
+   
+具体修改内容：
+   - 原问题：当点击"编辑"按钮时，请求头中的Authorization为"Bearer null"，导致后端返回403错误。
+   - 解决方案：统一使用更健壮的token获取方法，按照以下顺序尝试获取：
+     1. 首先从Vuex store中获取accessToken
+     2. 如果未找到，从localStorage的userInfo对象中获取
+     3. 如果未找到，尝试从localStorage的accessToken或token项中获取
+   - 改进了错误处理逻辑，更详细地记录和显示错误信息
+   - 为所有涉及API请求的函数（handleEditContent、handleEditSolution、saveContentEdit、saveSolutionEdit）统一采用相同的token获取和错误处理逻辑
+
 # 后续预防措施
 
 1. 确保项目中使用统一的配置管理方式，避免同一参数有多种配置源。
 2. 在后续开发中，应对JWT相关功能进行单元测试，确保认证流程正常工作。
 3. 定期检查JWT密钥配置，确保它们的一致性和安全性。
-4. 考虑使用中央配置服务来管理所有配置项，避免配置不一致问题。 
+4. 考虑使用中央配置服务来管理所有配置项，避免配置不一致问题。
+5. 对所有需要认证的前端页面组件，统一封装token获取逻辑，避免直接使用localStorage.getItem('token')这种单一来源的方式。 

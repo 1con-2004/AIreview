@@ -423,20 +423,20 @@ const formRules = {
 
 // 添加获取头像URL的函数
 const getFullAvatarUrl = (url) => {
-  if (!url) return 'http://localhost:3000/uploads/avatars/default-avatar.png'
+  if (!url) return '/uploads/avatars/default-avatar.png'
   if (url.startsWith('http')) return url
 
   // 处理数据库中存储的路径，确保使用正确的URL格式
   // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
-  // 需要转换为 http://localhost:3000/uploads/avatars/filename.jpeg
+  // 需要使用相对路径而非 http://localhost:3000/uploads/avatars/filename.jpeg
   if (url.includes('public/uploads/avatars/')) {
     // 提取文件名
     const fileName = url.split('/').pop()
-    return `http://localhost:3000/uploads/avatars/${fileName}`
+    return `/uploads/avatars/${fileName}`
   }
 
   // 处理其他情况
-  return `http://localhost:3000${url}`
+  return `${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 async function fetchStudents () {

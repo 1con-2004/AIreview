@@ -175,7 +175,7 @@ export default {
       if (!url) return defaultAvatar.value
       if (url.startsWith('http')) return url
       const cleanUrl = url.startsWith('/') ? url : `/${url}`
-      return `http://localhost:3000${cleanUrl}`
+      return cleanUrl
     }
     const userProfile = ref({})
     const stats = ref({})
@@ -310,7 +310,7 @@ export default {
 
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const response = await fetch('http://localhost:3000/api/user/avatar', {
+        const response = await fetch('/api/user/avatar', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`

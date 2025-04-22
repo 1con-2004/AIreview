@@ -129,7 +129,7 @@ const getFullAvatarUrl = (url) => {
   // 检查URL是否为空或无效
   if (!url || url === 'null' || url === 'undefined') {
     console.log('无效的头像URL，使用默认头像')
-    return 'http://localhost/uploads/avatars/default-avatar.png?t=' + Date.now()
+    return '/uploads/avatars/default-avatar.png?t=' + Date.now()
   }
 
   console.log('处理头像URL:', url)
@@ -143,26 +143,26 @@ const getFullAvatarUrl = (url) => {
   if (url.startsWith('public/')) {
     // 移除public前缀，因为在nginx配置中，public目录已经映射到根目录
     const realPath = url.replace('public/', '')
-    console.log('处理public/前缀头像，结果:', `http://localhost/${realPath}?t=${Date.now()}`)
-    return `http://localhost/${realPath}?t=${Date.now()}`
+    console.log('处理public/前缀头像，结果:', `/${realPath}?t=${Date.now()}`)
+    return `/${realPath}?t=${Date.now()}`
   }
 
   // 如果url包含uploads/avatars，构建完整URL
   if (url.includes('uploads/avatars/')) {
     const fileName = url.split('/').pop().split('?')[0] // 获取文件名，去除查询参数
-    console.log('处理uploads/avatars路径，结果:', `http://localhost/uploads/avatars/${fileName}?t=${Date.now()}`)
-    return `http://localhost/uploads/avatars/${fileName}?t=${Date.now()}`
+    console.log('处理uploads/avatars路径，结果:', `/uploads/avatars/${fileName}?t=${Date.now()}`)
+    return `/uploads/avatars/${fileName}?t=${Date.now()}`
   }
 
   // 处理可能只有文件名的情况
   if (!url.includes('/') && !url.includes('?')) {
-    console.log('处理纯文件名，结果:', `http://localhost/uploads/avatars/${url}?t=${Date.now()}`)
-    return `http://localhost/uploads/avatars/${url}?t=${Date.now()}`
+    console.log('处理纯文件名，结果:', `/uploads/avatars/${url}?t=${Date.now()}`)
+    return `/uploads/avatars/${url}?t=${Date.now()}`
   }
 
   // 其他情况
-  console.log('处理其他URL格式，结果:', `http://localhost${url.startsWith('/') ? '' : '/'}${url}?t=${Date.now()}`)
-  return `http://localhost${url.startsWith('/') ? '' : '/'}${url}?t=${Date.now()}`
+  console.log('处理其他URL格式，结果:', `${url.startsWith('/') ? '' : '/'}${url}?t=${Date.now()}`)
+  return `${url.startsWith('/') ? '' : '/'}${url}?t=${Date.now()}`
 }
 
 const isAdminOrTeacher = () => {

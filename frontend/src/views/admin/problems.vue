@@ -1140,10 +1140,32 @@ const editProblem = (problem) => {
 const handleEditContent = async () => {
   showEditDialog.value = false
   try {
-    const token = localStorage.getItem('token')
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken
+
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+    }
+
+    if (!accessToken) {
+      console.error('认证token不存在')
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      })
+      return
+    }
+
+    console.log('开始获取题目信息，ID:', currentProblem.value.id)
+    
     const response = await axios.get(`/api/problems/${currentProblem.value.id}`, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
     const problemData = response.data.data
@@ -1151,7 +1173,7 @@ const handleEditContent = async () => {
     // 获取题目的测试用例
     const testCasesResponse = await axios.get(`/api/problems/${currentProblem.value.id}/test-cases`, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
     const testCases = testCasesResponse.data.data
@@ -1168,10 +1190,24 @@ const handleEditContent = async () => {
     showEditContentDialog.value = true
   } catch (error) {
     console.error('获取题目信息失败:', error)
+    let errorMessage = '获取题目信息失败'
+
+    if (error.response) {
+      console.error('响应错误状态:', error.response.status)
+      console.error('响应错误数据:', error.response.data)
+      errorMessage = error.response.data?.message || errorMessage
+    } else if (error.request) {
+      console.error('请求错误:', error.request)
+      errorMessage = '服务器无响应'
+    } else {
+      console.error('错误信息:', error.message)
+      errorMessage = error.message
+    }
+    
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: error.response?.data?.message || '获取题目信息失败',
+      detail: errorMessage,
       life: 3000
     })
   }
@@ -1181,10 +1217,32 @@ const handleEditContent = async () => {
 const handleEditSolution = async () => {
   showEditDialog.value = false
   try {
-    const token = localStorage.getItem('token')
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken
+
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+    }
+
+    if (!accessToken) {
+      console.error('认证token不存在')
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      })
+      return
+    }
+
+    console.log('开始获取题目解答，ID:', currentProblem.value.id)
+    
     const response = await axios.get(`/api/problems/${currentProblem.value.id}/solution`, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
     const solutionData = response.data.data
@@ -1200,10 +1258,24 @@ const handleEditSolution = async () => {
     showEditSolutionDialog.value = true
   } catch (error) {
     console.error('获取题目解答失败:', error)
+    let errorMessage = '获取题目解答失败'
+
+    if (error.response) {
+      console.error('响应错误状态:', error.response.status)
+      console.error('响应错误数据:', error.response.data)
+      errorMessage = error.response.data?.message || errorMessage
+    } else if (error.request) {
+      console.error('请求错误:', error.request)
+      errorMessage = '服务器无响应'
+    } else {
+      console.error('错误信息:', error.message)
+      errorMessage = error.message
+    }
+    
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: error.response?.data?.message || '获取题目解答失败',
+      detail: errorMessage,
       life: 3000
     })
   }
@@ -1212,14 +1284,36 @@ const handleEditSolution = async () => {
 // 保存内容修改
 const saveContentEdit = async () => {
   try {
-    const token = localStorage.getItem('token')
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken
+
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+    }
+
+    if (!accessToken) {
+      console.error('认证token不存在')
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      })
+      return
+    }
+    
     const formData = { ...editForm.value }
     formData.tags = processTagString(formData.tags)
 
+    console.log('开始保存题目内容修改，ID:', currentProblem.value.id)
+    
     // 更新题目基本信息
     await axios.put(`/api/problems/${currentProblem.value.id}`, formData, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
 
@@ -1228,7 +1322,7 @@ const saveContentEdit = async () => {
       test_cases: formData.test_cases
     }, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
 
@@ -1242,10 +1336,24 @@ const saveContentEdit = async () => {
     fetchProblems()
   } catch (error) {
     console.error('保存修改失败:', error)
+    let errorMessage = '保存修改失败'
+
+    if (error.response) {
+      console.error('响应错误状态:', error.response.status)
+      console.error('响应错误数据:', error.response.data)
+      errorMessage = error.response.data?.message || errorMessage
+    } else if (error.request) {
+      console.error('请求错误:', error.request)
+      errorMessage = '服务器无响应'
+    } else {
+      console.error('错误信息:', error.message)
+      errorMessage = error.message
+    }
+    
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: error.response?.data?.message || '保存修改失败',
+      detail: errorMessage,
       life: 3000
     })
   }
@@ -1280,7 +1388,29 @@ const handleEditTestCaseSortChange = ({ column, prop, order }) => {
 // 保存答案修改
 const saveSolutionEdit = async () => {
   try {
-    const token = localStorage.getItem('token')
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken
+
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+    }
+
+    if (!accessToken) {
+      console.error('认证token不存在')
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      })
+      return
+    }
+
+    console.log('开始保存题目答案修改，ID:', currentProblem.value.id)
+    
     await axios.put(`/api/problems/${currentProblem.value.id}/solution`, {
       solution_approach: solutionForm.value.solution_approach,
       solutions: {
@@ -1291,7 +1421,7 @@ const saveSolutionEdit = async () => {
       }
     }, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
     showEditSolutionDialog.value = false
@@ -1303,10 +1433,24 @@ const saveSolutionEdit = async () => {
     })
   } catch (error) {
     console.error('保存修改失败:', error)
+    let errorMessage = '保存修改失败'
+
+    if (error.response) {
+      console.error('响应错误状态:', error.response.status)
+      console.error('响应错误数据:', error.response.data)
+      errorMessage = error.response.data?.message || errorMessage
+    } else if (error.request) {
+      console.error('请求错误:', error.request)
+      errorMessage = '服务器无响应'
+    } else {
+      console.error('错误信息:', error.message)
+      errorMessage = error.message
+    }
+    
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: error.response?.data?.message || '保存修改失败',
+      detail: errorMessage,
       life: 3000
     })
   }
@@ -1328,7 +1472,7 @@ const confirmDelete = async () => {
     if (!accessToken) {
       const userInfoStr = localStorage.getItem('userInfo')
       const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
-      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
     }
 
     if (!accessToken) {
