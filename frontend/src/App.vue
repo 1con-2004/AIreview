@@ -6,6 +6,8 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import store from '@/store'
+import axios from 'axios'
+import request from '@/utils/request'
 
 const router = useRouter()
 
@@ -14,19 +16,38 @@ const ensureUserConsistency = () => {
   try {
     // 获取本地存储的用户信息
     const userInfoStr = localStorage.getItem('userInfo')
-    if (!userInfoStr) return
+    if (!userInfoStr) return false
 
     const userInfo = JSON.parse(userInfoStr)
+    if (!userInfo || !userInfo.username) return false
 
     // 记录当前活跃用户名
     localStorage.setItem('currentUsername', userInfo.username)
 
+    // 检查token在localStorage中是否存在
+    const accessToken = localStorage.getItem('accessToken')
+    if (!accessToken && userInfo.accessToken) {
+      console.log('userInfo中存在token但localStorage中不存在，正在同步...')
+      localStorage.setItem('accessToken', userInfo.accessToken)
+      
+      if (userInfo.refreshToken) {
+        localStorage.setItem('refreshToken', userInfo.refreshToken)
+      }
+    }
+
+    // 检查token在请求头中是否设置
+    if (!axios.defaults.headers.common['Authorization'] && userInfo.accessToken) {
+      console.log('设置请求头中的token...')
+      axios.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+      request.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+    }
+
     // 检查Vuex中的用户数据与localStorage是否一致
     const storeUserInfo = store.getters.getUserInfo
+    const storeToken = store.getters.token
 
-    if (storeUserInfo && storeUserInfo.username !== userInfo.username) {
-      console.log('检测到用户信息不一致:', storeUserInfo?.username, '!=', userInfo.username)
-      console.log('正在同步Vuex中的用户信息...')
+    if (!storeUserInfo || !storeToken || storeUserInfo.username !== userInfo.username) {
+      console.log('检测到用户信息不一致，正在同步Vuex...')
 
       // 同步用户信息到Vuex
       store.dispatch('login', {
@@ -35,8 +56,11 @@ const ensureUserConsistency = () => {
         refreshToken: userInfo.refreshToken
       })
     }
+    
+    return true
   } catch (error) {
     console.error('检查用户一致性失败:', error)
+    return false
   }
 }
 

@@ -613,40 +613,135 @@
 - 将跨域处理集中到后端Express中，遵循"单一职责"原则，简化系统架构。
 - 详细配置CORS选项，确保跨域机制在各种场景下的正确工作。
 
-{ 2025-04-22 } 改动: 修复头像无法显示的问题
+{ 2025-04-22 } 改动: 修复用户资料页JWT令牌验证失败及头像显示问题
 
 主要改动文件:
 
-1. - nginx
-    |- default.conf
-        |- description: Nginx配置文件，修改了静态资源Content-Type处理逻辑。
+1. - frontend
+    |- src
+      |- components
+        |- UserProfileDialog.vue
+          |- description: 用户资料对话框组件，修复了JWT令牌处理逻辑，解决了未登录用户无法查看其他用户资料的问题，同时简化了头像URL处理逻辑。
+      |- utils
+        |- api.js
+          |- description: 修改了资源URL构建函数，添加了对"public/"前缀的处理，解决头像无法正确显示的问题。
 
-2. - docker-compose.yml
-    |- description: 完善了卷挂载配置，确保头像目录正确挂载。
-
-3. - sync-avatars.sh（新增）
-    |- description: 添加同步头像文件到Nginx容器的脚本。
-    
-4. - project_information
+2. - project_information
     |- bug_fixed_information
-        |- avatar_display_bug_fixed.md（新增）
-            |- description: 记录了头像显示问题的原因与解决方案。
+      |- user_profile_jwt_bug_fixed.md
+        |- description: 新增的bug修复记录文件，详细记录了问题原因和解决方案。
 
 主要改动逻辑:
 
-- 修复了Nginx配置中的强制Content-Type设置问题，允许根据文件扩展名自动识别MIME类型。
-- 完善了Docker卷挂载配置，确保uploads/avatars目录正确挂载到Nginx容器中。
-- 创建了脚本工具，用于同步头像文件到Nginx容器并设置正确的文件权限。
+- 在`fetchUserProfile`函数中，改进了令牌处理逻辑，只在有效令牌存在时才添加Authorization头
+- 在`handleFieldUpdate`函数中，增加了令牌验证，未登录用户无法更新资料
+- 在`handleAvatarUpload`函数中，同样只有在有效令牌存在时才添加Authorization头，并增加了未登录用户的提示
+- 在`getResourceUrl`函数中，增加了对"public/"前缀的处理，确保从后端返回的头像URL能正确解析
+- 简化了UserProfileDialog组件中的头像URL处理逻辑，将复杂处理逻辑移至统一的工具函数
+- 创建了详细的bug修复记录，记录问题出现原因和解决策略
 
 问题出现原因:
 
-- Nginx配置中错误地强制设置了Content-Type为image/png，导致所有文件都以该类型返回。
-- Docker容器中没有正确挂载uploads目录或者文件不存在，导致返回了index.html而非图片文件。
-- 前端与后端对于文件路径的处理逻辑不一致。
+- 在UserProfileDialog组件中，不管用户是否登录都会添加Authorization头，当用户未登录时，会发送"Bearer undefined"
+- 后端在接收请求时，当发现Authorization头存在却无效时，会尝试验证令牌并报"jwt malformed"错误
+- 前端API服务的拦截器已经会自动添加令牌，但组件中又手动添加，导致可能的冲突
+- 后端返回的头像URL包含"public/"前缀，但前端请求静态资源时不需要此前缀，导致头像无法正确显示
 
 解决问题使用的简要方案:
 
-- 修改Nginx配置，删除强制设置的Content-Type，让服务器根据文件扩展名自动识别。
-- 添加脚本工具确保所有头像文件都能同步到Nginx容器并设置正确的权限。
-- 优化Docker卷挂载配置，确保文件目录正确挂载。
+- 改进前端组件中的令牌处理逻辑，只在有效令牌存在时才添加Authorization头
+- 为更新用户资料的操作增加令牌验证，确保只有已登录用户才能更新资料
+- 改进静态资源URL处理逻辑，自动处理"public/"前缀，确保正确显示头像
+- 增加详细的日志输出，方便排查问题
+- 添加更明确的错误提示，提升用户体验
+
+{ 2024.7.12 } 改动: 修复Docker环境下登录后localStorage无法保存token的问题
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- utils
+        |- request.js
+          |- description: 修改axios请求基础配置，将baseURL改为相对路径，确保在Docker环境下正常工作，并增强token获取逻辑。
+
+      |- views
+        |- login
+          |- index.vue
+            |- description: 修改登录处理函数，简化localStorage存储逻辑，确保token能成功保存。增强登录诊断功能。
+
+      |- store
+        |- index.js
+          |- description: 改进状态管理store，修改token存储逻辑，以适应Docker环境。
+
+      |- main.js
+        |- description: 添加状态初始化逻辑，确保应用启动时能正确加载token信息。
+
+主要改动逻辑:
+
+- 修改了axios请求基础URL设置，从绝对路径改为相对路径，避免Docker环境中的跨域问题。
+- 简化登录时的token存储流程，直接将token存入localStorage中，提高存储可靠性。
+- 增强请求拦截器中的token获取逻辑，支持从多个位置获取token，提高token使用的灵活性。
+- 增强登录诊断功能，帮助用户快速定位登录相关问题。
+- 修改Vuex状态管理初始化逻辑，确保页面加载时能正确读取已有的token信息。
+
+问题出现原因:
+
+- Docker环境下前端使用绝对URL会导致跨域问题，影响token的存储和使用。
+- 复杂的token存储逻辑可能在某些情况下失败，导致token无法正确保存。
+- 前端token获取逻辑不够健壮，当主要获取方式失败时缺乏备选方案。
+
+解决问题使用的简要方案:
+
+- 调整前端的API请求URL策略，统一使用相对路径进行API请求，避免Docker环境中的跨域问题。
+- 简化并强化token存储逻辑，确保token能够可靠地保存到localStorage中。
+- 实现多级token获取逻辑，从多个位置尝试获取token，提高系统的容错能力。
+- 添加完善的登录调试和诊断功能，方便后续快速定位和解决相关问题。
+
+{ 2024.7.12 } 改动: 修复页面导航时自动登出的问题
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- App.vue
+        |- description: 改进了用户一致性检查函数ensureUserConsistency，增加token自动修复和同步。
+
+      |- router
+        |- index.js
+          |- description: 优化了路由守卫中的登录状态判断，增加了双重检查机制，同时检查userInfo和accessToken。
+
+      |- main.js
+        |- description: 增强了token初始化逻辑，确保token在不同位置的一致性。
+
+      |- utils
+        |- request.js
+          |- description: 修复了token刷新机制，确保token刷新后所有位置的token都会更新。
+
+      |- views
+        |- debug
+          |- TokenDebug.vue
+            |- description: 新增token调试页面，方便诊断和修复token问题。
+
+主要改动逻辑:
+
+- 优化了用户一致性检查函数，使其能检查并修复丢失的token信息
+- 改进了路由守卫，同时检查userInfo和accessToken，避免误判登录状态
+- 增强了token初始化逻辑，确保token从userInfo到localStorage和请求头的同步
+- 修复了token刷新机制，确保刷新后所有位置的token都会更新
+- 添加了token调试页面，提供可视化工具帮助诊断和修复token问题
+
+问题出现原因:
+
+- 登录状态检查机制不一致，路由守卫只检查userInfo但不检查token
+- token在不同位置（localStorage、Vuex、请求头）之间可能不同步
+- token刷新后未正确更新所有位置的token
+- 用户信息一致性检查不完善，未能自动修复丢失的token
+
+解决问题使用的简要方案:
+
+- 重构ensureUserConsistency函数，增加token自动同步和修复功能
+- 在路由守卫中增加双重检查和错误处理，防止误判登录状态
+- 优化token初始化和刷新逻辑，确保token在各个位置保持一致
+- 提供调试工具，便于问题诊断和修复
 

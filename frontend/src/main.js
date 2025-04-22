@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import axios from 'axios'
 
 // 基础样式
 import './assets/styles/common.css'
@@ -13,6 +14,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import 'element-plus/dist/index.css'
 // 导入API服务
 import apiService, { getApiUrl, getResourceUrl } from './utils/api'
+import request from './utils/request'
 
 // PrimeVue 相关
 import PrimeVue from 'primevue/config'
@@ -94,7 +96,60 @@ window.$fixUserInfo = function () {
   return false
 }
 
+// 初始化全局token
+const initializeGlobalToken = () => {
+  // 尝试从localStorage获取token
+  const directToken = localStorage.getItem('accessToken')
+  if (directToken) {
+    console.log('找到存储的token，正在初始化全局请求头')
+    // 设置全局axios默认头
+    axios.defaults.headers.common['Authorization'] = `Bearer ${directToken}`
+    // 设置自定义axios实例的默认头
+    request.defaults.headers.common['Authorization'] = `Bearer ${directToken}`
+    apiService.defaults.headers.common['Authorization'] = `Bearer ${directToken}`
+    console.log('已初始化全局axios请求头')
+    
+    return true
+  }
+  
+  // 尝试从userInfo获取token
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    try {
+      const userInfo = JSON.parse(userInfoStr)
+      if (userInfo.accessToken) {
+        console.log('从userInfo中获取token，正在初始化全局请求头')
+        
+        // 同步到localStorage中的独立token项
+        localStorage.setItem('accessToken', userInfo.accessToken)
+        if (userInfo.refreshToken) {
+          localStorage.setItem('refreshToken', userInfo.refreshToken)
+        }
+        
+        // 设置全局axios默认头
+        axios.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+        // 设置自定义axios实例的默认头
+        request.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+        apiService.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+        
+        console.log('已初始化全局axios请求头')
+        return true
+      }
+    } catch (e) {
+      console.error('初始化token出错:', e)
+    }
+  }
+  
+  return false
+}
+
 // 调用一次修复函数以便初始化
 window.$fixUserInfo()
+
+// 初始化全局token
+initializeGlobalToken()
+
+// 初始化状态
+store.commit('INITIALIZE_STATE')
 
 app.mount('#app')

@@ -10,13 +10,37 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     // 在发送请求之前做些什么
-    const userInfoStr = localStorage.getItem('userInfo')
-    const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
-    const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken')
-
+    // 增强令牌获取逻辑，从多个位置尝试获取令牌
+    let accessToken = null
+    
+    // 先从localStorage直接获取accessToken
+    const directToken = localStorage.getItem('accessToken')
+    if (directToken) {
+      accessToken = directToken
+    } 
+    // 如果直接获取失败，尝试从userInfo获取
+    else {
+      const userInfoStr = localStorage.getItem('userInfo')
+      if (userInfoStr) {
+        try {
+          const userInfo = JSON.parse(userInfoStr)
+          if (userInfo.accessToken) {
+            accessToken = userInfo.accessToken
+            
+            // 同步到localStorage中的独立令牌项
+            localStorage.setItem('accessToken', userInfo.accessToken)
+          }
+        } catch (e) {
+          console.error('解析localStorage中userInfo出错:', e)
+        }
+      }
+    }
+    
+    // 如果找到令牌，添加到请求头
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
     }
+    
     return config
   },
   error => {
@@ -97,3 +121,5 @@ export const deleteTestCase = async (id) => {
     throw error
   }
 }
+
+export default request

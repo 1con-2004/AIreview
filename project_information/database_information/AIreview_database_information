@@ -698,3 +698,27 @@ CREATE TABLE IF NOT EXISTS `problems` (
     1. 从实际使用的AIreview.sql中提取完整表结构
     2. 更新init.sql以匹配实际数据库结构
     3. 确保用户角色和其他枚举值与系统实际使用一致
+
+- **操作时间**：2024.7.12
+
+- **操作描述**：解决Docker环境下localStorage无法保存token的问题
+
+- **表及字段信息**：
+  - 无需修改数据库表或字段
+
+- **修复过程**：
+  - 修改前端登录逻辑，确保token能够正确存储和使用
+  - 修改axios请求配置，使baseURL从绝对路径改为相对路径，适应Docker环境
+  - 增强token获取逻辑，从多个位置尝试获取token以提高可靠性
+  - 添加额外的登录诊断功能，帮助定位和解决token存储问题
+
+- **原因分析**：
+  - Docker环境下，由于网络配置和跨域问题，前端使用绝对URL时可能导致token无法正确保存
+  - localStorage保存token的逻辑过于复杂，导致在某些情况下可能会失败
+  - 登录逻辑分散在多处，缺乏统一的token管理机制
+
+- **解决方案**：
+  - 统一使用相对路径进行API请求，避免Docker环境中的跨域问题
+  - 简化localStorage存储逻辑，确保token直接保存到localStorage
+  - 在多个位置设置请求头的Authorization字段，确保请求始终带有token
+  - 添加完善的诊断和调试功能，方便后续问题排查

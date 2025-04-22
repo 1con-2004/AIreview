@@ -149,7 +149,8 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import store from '@/store'
-import request from '@/utils/request'
+import request, { setGlobalToken } from '@/utils/request'
+import axios from 'axios'
 
 const router = useRouter()
 const showPassword = ref(false)
@@ -165,11 +166,96 @@ const togglePassword = () => {
   showPassword.value = !showPassword.value
 }
 
+// 测试localStorage是否可用
+const testLocalStorage = () => {
+  try {
+    // 测试localStorage是否可用
+    const testKey = '_test_storage_' + Date.now()
+    localStorage.setItem(testKey, 'test')
+    const testValue = localStorage.getItem(testKey)
+    localStorage.removeItem(testKey)
+    
+    if (testValue !== 'test') {
+      console.error('localStorage测试失败: 存储和读取值不匹配')
+      return false
+    }
+    
+    // 测试存储大对象
+    const bigObject = {
+      data: new Array(1000).fill('test').join(''),
+      timestamp: Date.now()
+    }
+    
+    try {
+      localStorage.setItem('_test_big_object_', JSON.stringify(bigObject))
+      localStorage.removeItem('_test_big_object_')
+      console.log('localStorage大对象测试通过')
+    } catch (e) {
+      console.error('localStorage大对象测试失败:', e)
+      return false
+    }
+    
+    console.log('localStorage测试通过')
+    return true
+  } catch (e) {
+    console.error('localStorage测试出错:', e)
+    return false
+  }
+}
+
+// 估算对象大小（字节）
+const getObjectSize = (obj) => {
+  const str = JSON.stringify(obj)
+  // UTF-16编码中，一个字符占2个字节
+  return str.length * 2
+}
+
+// 检查localStorage剩余空间
+const checkLocalStorageSpace = () => {
+  try {
+    // 获取当前已使用空间
+    let usedSpace = 0
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      const value = localStorage.getItem(key)
+      usedSpace += (key.length + value.length) * 2 // UTF-16编码
+    }
+    
+    // 大多数浏览器localStorage限制为5MB
+    const MAX_SPACE = 5 * 1024 * 1024
+    const remainingSpace = MAX_SPACE - usedSpace
+    
+    console.log(`localStorage已使用空间: ${(usedSpace / 1024 / 1024).toFixed(2)}MB`)
+    console.log(`localStorage剩余空间: ${(remainingSpace / 1024 / 1024).toFixed(2)}MB`)
+    
+    return {
+      usedSpace,
+      remainingSpace,
+      isEnoughSpace: remainingSpace > 50 * 1024 // 至少需要50KB
+    }
+  } catch (e) {
+    console.error('检查localStorage空间失败:', e)
+    return { usedSpace: 0, remainingSpace: 0, isEnoughSpace: false }
+  }
+}
+
 const handleLogin = async () => {
   try {
+    // 测试localStorage是否可用
+    const isLocalStorageWorking = testLocalStorage()
+    if (!isLocalStorageWorking) {
+      console.error('localStorage不可用，将使用sessionStorage作为备用')
+    }
+    
     // 在发送请求前先清除所有存储的用户数据
     localStorage.clear() // 彻底清除所有localStorage数据
     sessionStorage.clear() // 彻底清除所有sessionStorage数据
+    
+    // 检查localStorage空间
+    const { isEnoughSpace, remainingSpace } = checkLocalStorageSpace()
+    if (!isEnoughSpace) {
+      console.warn(`localStorage空间不足，只有${remainingSpace}字节可用，至少需要50KB`)
+    }
 
     console.log('[登录] 发送登录请求，用户名:', loginForm.username)
 
@@ -209,48 +295,71 @@ const handleLogin = async () => {
       userInfo.accessToken = accessToken
       userInfo.refreshToken = refreshToken
 
-      // 先删除之前的数据再添加新数据，确保数据完全刷新
-      localStorage.removeItem('userInfo')
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('currentUsername')
+      // 准备存储到localStorage的完整用户信息
+      const userInfoStr = JSON.stringify(userInfo)
+      const userInfoSize = getObjectSize(userInfo)
+      console.log(`用户信息大小: ${userInfoSize} 字节 (${(userInfoSize / 1024).toFixed(2)} KB)`)
       
-      // 保存用户信息到localStorage
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      localStorage.setItem('currentUsername', userInfo.username)
-
+      try {
+        // 确保直接设置token - 修复Docker环境下的问题
+        console.log('存储令牌到localStorage')
+        localStorage.setItem('accessToken', accessToken)
+        localStorage.setItem('refreshToken', refreshToken)
+        localStorage.setItem('currentUsername', userInfo.username)
+          
+        // 使用全局token设置函数确保token在所有请求中可用
+        setGlobalToken(accessToken)
+          
+        // 存储完整用户信息
+        localStorage.setItem('userInfo', userInfoStr)
+          
+        // 验证存储是否成功
+        console.log('验证存储结果:')
+        console.log('- accessToken 存在:', !!localStorage.getItem('accessToken'))
+        console.log('- refreshToken 存在:', !!localStorage.getItem('refreshToken'))
+        console.log('- userInfo 存在:', !!localStorage.getItem('userInfo'))
+      } catch (storageError) {
+        console.error('存储数据失败:', storageError)
+        // 使用sessionStorage作为备选存储方式
+        sessionStorage.setItem('accessToken', accessToken)
+        sessionStorage.setItem('refreshToken', refreshToken)
+        sessionStorage.setItem('userInfo', userInfoStr)
+        console.log('已使用sessionStorage作为备用存储')
+      }
+      
       // 保存用户信息到Vuex
       store.dispatch('login', {
         userInfo,
         accessToken,
         refreshToken
+      }).then(() => {
+        // 确保Vuex状态已更新后再进行后续操作
+        console.log('Vuex状态已更新，验证token存储')
+        
+        // 最终验证是否存储成功
+        console.log('最终验证localStorage存储:')
+        console.log('- userInfo:', !!localStorage.getItem('userInfo'))
+        console.log('- accessToken:', !!localStorage.getItem('accessToken'))
+        console.log('- currentUsername:', localStorage.getItem('currentUsername'))
+        console.log('- Vuex Token:', !!store.getters.token)
+        
+        // 设置成功消息并跳转
+        ElMessage.success('登录成功')
+        
+        // 修改这里：无论是哪种角色的用户，都跳转到首页
+        router.push('/home')
+      }).catch(error => {
+        console.error('Vuex更新状态失败:', error)
+        ElMessage.error('登录状态更新失败，请重试')
       })
-
-      // 触发全局事件，确保导航栏更新用户状态
-      window.dispatchEvent(new CustomEvent('userInfoChanged'))
-      
-      // 如果window中存在用户信息同步函数，调用它
-      if (typeof window.forceReloadUserInfo === 'function') {
-        console.log('手动同步用户状态')
-        window.forceReloadUserInfo()
-      }
-
-      // 添加登录时用户信息的临时验证
-      console.log('登录时用户信息：', JSON.parse(localStorage.getItem('userInfo')))
-      
-      ElMessage.success('登录成功')
-
-      // 不使用location.href跳转，改用Vue Router
-      router.push('/home')
     } else {
+      // 处理登录失败
       ElMessage.error(data.message || '登录失败')
     }
   } catch (error) {
-    console.error('登录错误详情：', error)
-
-    // 添加更多错误信息记录
+    console.error('[登录] 登录请求出错:', error)
+    
+    // 详细记录错误信息
     if (error.response) {
       console.error('[登录错误] 状态码:', error.response.status)
       console.error('[登录错误] 响应数据:', error.response.data)
@@ -285,7 +394,17 @@ const diagnoseLoginState = () => {
   // 检查sessionStorage
   console.log('\nSessionStorage 内容:')
   console.log('- current_user:', sessionStorage.getItem('current_user'))
-  console.log('- last_active_user:', sessionStorage.getItem('last_active_user'))
+  console.log('- accessToken:', sessionStorage.getItem('accessToken') ? '存在' : '未找到')
+  
+  // 检查axios请求头
+  console.log('\n请求头状态:')
+  console.log('- axios全局:', axios.defaults.headers.common['Authorization'] || '未设置')
+  console.log('- request实例:', request.defaults.headers.common['Authorization'] || '未设置')
+  
+  // 检查Vuex状态
+  console.log('\nVuex状态:')
+  console.log('- accessToken:', store.getters.token ? '存在' : '未找到')
+  console.log('- userInfo:', store.getters.getUserInfo ? '存在' : '未找到')
   
   // 诊断结果
   console.log('\n诊断结果:')
@@ -295,6 +414,12 @@ const diagnoseLoginState = () => {
     // 检查头像URL
     try {
       const userInfo = JSON.parse(userInfoStr)
+      if (userInfo.accessToken) {
+        console.log('- 用户信息中的token存在')
+      } else {
+        console.log('- 警告：用户信息中token不存在')
+      }
+      
       if (userInfo.avatar_url) {
         console.log('- 头像URL:', userInfo.avatar_url)
         if (userInfo.avatar_url.startsWith('public/')) {
@@ -308,6 +433,21 @@ const diagnoseLoginState = () => {
     }
   } else {
     console.log('- 未找到用户信息，正常情况下应当未登录')
+  }
+  
+  // 检查Docker环境
+  console.log('\n环境检查:')
+  console.log('- 当前环境:', process.env.NODE_ENV)
+  console.log('- baseURL:', request.defaults.baseURL)
+  
+  // 测试localStorage是否可用
+  const testKey = '_test_' + Date.now()
+  try {
+    localStorage.setItem(testKey, 'test')
+    localStorage.removeItem(testKey)
+    console.log('- localStorage: 可用')
+  } catch (e) {
+    console.log('- localStorage: 不可用', e)
   }
   
   console.groupEnd()

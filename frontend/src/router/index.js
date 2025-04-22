@@ -3,6 +3,7 @@ import HomePage from '@/views/home/index.vue'
 import Login from '@/views/login/index.vue'
 import Problems from '@/views/problems/index.vue'
 import Community from '@/views/community/index.vue'
+import TokenDebug from '@/views/debug/TokenDebug.vue'
 
 const routes = [
   {
@@ -103,6 +104,14 @@ const routes = [
     name: 'LearningPlanDetail',
     component: () => import('@/views/learning-plans/detail.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/debug/token',
+    name: 'token-debug',
+    component: TokenDebug,
+    meta: {
+      title: 'Token调试工具'
+    }
   }
 ]
 
@@ -180,32 +189,51 @@ const router = createRouter({
 
 // 添加路由守卫
 router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/register', '/home', '/login/phone', '/login/reset-password']
+  const publicPages = ['/login', '/register', '/home', '/login/phone', '/login/reset-password', '/debug/token']
   const authRequired = !publicPages.includes(to.path)
+  
+  // 检查用户信息和token
   const userInfoStr = localStorage.getItem('userInfo')
+  const accessToken = localStorage.getItem('accessToken')
+  
+  // 增加详细日志
+  console.log(`[路由] 检查访问权限: ${to.path}`)
+  console.log(`[路由] 用户信息存在: ${!!userInfoStr}, Token存在: ${!!accessToken}`)
+  console.log(`[路由] 页面需要登录: ${authRequired}`)
 
   // 未登录且需要认证，跳转到登录页
-  if (authRequired && !userInfoStr) {
+  if (authRequired && (!userInfoStr || !accessToken)) {
+    console.log(`[路由] 需要登录但未登录，重定向到登录页`)
     next('/login')
     return
   }
 
   // 检查角色权限
   if (userInfoStr) {
-    const userInfo = JSON.parse(userInfoStr)
+    try {
+      const userInfo = JSON.parse(userInfoStr)
+      console.log(`[路由] 当前用户角色: ${userInfo.role}`)
 
-    // 路由需要管理员权限
-    if (to.meta.requiresAdmin && userInfo.role !== 'admin') {
-      console.log('需要管理员权限，当前用户角色:', userInfo.role)
-      next('/login')
-      return
-    }
+      // 路由需要管理员权限
+      if (to.meta.requiresAdmin && userInfo.role !== 'admin') {
+        console.log(`[路由] 需要管理员权限，当前用户角色: ${userInfo.role}，重定向到登录页`)
+        next('/login')
+        return
+      }
 
-    // 路由需要教师权限
-    if (to.meta.requiresTeacher && userInfo.role !== 'teacher' && userInfo.role !== 'admin') {
-      console.log('需要教师权限，当前用户角色:', userInfo.role)
-      next('/login')
-      return
+      // 路由需要教师权限
+      if (to.meta.requiresTeacher && userInfo.role !== 'teacher' && userInfo.role !== 'admin') {
+        console.log(`[路由] 需要教师权限，当前用户角色: ${userInfo.role}，重定向到登录页`)
+        next('/login')
+        return
+      }
+    } catch (error) {
+      console.error(`[路由] 解析用户信息失败:`, error)
+      // 解析失败视为未登录
+      if (authRequired) {
+        next('/login')
+        return
+      }
     }
   }
 

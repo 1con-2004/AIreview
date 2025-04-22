@@ -57,8 +57,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import * as echarts from 'echarts'
-import axios from 'axios'
 import { useRouter } from 'vue-router'
+import request from '@/utils/request'
+import store from '@/store'
 
 const router = useRouter()
 
@@ -89,26 +90,29 @@ const stats = ref([
 const fetchStats = async () => {
   try {
     console.log('获取统计数据...')
-    // 从localStorage中获取token
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    const token = userInfo.accessToken
-    console.log('当前token:', token)
+    // 从store和localStorage多处检查token
+    const storeToken = store.getters.token
+    const localToken = localStorage.getItem('accessToken')
+    const token = storeToken || localToken
+    
+    console.log('当前token从store获取:', token)
 
     if (!token) {
-      console.error('未找到token，请重新登录')
-      router.push('/login')
-      return
+      console.log('未找到有效token，跳过统计数据获取')
+      return // 只是跳过获取，不跳转
     }
 
-    const response = await axios.get('/api/stats/dashboard', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    console.log('统计数据响应:', response.data)
+    // 确保token设置在请求头中
+    if (!request.defaults.headers.common['Authorization']) {
+      console.log('请求头中未设置token，正在设置...')
+      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
 
-    if (response.data.success) {
-      const data = response.data.data
+    const response = await request.get('/api/stats/dashboard')
+    console.log('统计数据响应:', response)
+
+    if (response.success) {
+      const data = response.data
       console.log('更新前的统计卡片数据:', stats.value)
 
       // 更新统计卡片数据
@@ -137,7 +141,8 @@ const fetchStats = async () => {
       console.log('更新后的统计卡片数据:', stats.value)
     }
   } catch (error) {
-    console.error('获取统计数据失败:', error)
+    console.log('获取统计数据失败，继续执行不中断:', error)
+    // 统计获取失败不影响界面显示，显示默认值
   }
 }
 
@@ -145,24 +150,28 @@ const fetchStats = async () => {
 const recordVisit = async () => {
   try {
     console.log('记录用户访问...')
-    // 从localStorage中获取token
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    const token = userInfo.accessToken
-    console.log('当前token:', token)
+    // 从store和localStorage多处检查token
+    const storeToken = store.getters.token
+    const localToken = localStorage.getItem('accessToken')
+    const token = storeToken || localToken
+    
+    console.log('当前token从store获取:', token)
 
     if (!token) {
-      console.error('未找到token，请重新登录')
-      router.push('/login')
-      return
+      console.log('未找到有效token，跳过访问记录')
+      return // 只是跳过记录，不跳转
     }
 
-    await axios.post('/api/stats/record-visit', {}, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    // 确保token设置在请求头中
+    if (!request.defaults.headers.common['Authorization']) {
+      console.log('请求头中未设置token，正在设置...')
+      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+
+    await request.post('/api/stats/record-visit')
   } catch (error) {
-    console.error('记录访问失败:', error)
+    console.log('记录访问失败，继续执行不中断:', error)
+    // 访问记录失败不影响后续操作，静默失败
   }
 }
 
@@ -175,28 +184,32 @@ const visitChartPeriod = ref('7天')
 // 获取图表数据
 const fetchChartData = async (type, days) => {
   try {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    const token = userInfo.accessToken
+    // 从store和localStorage多处检查token
+    const storeToken = store.getters.token
+    const localToken = localStorage.getItem('accessToken')
+    const token = storeToken || localToken
 
     if (!token) {
-      console.error('未找到token，请重新登录')
-      router.push('/login')
-      return null
+      console.log(`未找到有效token，跳过${type}趋势数据获取`)
+      return null // 只是返回null，不跳转
     }
 
-    const response = await axios.get(`/api/stats/trend/${type}`, {
-      params: { days },
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    // 确保token设置在请求头中
+    if (!request.defaults.headers.common['Authorization']) {
+      console.log('请求头中未设置token，正在设置...')
+      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await request.get(`/api/stats/trend/${type}`, {
+      params: { days }
     })
 
-    if (response.data.success) {
-      return response.data.data
+    if (response.success) {
+      return response.data
     }
     return null
   } catch (error) {
-    console.error(`获取${type}趋势数据失败:`, error)
+    console.log(`获取${type}趋势数据失败，返回null:`, error)
     return null
   }
 }
@@ -294,27 +307,32 @@ const userChartInstance = ref(null)
 const visitChartInstance = ref(null)
 
 onMounted(async () => {
-  // 记录访问并获取统计数据
-  await recordVisit()
-  await fetchStats()
+  try {
+    // 记录访问并获取统计数据
+    await recordVisit()
+    await fetchStats()
 
-  // 获取初始图表数据
-  const userData = await fetchChartData('users', 7)
-  const visitData = await fetchChartData('visits', 7)
+    // 获取初始图表数据
+    const userData = await fetchChartData('users', 7)
+    const visitData = await fetchChartData('visits', 7)
 
-  // 初始化图表
-  if (userData) {
-    userChartInstance.value = initChart(userChart.value, '用户数量', userData)
+    // 初始化图表
+    if (userData && userChart.value) {
+      userChartInstance.value = initChart(userChart.value, '用户数量', userData)
+    }
+    if (visitData && visitChart.value) {
+      visitChartInstance.value = initChart(visitChart.value, '访问量', visitData)
+    }
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+      userChartInstance.value?.resize()
+      visitChartInstance.value?.resize()
+    })
+  } catch (error) {
+    console.log('初始化图表时出错:', error)
+    // 错误不会影响页面其他部分
   }
-  if (visitData) {
-    visitChartInstance.value = initChart(visitChart.value, '访问量', visitData)
-  }
-
-  // 监听窗口大小变化
-  window.addEventListener('resize', () => {
-    userChartInstance.value?.resize()
-    visitChartInstance.value?.resize()
-  })
 })
 </script>
 

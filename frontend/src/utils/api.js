@@ -71,33 +71,40 @@ export const getResourceUrl = (path) => {
 
   // 确保path不以/开头，避免重复
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
+  
+  // 移除public/前缀，因为资源文件在静态目录中不包含此前缀
+  let processedPath = cleanPath
+  if (processedPath.startsWith('public/')) {
+    processedPath = processedPath.replace('public/', '')
+    console.log(`移除public/前缀，处理后的路径: ${processedPath}`)
+  }
 
   // 添加调试日志，帮助定位问题
-  console.log(`构建资源URL，原始路径: ${path}, 清理后: ${cleanPath}`)
+  console.log(`构建资源URL，原始路径: ${path}, 清理后: ${processedPath}`)
 
   // 获取配置的资源基础URL
   const resourceBaseUrl = process.env.VUE_APP_RESOURCE_BASE_URL || ''
   
   // 处理不同类型的资源路径
-  if (cleanPath.includes('uploads/avatars/')) {
+  if (processedPath.includes('uploads/avatars/')) {
     // 添加时间戳避免缓存问题
-    if (cleanPath.includes('?t=')) {
-      return `${resourceBaseUrl}/${cleanPath}`
+    if (processedPath.includes('?t=')) {
+      return `${resourceBaseUrl}/${processedPath}`
     } else {
-      return `${resourceBaseUrl}/${cleanPath}?t=${Date.now()}`
+      return `${resourceBaseUrl}/${processedPath}?t=${Date.now()}`
     }
-  } else if (cleanPath.includes('icons/')) {
+  } else if (processedPath.includes('icons/')) {
     // 图标资源使用相对路径
-    return `${resourceBaseUrl}/${cleanPath}`
-  } else if (cleanPath.includes('public/')) {
+    return `${resourceBaseUrl}/${processedPath}`
+  } else if (processedPath.includes('public/')) {
     // 处理public目录下的资源
-    const fileName = cleanPath.split('/').pop()
-    const dirPath = cleanPath.split('/').slice(-2, -1)[0]
+    const fileName = processedPath.split('/').pop()
+    const dirPath = processedPath.split('/').slice(-2, -1)[0]
     return `${resourceBaseUrl}/${dirPath}/${fileName}`
   }
 
   // 默认使用相对路径
-  return `${resourceBaseUrl}/${cleanPath}`
+  return `${resourceBaseUrl}/${processedPath}`
 }
 
 /**
@@ -111,18 +118,40 @@ apiService.interceptors.request.use(
 
     console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 发送请求: ${config.method.toUpperCase()} ${config.url}`)
 
-    // 从localStorage获取token并添加到请求头
-    const userInfoStr = localStorage.getItem('userInfo')
-    if (userInfoStr) {
-      try {
-        const userInfo = JSON.parse(userInfoStr)
-        if (userInfo.accessToken) {
-          config.headers.Authorization = `Bearer ${userInfo.accessToken}`
-          console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 添加认证令牌，用户: ${userInfo.username || '未知'}`)
+    // 增强令牌获取逻辑，从多个位置尝试获取令牌
+    let accessToken = null
+    
+    // 先从localStorage直接获取accessToken
+    const directToken = localStorage.getItem('accessToken')
+    if (directToken) {
+      accessToken = directToken
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从localStorage直接获取到令牌`)
+    } 
+    // 如果直接获取失败，尝试从userInfo获取
+    else {
+      const userInfoStr = localStorage.getItem('userInfo')
+      if (userInfoStr) {
+        try {
+          const userInfo = JSON.parse(userInfoStr)
+          if (userInfo.accessToken) {
+            accessToken = userInfo.accessToken
+            console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从userInfo中获取到令牌，用户: ${userInfo.username || '未知'}`)
+            
+            // 同步到localStorage中的独立令牌项
+            localStorage.setItem('accessToken', userInfo.accessToken)
+          }
+        } catch (e) {
+          console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 解析localStorage中userInfo出错:`, e)
         }
-      } catch (e) {
-        console.error(`[前端日志] [${new Date().toISOString()}] [${requestId}] 解析localStorage中userInfo出错:`, e)
       }
+    }
+    
+    // 如果找到令牌，添加到请求头
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 添加认证令牌到请求头`)
+    } else {
+      console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 未找到认证令牌`)
     }
 
     return config

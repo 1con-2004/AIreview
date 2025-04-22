@@ -188,30 +188,15 @@ export default {
         return url
       }
 
-      // 处理具体路径
-      if (url.includes('public/uploads/avatars/')) {
-        const fileName = url.split('/').pop()
-        return getResourceUrl(`uploads/avatars/${fileName}?t=${Date.now()}`)
-      }
+      // 记录调试信息
+      console.log('处理头像URL:', url)
       
-      // 处理带有查询参数的URL
-      if (url.includes('?t=')) {
-        const baseUrl = url.split('?')[0]
-        return getResourceUrl(`${baseUrl}?t=${Date.now()}`)
-      }
-
-      // 处理直接存储为uploads/avatars路径的情况
-      if (url.includes('uploads/avatars/')) {
-        return getResourceUrl(`${url}?t=${Date.now()}`)
-      }
-
-      // 处理其他情况，可能是直接文件名
-      if (!url.includes('/')) {
-        return getResourceUrl(`uploads/avatars/${url}?t=${Date.now()}`)
-      }
-
-      // 处理任何其他情况
-      return getResourceUrl(`${url}?t=${Date.now()}`)
+      // 直接使用getResourceUrl处理，会自动处理public前缀和各种路径情况
+      // 添加时间戳避免缓存问题
+      const timestamp = Date.now()
+      const avatarUrl = getResourceUrl(url) + (url.includes('?') ? `&t=${timestamp}` : `?t=${timestamp}`)
+      console.log('处理后的头像URL:', avatarUrl)
+      return avatarUrl
     }
 
     const fetchUserProfile = async () => {
@@ -224,14 +209,20 @@ export default {
         
         // 添加时间戳防止缓存
         const timestamp = Date.now()
-        const response = await apiService.get(`user/user-profile/${username}?t=${timestamp}`, {
-          headers: {
-            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        })
+        
+        // 准备请求头，仅当有效令牌存在时才添加Authorization头
+        const headers = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+        
+        // 检查是否有有效令牌
+        if (userInfo.accessToken || userInfo.token) {
+          headers.Authorization = `Bearer ${userInfo.accessToken || userInfo.token}`
+        }
+        
+        const response = await apiService.get(`user/user-profile/${username}?t=${timestamp}`, { headers })
 
         if (response.success) {
           console.log('获取到的用户资料:', response.data)
@@ -264,11 +255,19 @@ export default {
     const handleFieldUpdate = async (field, value) => {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        
+        // 检查是否有有效令牌
+        if (!userInfo.accessToken && !userInfo.token) {
+          toast.add({ severity: 'error', summary: '错误', detail: '您未登录，无法更新资料' })
+          return
+        }
+        
         // 处理日期格式
         let processedValue = value
         if (field === 'birth_date') {
           processedValue = value // 已经是 YYYY-MM-DD 格式
         }
+        
         const response = await apiService.patch('user/user-profile', { [field]: processedValue }, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
@@ -302,12 +301,21 @@ export default {
         console.log('开始上传头像...')
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 
+        // 准备请求头
+        const headers = {}
+        
+        // 检查是否有有效令牌
+        if (userInfo.accessToken || userInfo.token) {
+          headers.Authorization = `Bearer ${userInfo.accessToken || userInfo.token}`
+        } else {
+          toast.add({ severity: 'error', summary: '错误', detail: '您未登录，无法上传头像' })
+          return
+        }
+
         // 由于apiService默认使用JSON，这里需要使用fetch进行文件上传
         const response = await fetch(getApiUrl('user/avatar'), {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
-          },
+          headers: headers,
           body: formData
         })
 
