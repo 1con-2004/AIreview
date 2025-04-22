@@ -3,7 +3,6 @@ import HomePage from '@/views/home/index.vue'
 import Login from '@/views/login/index.vue'
 import Problems from '@/views/problems/index.vue'
 import Community from '@/views/community/index.vue'
-import UserProfile from '@/views/user/UserProfile.vue'
 
 const routes = [
   {

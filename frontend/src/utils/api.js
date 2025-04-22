@@ -8,8 +8,13 @@ import store from '@/store'
  * 封装环境变量逻辑，支持开发环境和生产环境
  */
 const getBaseUrl = () => {
-  // 始终使用相对路径，确保通过Nginx代理
-  return process.env.VUE_APP_BASE_API || '/api'
+  // 检查环境变量是否已设置
+  if (process.env.VUE_APP_BASE_API) {
+    return process.env.VUE_APP_BASE_API
+  }
+
+  // 默认使用相对路径，确保通过Nginx代理
+  return '/api'
 
   // 注释掉以下代码，防止使用硬编码的localhost地址
   // 开发环境使用localhost
@@ -32,6 +37,11 @@ const apiService = axios.create({
 export const getApiUrl = (path) => {
   // 确保path不以/开头，避免重复
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
+
+  // 检查cleanPath是否已经包含api前缀，如果是，不要添加/api
+  if (cleanPath.startsWith('api/')) {
+    return `/${cleanPath}`
+  }
 
   // 始终使用相对路径
   return `${process.env.VUE_APP_BASE_API || '/api'}/${cleanPath}`
@@ -62,18 +72,25 @@ export const getResourceUrl = (path) => {
   // 确保path不以/开头，避免重复
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
 
-  // 始终使用相对路径
+  // 添加调试日志，帮助定位问题
+  console.log(`构建资源URL，原始路径: ${path}, 清理后: ${cleanPath}`)
+
+  // 处理不同类型的资源路径
+  if (cleanPath.includes('uploads/avatars/')) {
+    // 头像资源使用相对路径
+    return `/${cleanPath}`
+  } else if (cleanPath.includes('icons/')) {
+    // 图标资源使用相对路径
+    return `/${cleanPath}`
+  } else if (cleanPath.includes('public/')) {
+    // 处理public目录下的资源
+    const fileName = cleanPath.split('/').pop()
+    const dirPath = cleanPath.split('/').slice(-2, -1)[0]
+    return `/${dirPath}/${fileName}`
+  }
+
+  // 默认使用相对路径
   return `/${cleanPath}`
-
-  // 注释掉以下代码，防止使用硬编码的localhost地址
-  // 如果使用相对路径
-  // if (process.env.VUE_APP_USE_RELATIVE_PATH === 'true') {
-  //   // 如果path已经包含/uploads等前缀，则直接返回
-  //   return `/${cleanPath}`
-  // }
-
-  // 开发环境返回完整URL
-  // return `${process.env.VUE_APP_BASE_API || 'http://localhost:3000'}/${cleanPath}`
 }
 
 /**

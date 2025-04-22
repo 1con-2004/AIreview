@@ -11,7 +11,6 @@ import './assets/styles/login.css'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import 'element-plus/dist/index.css'
-import { ElMessage } from 'element-plus'
 // 导入API服务
 import apiService, { getApiUrl, getResourceUrl } from './utils/api'
 
@@ -64,7 +63,6 @@ app.component('Chips', Chips)
 app.component('Button', Button)
 
 // 全局挂载 $message
-app.config.globalProperties.$message = ElMessage
 
 // 注册为全局属性
 app.config.globalProperties.$axios = apiService

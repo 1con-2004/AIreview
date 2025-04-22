@@ -188,13 +188,29 @@ export default {
         return url
       }
 
-      // 处理数据库中存储的路径
+      // 处理具体路径
       if (url.includes('public/uploads/avatars/')) {
         const fileName = url.split('/').pop()
         return getResourceUrl(`uploads/avatars/${fileName}?t=${Date.now()}`)
       }
+      
+      // 处理带有查询参数的URL
+      if (url.includes('?t=')) {
+        const baseUrl = url.split('?')[0]
+        return getResourceUrl(`${baseUrl}?t=${Date.now()}`)
+      }
 
-      // 处理其他情况
+      // 处理直接存储为uploads/avatars路径的情况
+      if (url.includes('uploads/avatars/')) {
+        return getResourceUrl(`${url}?t=${Date.now()}`)
+      }
+
+      // 处理其他情况，可能是直接文件名
+      if (!url.includes('/')) {
+        return getResourceUrl(`uploads/avatars/${url}?t=${Date.now()}`)
+      }
+
+      // 处理任何其他情况
       return getResourceUrl(`${url}?t=${Date.now()}`)
     }
 
@@ -205,10 +221,15 @@ export default {
 
         // 直接使用传入的用户名作为参数，确保获取正确的用户资料
         const username = props.username
-
-        const response = await apiService.get(`/api/user/user-profile/${username}`, {
+        
+        // 添加时间戳防止缓存
+        const timestamp = Date.now()
+        const response = await apiService.get(`user/user-profile/${username}?t=${timestamp}`, {
           headers: {
-            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
+            Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         })
 
@@ -248,7 +269,7 @@ export default {
         if (field === 'birth_date') {
           processedValue = value // 已经是 YYYY-MM-DD 格式
         }
-        const response = await apiService.patch('/api/user/user-profile', { [field]: processedValue }, {
+        const response = await apiService.patch('user/user-profile', { [field]: processedValue }, {
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`
           }
@@ -282,7 +303,7 @@ export default {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 
         // 由于apiService默认使用JSON，这里需要使用fetch进行文件上传
-        const response = await fetch(getApiUrl('api/user/avatar'), {
+        const response = await fetch(getApiUrl('user/avatar'), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${userInfo.accessToken || userInfo.token}`

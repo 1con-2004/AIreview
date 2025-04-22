@@ -6,7 +6,7 @@
       <!-- 学习计划部分 -->
       <div class="learning-plans">
         <div class="section-header">
-          <h2>学习计划测试更22新</h2>
+          <h2>学习计划</h2>
           <router-link to="/learning-plans" class="view-more">查看更多</router-link>
         </div>
         <div class="plan-cards">
@@ -392,7 +392,7 @@ export default {
             title: plan.title || '',
             description: plan.description || '',
             icon: plan.icon
-              ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
+              ? this.getCorrectIconPath(plan.icon)
               : '/icons/default.png',
             creator_name: plan.creator_name || ''
           }))
@@ -410,6 +410,30 @@ export default {
         }
         this.plans = []
       }
+    },
+    getCorrectIconPath (iconPath) {
+      // 如果是完整URL路径，直接返回
+      if (iconPath.startsWith('http')) {
+        return iconPath
+      }
+
+      // 处理icons路径
+      if (iconPath.includes('/icons/')) {
+        // 确保路径不以多个斜杠开头
+        return iconPath.startsWith('/') ? iconPath : `/${iconPath}`
+      }
+
+      // 处理public/icons路径
+      if (iconPath.includes('public/icons/')) {
+        const fileName = iconPath.split('/').pop()
+        return `/icons/${fileName}`
+      }
+
+      // 添加调试日志
+      console.log('处理学习路径图标，原始路径:', iconPath)
+
+      // 默认返回原路径，确保以/开头
+      return iconPath.startsWith('/') ? iconPath : `/${iconPath}`
     },
     async fetchCategories () {
       try {

@@ -114,13 +114,29 @@ const getFullAvatarUrl = (url) => {
     return url
   }
 
-  // 处理数据库中存储的路径
+  // 处理具体路径
   if (url.includes('public/uploads/avatars/')) {
     const fileName = url.split('/').pop()
     return getResourceUrl(`uploads/avatars/${fileName}?t=${Date.now()}`)
   }
+  
+  // 处理带有查询参数的URL
+  if (url.includes('?t=')) {
+    const baseUrl = url.split('?')[0]
+    return getResourceUrl(`${baseUrl}?t=${Date.now()}`)
+  }
 
-  // 处理其他情况
+  // 处理直接存储为uploads/avatars路径的情况
+  if (url.includes('uploads/avatars/')) {
+    return getResourceUrl(`${url}?t=${Date.now()}`)
+  }
+
+  // 处理其他情况，可能是直接文件名
+  if (!url.includes('/')) {
+    return getResourceUrl(`uploads/avatars/${url}?t=${Date.now()}`)
+  }
+
+  // 处理任何其他情况
   return getResourceUrl(`${url}?t=${Date.now()}`)
 }
 

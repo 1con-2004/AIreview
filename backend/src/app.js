@@ -22,16 +22,79 @@ const authRoutes = require('./routes/auth');
 const statisticsRoutes = require('./routes/statistics');
 const learningPathRoutes = require('./api/learning-path');
 const dockerHelper = require('./services/judge/docker-helper');
+const { logConfig, setLogLevel, setGlobalLogLevel } = require('./config/logging');
 
 // 添加请求日志中间件
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  // 排除健康检查路径的日志输出
+  if (req.url === '/api/health' || req.url.startsWith('/api/health?') || 
+      req.url === '/api/health/docker' || req.url.startsWith('/api/health/docker?')) {
+    return next();
+  }
+  
+  // 检查是否应该记录API请求
+  if (logConfig.api.shouldLogRequests()) {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  }
   next();
 });
 
+// 添加日志级别控制的简单API
+app.get('/api/log/level/:level', (req, res) => {
+  const level = parseInt(req.params.level);
+  
+  if (isNaN(level) || level < 0 || level > 4) {
+    return res.status(400).json({
+      success: false,
+      message: '无效的日志级别，应为0-4之间的整数'
+    });
+  }
+  
+  // 设置全局日志级别
+  setGlobalLogLevel(level);
+  
+  // 响应
+  res.json({
+    success: true,
+    message: `全局日志级别已设置为 ${level}`,
+    levels: {
+      global: logConfig.global.level,
+      auth: logConfig.auth.getLevel(),
+      api: logConfig.api.getLevel(),
+      database: logConfig.database.getLevel()
+    }
+  });
+});
+
+// 获取当前日志级别
+app.get('/api/log/level', (req, res) => {
+  res.json({
+    success: true,
+    levels: {
+      global: logConfig.global.level,
+      auth: logConfig.auth.getLevel(),
+      api: logConfig.api.getLevel(),
+      database: logConfig.database.getLevel()
+    }
+  });
+});
+
 // 健康检查API端点
+let healthCheckCount = 0;
+let lastHealthCheckLog = Date.now();
 app.get('/api/health', async (req, res) => {
-  console.log('健康检查请求被调用');
+  // 只在首次请求、每隔5分钟或出错时记录日志
+  const currentTime = Date.now();
+  const shouldLog = healthCheckCount === 0 || 
+                   (currentTime - lastHealthCheckLog > 5 * 60 * 1000);
+  
+  if (shouldLog) {
+    console.log(`健康检查请求被调用 (第${healthCheckCount + 1}次)`);
+    lastHealthCheckLog = currentTime;
+  }
+  
+  healthCheckCount++;
+  
   try {
     // 检查Docker可用性
     const isDockerAvailable = await dockerHelper.checkDockerAvailability();
@@ -65,8 +128,21 @@ app.get('/api/health', async (req, res) => {
 });
 
 // 详细Docker诊断API端点
+let dockerDiagnosticCount = 0;
+let lastDockerDiagnosticLog = Date.now();
 app.get('/api/health/docker', async (req, res) => {
-  console.log('Docker诊断API请求被调用');
+  // 只在首次请求、每隔5分钟或出错时记录日志
+  const currentTime = Date.now();
+  const shouldLog = dockerDiagnosticCount === 0 || 
+                   (currentTime - lastDockerDiagnosticLog > 5 * 60 * 1000);
+  
+  if (shouldLog) {
+    console.log(`Docker诊断API请求被调用 (第${dockerDiagnosticCount + 1}次)`);
+    lastDockerDiagnosticLog = currentTime;
+  }
+  
+  dockerDiagnosticCount++;
+  
   try {
     // 获取Docker信息
     const dockerInfo = await dockerHelper.getDockerInfo();
@@ -97,7 +173,11 @@ const corsOptions = {
     callback(null, true);
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Length', 'Content-Range'],
+  optionsSuccessStatus: 200,
+  maxAge: 86400 // 预检请求缓存24小时
 };
 
 app.use(cors(corsOptions));
@@ -116,23 +196,23 @@ app.use(session({
 // 解析 JSON 请求体
 app.use(express.json());
 
-// 添加响应头中间件，确保所有响应使用UTF-8编码
+// 确保解析JSON请求体能够正常工作
+app.use(express.urlencoded({ extended: true }));
+
+// 添加响应头中间件，确保所有响应使用UTF-8编码，并添加跨域头
 app.use((req, res, next) => {
+  // 处理OPTIONS预检请求
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
   // 设置所有响应的字符集为UTF-8
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   
   // 增强JSON.stringify处理中文的能力
   const originalJson = res.json;
   res.json = function(obj) {
-    // 确保不处理流和Buffer等特殊对象
-    if (obj && typeof obj === 'object' && !Buffer.isBuffer(obj) && !obj.readable) {
-      console.log('设置响应编码: UTF-8, JSON对象类型:', typeof obj);
-      
-      // 测试中文
-      const testObj = {test: '测试中文'};
-      console.log('中文测试对象:', JSON.stringify(testObj));
-    }
-    
+    // 直接调用原始json方法，不输出任何调试信息
     return originalJson.call(this, obj);
   };
   
@@ -166,7 +246,23 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 // 添加 /api/uploads 路径，以便前端可以通过 /api/uploads 访问上传的文件
 app.use('/api/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+// 添加 /icons 路径，以便前端可以通过 /icons 访问图标文件
+app.use('/icons', express.static(path.join(__dirname, '../public/icons')));
+
+// 添加直接访问public目录的路径
+app.use('/public', express.static(path.join(__dirname, '../public')));
+app.use('/api/public', express.static(path.join(__dirname, '../public')));
+
 app.use('/icons', express.static(iconsPath, {
+    setHeaders: (res, path, stat) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET');
+        res.set('Cache-Control', 'public, max-age=3600');
+    }
+}));
+
+// 为icons提供额外的路径支持
+app.use('/api/icons', express.static(iconsPath, {
     setHeaders: (res, path, stat) => {
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET');
@@ -277,4 +373,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = app; 
+module.exports = app;

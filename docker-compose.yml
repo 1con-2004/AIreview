@@ -8,6 +8,8 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./frontend/dist:/usr/share/nginx/html:rw
+      # 直接使用前端public目录中的图标，不使用dist目录中的，避免权限问题
+      - ./frontend/public/icons:/usr/share/nginx/html/icons:rw
     depends_on:
       - backend
     networks:
