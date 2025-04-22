@@ -64,7 +64,7 @@
           <img :src="getFullAvatarUrl(avatarUrl)" class="user-avatar" alt="用户头像">
           <span>{{ username }}</span>
         </div>
-        <a @click="handleRefreshUserState" class="refresh-btn" title="刷新用户状态">
+        <!-- <a @click="handleRefreshUserState" class="refresh-btn" title="刷新用户状态">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
           </svg>
@@ -74,7 +74,7 @@
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M12 16v-4m0-4h.01"></path>
           </svg>
-        </a>
+        </a> -->
         <a @click="handleLogout" class="logout-btn">登出</a>
       </template>
       <template v-else>
@@ -384,7 +384,7 @@ const sessionStorageManager = {
     }
   }
 }
-
+// 暂时注释掉诊断按钮
 // 修改诊断登录状态函数
 const diagnoseLoginState = () => {
   console.group('===== 实时登录状态诊断 =====')
