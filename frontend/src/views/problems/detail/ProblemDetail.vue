@@ -6,7 +6,7 @@
       <div class="problem-description">
         <div class="problem-header">
           <div class="action-buttons">
-            <button class="back-button" @click="goBack">返回题目列表</button>
+            <button class="back-button" @click="goBack">题目列表</button>
           </div>
           <div class="title-section">
             <div class="title-row">
@@ -434,7 +434,38 @@
                       </div>
                     </div>
                   </div>
+                  
+                  <!-- 添加原始AI分析显示，当没有结构化内容时显示 -->
+                  <div v-if="!aiAnalysisResult.errors?.length && !aiAnalysisResult.improvements?.length && aiAnalysisResult.performance?.explanation" 
+                    class="analysis-section" 
+                    style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; transition: all 0.3s ease;">
+                    <div class="section-header">
+                      <div class="section-title">
+                        <i class="el-icon-info"></i>
+                        <span>AI 分析结果</span>
+                      </div>
+                    </div>
+                    <div style="background: rgba(30, 30, 46, 0.5); border-radius: 8px; padding: 16px; margin-top: 16px;">
+                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;">{{ aiAnalysisResult.performance.explanation }}</pre>
+                    </div>
+                  </div>
+                  
+                  <!-- 添加一个直接显示原始代码分析结果的容器，用于处理Docker环境下的响应格式 -->
+                  <div v-if="aiAnalysisResult.rawAnalysis" 
+                    class="analysis-section" 
+                    style="background: rgba(78, 205, 196, 0.05); border: 1px solid rgba(78, 205, 196, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; transition: all 0.3s ease;">
+                    <div class="section-header">
+                      <div class="section-title">
+                        <i class="el-icon-info"></i>
+                        <span>AI 代码分析</span>
+                      </div>
+                    </div>
+                    <div style="background: rgba(30, 30, 46, 0.5); border-radius: 8px; padding: 16px; margin-top: 16px;">
+                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;">{{ aiAnalysisResult.rawAnalysis }}</pre>
+                    </div>
+                  </div>
                 </div>
+                
               </div>
             </div>
           </div>
@@ -619,7 +650,9 @@ export default defineComponent({
     const problemExamples = ref([]) // 添加problemExamples
     const aiAnalysisResult = ref({
       errors: [],
-      improvements: []
+      improvements: [],
+      performance: null,
+      rawAnalysis: null
     })
     const activeConsoleTab = ref('testCase')
     const customInput = ref('')
@@ -671,8 +704,8 @@ export default defineComponent({
         const headers = { Authorization: `Bearer ${accessToken}` }
         const problemNumber = route.params.id.padStart(4, '0')
         const [problemRes, solutionRes] = await Promise.all([
-          apiService.get(`/api/problems/${problemNumber}`, { headers }),
-          apiService.get(`/api/problems/${problemNumber}/solution`, { headers })
+          apiService.get(`problems/${problemNumber}`, { headers }),
+          apiService.get(`problems/${problemNumber}/solution`, { headers })
         ])
 
         if (problemRes && problemRes.code === 200) {
@@ -728,7 +761,7 @@ export default defineComponent({
         const headers = { Authorization: `Bearer ${accessToken}` }
 
         // 首先尝试使用路由参数获取提交记录
-        const response = await apiService.get(`/api/problems/${route.params.id}/submissions`, { headers })
+        const response = await apiService.get(`problems/${route.params.id}/submissions`, { headers })
 
         // 如果没有数据，且是数字ID，尝试将其作为实际的problem_id使用
         if (response && response.code === 200 && (!response.data || response.data.length === 0)) {
@@ -736,7 +769,7 @@ export default defineComponent({
             console.log('尝试直接通过题目ID获取提交记录:', Number(route.params.id))
             // 尝试直接用数字ID获取
             try {
-              const directResponse = await apiService.get(`/api/judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
+              const directResponse = await apiService.get(`judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
               if (directResponse && directResponse.length > 0) {
                 submissions.value = directResponse
 
@@ -925,11 +958,18 @@ export default defineComponent({
 
     // 从AI分析文本中提取错误信息
     const extractErrors = (analysis) => {
+      // 确保分析结果是字符串
+      if (!analysis) return [];
+      
+      // 如果分析结果不是字符串，尝试将其转换为字符串
+      const analysisText = typeof analysis === 'string' ? analysis : JSON.stringify(analysis);
+      
       const errors = []
-      const errorRegex = /错误代码片段[\s\S]*?有问题的代码：\`(.*?)\`[\s\S]*?错误原因：(.*?)(?=\n\n|\n$|$)/g
+      // 更新正则表达式以匹配新的格式，如"1. 错误代码片段"，而不是单独的"错误代码片段"
+      const errorRegex = /1\.\s*错误代码片段[\s\S]*?有问题的代码[\s\S]*?[：:]\s*\`(.*?)\`[\s\S]*?错误原因[\s\S]*?[：:]\s*(.*?)(?=\n\n|\n$|$)/g
       let match
 
-      while ((match = errorRegex.exec(analysis)) !== null) {
+      while ((match = errorRegex.exec(analysisText)) !== null) {
         errors.push({
           type: '代码错误',
           location: '相关代码',
@@ -939,33 +979,151 @@ export default defineComponent({
         })
       }
 
+      // 如果没有匹配到错误，尝试更宽松的正则
+      if (errors.length === 0) {
+        // 尝试匹配包含代码的任何部分
+        const codeRegex = /有问题的代码.*?\`(.*?)\`/g
+        let codeMatch
+        while ((codeMatch = codeRegex.exec(analysisText)) !== null) {
+          // 尝试在代码周围找错误原因
+          const surroundingText = analysisText.substring(
+            Math.max(0, codeMatch.index - 100), 
+            Math.min(analysisText.length, codeMatch.index + codeMatch[0].length + 200)
+          )
+          
+          // 从周围文本中提取可能的错误原因
+          const reasonMatch = /错误原因.*?[:：]\s*(.*?)(?=\n|$)/i.exec(surroundingText)
+          
+          errors.push({
+            type: '代码错误',
+            location: '相关代码',
+            message: reasonMatch ? reasonMatch[1].trim() : '代码有问题，需要修改',
+            severity: 'error',
+            code: codeMatch[1].trim()
+          })
+        }
+      }
+      
+      // 如果仍然没有匹配到，创建一个通用的错误
+      if (errors.length === 0 && analysisText) {
+        errors.push({
+          type: '代码分析',
+          location: '整体代码',
+          message: '请检查AI分析的完整内容，可能有需要改进的地方',
+          severity: 'warning',
+          code: null
+        })
+      }
+
       return errors
     }
 
     // 从AI分析文本中提取改进建议
     const extractImprovements = (analysis) => {
+      // 确保分析结果是字符串
+      if (!analysis) return [];
+      
+      // 如果分析结果不是字符串，尝试将其转换为字符串
+      const analysisText = typeof analysis === 'string' ? analysis : JSON.stringify(analysis);
+      
       const improvements = []
-      // 修改正则表达式以匹配2. 逻辑问题后的所有内容
-      const improvementRegex = /2\.\s*逻辑问题\n-([\s\S]*?)(?=\n\n|\n$|$)/g
-      let match
-
-      while ((match = improvementRegex.exec(analysis)) !== null) {
-        improvements.push({
-          icon: 'el-icon-warning',
-          title: '逻辑问题',
-          description: match[1].trim()
-        })
+      
+      // 尝试匹配"2. 逻辑问题"部分
+      let logicMatch = /2\.\s*逻辑问题([\s\S]*?)(?=\n\n\d\.|\n$|$)/.exec(analysisText)
+      
+      if (logicMatch) {
+        // 获取逻辑问题部分的完整内容
+        const logicContent = logicMatch[1].trim()
+        
+        // 尝试匹配带有"-"的要点
+        const pointsRegex = /-\s*(.*?)(?=\n-|\n\n|\n$|$)/g
+        let pointMatch
+        let hasPoints = false
+        
+        while ((pointMatch = pointsRegex.exec(logicContent)) !== null) {
+          hasPoints = true
+          improvements.push({
+            icon: 'el-icon-warning',
+            title: '逻辑问题',
+            description: pointMatch[1].trim()
+          })
+        }
+        
+        // 如果没找到要点，使用整个内容
+        if (!hasPoints) {
+          improvements.push({
+            icon: 'el-icon-warning',
+            title: '逻辑问题',
+            description: logicContent
+          })
+        }
+      } else {
+        // 如果没有明确的"2. 逻辑问题"部分，查找分析中除了错误代码片段之外的有用信息
+        
+        // 先排除"1. 错误代码片段"部分
+        let cleanedAnalysis = analysisText.replace(/1\.\s*错误代码片段[\s\S]*?(?=\n\n2\.|\n$|$)/, '').trim()
+        
+        // 如果仍有内容，将其作为通用建议
+        if (cleanedAnalysis) {
+          // 移除数字编号前缀（如有）
+          cleanedAnalysis = cleanedAnalysis.replace(/^\d+\.\s*/, '')
+          
+          improvements.push({
+            icon: 'el-icon-info',
+            title: '分析建议',
+            description: cleanedAnalysis
+          })
+        }
+        
+        // 如果还是没有内容，从原始分析中提取一般性建议
+        if (improvements.length === 0 && analysisText) {
+          // 寻找最后一段文字，可能包含总结性建议
+          const lastParagraph = analysisText.split('\n\n').pop()
+          if (lastParagraph && lastParagraph.length > 30) { // 有一定长度才可能是有用的建议
+            improvements.push({
+              icon: 'el-icon-info',
+              title: '总体建议',
+              description: lastParagraph.trim()
+            })
+          }
+        }
       }
-
+      
       return improvements
     }
 
     // 从AI分析文本中提取性能相关信息
     const extractPerformance = (analysis) => {
+      // 返回包含原始分析内容的对象
       return {
-        timeComplexity: '由AI分析得出',
-        spaceComplexity: '由AI分析得出',
-        explanation: analysis
+        timeComplexity: '详见分析内容',
+        spaceComplexity: '详见分析内容',
+        explanation: typeof analysis === 'string' ? analysis : JSON.stringify(analysis) // 确保使用字符串类型
+      }
+    }
+
+    // 定义analyzeCode函数，统一处理调用AI分析接口的请求
+    const analyzeCode = async (params, accessToken) => {
+      try {
+        console.log('调用analyzeCode函数分析代码:', params);
+        
+        // 发送API请求到后端
+        const apiResponse = await apiService.post(
+          'ai/analyze-code',
+          params,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          }
+        );
+        
+        console.log('analyzeCode函数收到原始响应:', apiResponse);
+        
+        // 直接返回apiResponse，不做额外处理
+        // 这样调用方可以使用相同的逻辑处理返回数据
+        return apiResponse;
+      } catch (error) {
+        console.error('analyzeCode函数调用API失败:', error);
+        throw error;
       }
     }
 
@@ -1087,7 +1245,6 @@ export default defineComponent({
       { name: 'C++', code: 'C++' },
       { name: 'Python', code: 'Python' },
       { name: 'Java', code: 'Java' },
-      { name: 'JavaScript', code: 'JavaScript' }
     ]
 
     // 筛选状态
@@ -1261,7 +1418,7 @@ export default defineComponent({
         }
 
         const response = await apiService.post(
-          `/api/judge/problems/${route.params.id}/run`,
+          `judge/problems/${route.params.id}/run`,
           {
             code: code.value,
             language: selectedLanguageForCode.value,
@@ -1338,7 +1495,7 @@ export default defineComponent({
         })
 
         const response = await apiService.post(
-          `/api/judge/problems/${route.params.id}/submit`,
+          `judge/problems/${route.params.id}/submit`,
           {
             code: code.value,
             language: selectedLanguageForCode.value
@@ -1468,24 +1625,37 @@ export default defineComponent({
         // 改进获取token的方式，确保能找到正确的token
         let accessToken = null
 
-        // 首先从userInfo中获取token
+        // 尝试各种可能的token存储位置
+        const possibleTokens = [];
+        
+        // 从userInfo中获取
         const userInfoStr = localStorage.getItem('userInfo')
         if (userInfoStr) {
           try {
             const userInfo = JSON.parse(userInfoStr)
-            accessToken = userInfo.accessToken || userInfo.token
+            if (userInfo.accessToken) possibleTokens.push(userInfo.accessToken);
+            if (userInfo.token) possibleTokens.push(userInfo.token);
           } catch (e) {
             console.error('解析userInfo失败:', e)
           }
         }
-
-        // 如果userInfo中没有token，尝试直接从localStorage获取
-        if (!accessToken) {
-          accessToken = localStorage.getItem('accessToken')
+        
+        // 直接从localStorage和sessionStorage获取
+        const localStorageToken = localStorage.getItem('accessToken');
+        const localStorageSimpleToken = localStorage.getItem('token');
+        const sessionStorageToken = sessionStorage.getItem('accessToken');
+        const sessionStorageSimpleToken = sessionStorage.getItem('token');
+        
+        if (localStorageToken) possibleTokens.push(localStorageToken);
+        if (localStorageSimpleToken) possibleTokens.push(localStorageSimpleToken);
+        if (sessionStorageToken) possibleTokens.push(sessionStorageToken);
+        if (sessionStorageSimpleToken) possibleTokens.push(sessionStorageSimpleToken);
+        
+        // 使用第一个有效的token
+        if (possibleTokens.length > 0) {
+          accessToken = possibleTokens[0];
+          console.log('从localStorage直接获取到令牌');
         }
-
-        // 添加更多日志便于调试
-        console.log('获取到的accessToken:', accessToken ? `${accessToken.substring(0, 10)}...` : 'null')
 
         if (!accessToken) {
           isAnalyzing.value = false
@@ -1493,11 +1663,13 @@ export default defineComponent({
           return
         }
 
+        console.log('添加认证令牌到请求头');
+        
         // 立即切换到左侧AI分析标签页
         activeTab.value = 'aiAnalysis'
 
         const response = await apiService.post(
-          '/api/ai/analyze-code',
+          'ai/analyze-code',
           {
             code: code.value,
             language: selectedLanguageForCode.value,
@@ -1508,27 +1680,134 @@ export default defineComponent({
           }
         )
 
-        if (response.data.success) {
-          // 解析AI返回的分析结果
-          const analysis = response.data.data.codeAnalysis
+        console.log('收到响应:', response.status);
+        console.log('前端接收的原始响应对象结构:', typeof response, Object.keys(response));
+        console.log('前端接收的响应data属性类型:', typeof response.data);
+        console.log('完整响应对象JSON字符串:', JSON.stringify(response.data, null, 2));
+        
+        // 正确处理响应数据
+        if (response && response.data && response.data.success === true) {
+          // 初始化分析结果变量
+          let analysis = '';
+          
+          console.log('response数据检查: data.success=true');
+          
+          // 在这里添加详细的数据结构检查
+          if (response.data.data) {
+            console.log('data存在，类型:', typeof response.data.data);
+            
+            // 检查data.data是否是对象且包含codeAnalysis属性
+            if (typeof response.data.data === 'object' && response.data.data.codeAnalysis) {
+              analysis = response.data.data.codeAnalysis;
+              console.log('从data.data.codeAnalysis获取分析结果, 值类型:', typeof analysis);
+            } 
+            // 如果data.data本身是字符串
+            else if (typeof response.data.data === 'string') {
+              analysis = response.data.data;
+              console.log('直接从data.data字符串获取分析结果');
+            }
+            // 如果data.data是对象但没有codeAnalysis属性
+            else if (typeof response.data.data === 'object') {
+              // 将对象转为字符串
+              analysis = JSON.stringify(response.data.data);
+              console.log('data.data是对象但无codeAnalysis属性，转为字符串');
+            }
+          } else {
+            // 如果data.data不存在，尝试使用整个响应对象
+            analysis = JSON.stringify(response.data);
+            console.log('data.data不存在，使用整个响应对象');
+          }
+          
+          // 对分析结果进行最终检查
+          if (!analysis || analysis === 'undefined' || analysis === 'null') {
+            analysis = '无法获取分析结果，请重试';
+            console.log('分析结果无效，使用默认提示');
+          }
+          
+          console.log('最终处理后的AI分析内容:', analysis.substring(0, 50) + '...');
 
-          // 提取错误和改进建议
-          const errors = extractErrors(analysis)
-          const improvements = extractImprovements(analysis)
-
-          // 更新optimizationInsights
-          optimizationInsights.value = improvements
-
-          // 更新aiAnalysisResult
-          aiAnalysisResult.value = {
-            errors: errors,
-            improvements: improvements,
-            performance: extractPerformance(analysis)
+          // 创建一个备用的分析结果，以防无法解析结构化数据
+          let fallbackAnalysis = {
+            errors: [],
+            improvements: [],
+            performance: {
+              explanation: analysis
+            },
+            rawAnalysis: analysis
           }
 
-          ElMessage.success('代码分析完成')
+          // 尝试提取错误和改进建议
+          try {
+            // 提取错误和改进建议
+            const errors = extractErrors(analysis);
+            console.log('提取的错误数量:', errors.length);
+            
+            const improvements = extractImprovements(analysis);
+            console.log('提取的改进建议数量:', improvements.length);
+
+            // 确保即使正则表达式无法匹配，也能展示AI分析结果
+            if (errors.length === 0 && improvements.length === 0 && analysis) {
+              // 如果没有提取到结构化信息但有分析内容，创建一个通用显示
+              improvements.push({
+                icon: 'el-icon-info',
+                title: 'AI分析结果',
+                description: analysis
+              });
+              console.log('未提取到结构化数据，创建通用显示');
+            }
+
+            // 更新optimizationInsights
+            optimizationInsights.value = improvements;
+
+            // 更新aiAnalysisResult
+            aiAnalysisResult.value = {
+              errors: errors,
+              improvements: improvements,
+              performance: extractPerformance(analysis),
+              rawAnalysis: analysis
+            };
+            
+            console.log('成功更新AI分析结果到界面');
+          } catch (parseError) {
+            console.warn('解析AI分析结果失败，使用备用显示:', parseError);
+            // 使用备用分析结果
+            aiAnalysisResult.value = fallbackAnalysis;
+          }
+
+          ElMessage.success('代码分析完成');
         } else {
-          ElMessage.error(response.data.message || '分析失败')
+          // 添加更详细的错误日志
+          console.warn('AI分析响应未包含预期数据:', JSON.stringify(response.data, null, 2));
+          
+          if (response && response.data) {
+            console.log('response存在且data存在');
+            // 尝试从各种可能的地方获取数据
+            const possibleData = 
+              (response.data.data && response.data.data.codeAnalysis) || 
+              response.data.data || 
+              response.data.message || 
+              '分析结果不可用';
+            
+            console.log('最终提取到的数据:', typeof possibleData);
+            
+            // 创建一个通用的分析结果
+            aiAnalysisResult.value = {
+              errors: [],
+              improvements: [{
+                icon: 'el-icon-info',
+                title: 'AI分析结果',
+                description: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
+              }],
+              performance: {
+                explanation: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
+              },
+              rawAnalysis: typeof possibleData === 'string' ? possibleData : JSON.stringify(possibleData)
+            };
+            
+            ElMessage.success('代码分析完成(非标准格式)');
+          } else {
+            ElMessage.error(response?.data?.message || '分析失败');
+          }
         }
       } catch (error) {
         console.error('AI分析失败:', error)
@@ -1612,27 +1891,108 @@ export default defineComponent({
           problemId: route.params.id
         }, accessToken) // 传递accessToken到analyzeCode函数
 
-        if (response.data.success) {
-          const analysis = response.data.data.codeAnalysis
-          console.log('AI分析结果:', analysis) // 添加调试日志
+        console.log('handleAiAnalysis函数收到analyzeCode响应:', response);
+        console.log('handleAiAnalysis - 响应数据类型:', typeof response.data);
+        console.log('handleAiAnalysis - 完整响应:', JSON.stringify(response.data, null, 2));
+        
+        // 立即切换到左侧AI分析标签页
+        activeTab.value = 'aiAnalysis'
 
-          // 提取错误和改进建议
-          const errors = extractErrors(analysis)
-          const improvements = extractImprovements(analysis)
-
-          console.log('提取的改进建议:', improvements) // 添加调试日志
-
-          // 更新分析结果
-          aiAnalysisResult.value = {
-            errors,
-            improvements
+        // 使用与getAiAnalysis相同的处理逻辑
+        if (response.data && response.data.success === true) {
+          // 初始化分析结果变量
+          let analysis = '';
+          
+          console.log('handleAiAnalysis - 数据检查通过: success=true');
+          
+          // 在这里添加详细的数据结构检查
+          if (response.data.data) {
+            console.log('handleAiAnalysis - data存在，类型:', typeof response.data.data);
+            
+            // 检查data.data是否是对象且包含codeAnalysis属性
+            if (typeof response.data.data === 'object' && response.data.data.codeAnalysis) {
+              analysis = response.data.data.codeAnalysis;
+              console.log('handleAiAnalysis - 从data.data.codeAnalysis获取分析结果');
+            } 
+            // 如果data.data本身是字符串
+            else if (typeof response.data.data === 'string') {
+              analysis = response.data.data;
+              console.log('handleAiAnalysis - 直接从data.data字符串获取分析结果');
+            }
+            // 如果data.data是对象但没有codeAnalysis属性
+            else if (typeof response.data.data === 'object') {
+              // 将对象转为字符串
+              analysis = JSON.stringify(response.data.data);
+              console.log('handleAiAnalysis - data.data是对象但无codeAnalysis属性，转为字符串');
+            }
+          } else {
+            // 如果data.data不存在，尝试使用整个响应对象
+            analysis = JSON.stringify(response.data);
+            console.log('handleAiAnalysis - data.data不存在，使用整个响应对象');
           }
+          
+          // 对分析结果进行最终检查
+          if (!analysis || analysis === 'undefined' || analysis === 'null') {
+            analysis = '无法获取分析结果，请重试';
+            console.log('handleAiAnalysis - 分析结果无效，使用默认提示');
+          }
+          
+          console.log('handleAiAnalysis - 最终分析内容片段:', analysis.substring(0, 30) + '...');
+
+          // 尝试提取错误和改进建议
+          try {
+            // 提取错误和改进建议
+            const errors = extractErrors(analysis);
+            console.log('handleAiAnalysis - 提取的错误数量:', errors.length);
+            
+            const improvements = extractImprovements(analysis);
+            console.log('handleAiAnalysis - 提取的改进建议数量:', improvements.length);
+
+            // 确保有内容显示
+            if (errors.length === 0 && improvements.length === 0 && analysis) {
+              improvements.push({
+                icon: 'el-icon-info',
+                title: 'AI分析结果',
+                description: analysis
+              });
+              console.log('handleAiAnalysis - 未提取到结构化数据，创建通用显示');
+            }
+
+            // 更新aiAnalysisResult
+            aiAnalysisResult.value = {
+              errors,
+              improvements,
+              performance: extractPerformance(analysis),
+              rawAnalysis: analysis
+            };
+            
+            ElMessage.success('代码分析完成');
+          } catch (error) {
+            console.error('handleAiAnalysis - 解析结果失败:', error);
+            // 创建一个简单的展示结果
+            aiAnalysisResult.value = {
+              errors: [],
+              improvements: [{
+                icon: 'el-icon-info',
+                title: 'AI分析结果',
+                description: analysis
+              }],
+              performance: {
+                explanation: analysis
+              },
+              rawAnalysis: analysis
+            };
+            ElMessage.success('代码分析完成(简化展示)');
+          }
+        } else {
+          console.warn('handleAiAnalysis - AI分析响应未包含预期数据');
+          ElMessage.error('分析失败：数据格式异常');
         }
       } catch (error) {
-        console.error('AI分析失败:', error)
-        ElMessage.error('AI分析失败：' + error.message)
+        console.error('AI分析失败:', error);
+        ElMessage.error('AI分析失败：' + (error.message || '未知错误'));
       } finally {
-        isAnalyzing.value = false
+        isAnalyzing.value = false;
       }
     }
 
@@ -3838,7 +4198,6 @@ export default defineComponent({
   font-size: 32px;
   opacity: 0.5;
   background: linear-gradient(135deg, #4ecdc4, #7c4dff);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 10px rgba(124, 77, 255, 0.3));
 }
@@ -3847,7 +4206,6 @@ export default defineComponent({
   font-size: 14px;
   font-weight: 500;
   background: linear-gradient(90deg, #a6accd, #6c7086);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

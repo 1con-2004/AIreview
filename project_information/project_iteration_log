@@ -1,5 +1,40 @@
 # 项目迭代日志
 
+{ 2023-04-22 } 改动: 修复Docker环境下前端API请求路径重复导致404错误问题
+
+主要改动文件:
+
+1. - frontend
+    |- src
+      |- views
+        |- problems
+          |- detail
+            |- ProblemDetail.vue
+              |- description: 问题详情页面，修复了API请求中重复的/api/前缀。
+
+    |- src
+      |- api
+        |- testCase.js
+          |- description: 测试用例API文件，修复了直接使用axios而不是配置好的request实例的问题。
+
+主要改动逻辑:
+
+- 在`ProblemDetail.vue`文件中，将API请求路径从`/api/problems/${problemNumber}`修改为`problems/${problemNumber}`，避免路径前缀重复
+- 在`testCase.js`文件中，将所有API请求从使用`axios.get('/api/...')`修改为使用`request.get('...')`，使用已配置好的request实例
+- 创建了问题记录文件`api_path_docker_bug_fixed.md`，详细记录了问题原因和解决方案
+
+问题出现原因:
+
+- Docker环境中，Nginx将`/api`路径反向代理到后端服务
+- 前端axios实例已配置了`baseURL: '/api'`，但在API请求路径中又添加了`/api/`前缀
+- 导致最终请求变成了`/api/api/problems/0001`等形式，后端找不到对应路由
+
+解决问题使用的简要方案:
+
+- 移除API请求路径中重复的`/api/`前缀
+- 统一使用项目配置的API请求实例，如`request`或`apiService`
+- 将直接使用`axios`的方法改为使用已配置的请求实例
+
 { 2025-04-21 } 改动: 修复Docker部署环境下API路径错误问题
 
 主要改动文件:

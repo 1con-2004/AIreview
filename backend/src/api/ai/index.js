@@ -82,6 +82,15 @@ ${code}
     const zhipuAI = new ZhipuAI();
     const aiResponse = await zhipuAI.chat(messages);
     
+    // 检查AI响应是否为空
+    if (!aiResponse) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] AI响应为空`);
+      return res.status(500).json({
+        success: false,
+        message: 'AI分析返回结果为空'
+      });
+    }
+    
     // 解析AI响应
     let analysis;
     try {
@@ -92,33 +101,63 @@ ${code}
       console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI响应解析成功, 内容长度: ${aiResponse?.length || 0}`);
     } catch (error) {
       console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 解析AI响应失败:`, error);
-      analysis = {
-        codeAnalysis: '解析AI响应失败'
-      };
+      return res.status(500).json({
+        success: false,
+        message: '解析AI响应失败: ' + (error.message || '未知错误')
+      });
     }
 
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析完成，准备返回结果`);
     
-    res.json({
+    // 添加数据结构调试日志
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 返回的数据结构:`, JSON.stringify({
       success: true,
       data: analysis
-    });
+    }, null, 2));
+    
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis对象类型:`, typeof analysis);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis对象键:`, Object.keys(analysis));
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis.codeAnalysis类型:`, typeof analysis.codeAnalysis);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] analysis.codeAnalysis前50个字符:`, analysis.codeAnalysis.substring(0, 50));
+    
+    const responseObj = {
+      success: true,
+      data: analysis
+    };
+    
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应success类型:`, typeof responseObj.success);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应data类型:`, typeof responseObj.data);
+    
+    return res.json(responseObj);
     
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析结束=========`);
   } catch (error) {
     console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 代码分析失败:`, error);
     
     // 记录详细错误信息
+    let errorMessage = '代码分析失败';
+    
     if (error.response) {
       console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] API响应错误:`, {
         status: error.response.status,
         data: error.response.data
       });
+      errorMessage += `：API错误(${error.response.status}) - ${error.response.data?.error || '未知API错误'}`;
+    } else if (error.request) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 未收到响应:`, error.request);
+      errorMessage += '：请求已发送但未收到响应，请检查网络连接或服务提供商状态';
+    } else {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 请求设置错误:`, error.message);
+      errorMessage += `：${error.message || '未知错误'}`;
     }
     
     res.status(500).json({
       success: false,
-      message: '代码分析失败：' + error.message
+      message: errorMessage,
+      error: {
+        type: error.name || 'Error',
+        detail: error.message || '未知错误'
+      }
     });
     
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析异常结束=========`);
