@@ -49,16 +49,21 @@ module.exports = defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost',
+        target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
         changeOrigin: true,
         secure: false,
         logLevel: 'debug'
       },
       '/uploads': {
-        target: 'http://localhost',
+        target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
         changeOrigin: true,
         secure: false
       }
+    },
+    static: {
+      directory: path.join(__dirname, '../uploads'),
+      publicPath: '/uploads',
+      watch: true
     }
   }
 })

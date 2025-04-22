@@ -78,7 +78,7 @@
                 <ellipse cx="512" cy="512" rx="400" ry="80" transform="rotate(-15,512,512)" fill="none" stroke="#fff" stroke-width="30"/>
               </g>
             </svg>
-            <h2>QuizPlanet 问知星球333</h2>
+            <h2>QuizPlanet 问知星球</h2>
           </div>
 
           <div class="feature-card">
@@ -136,6 +136,7 @@
             <button @click="router.push('/login/phone')" class="text-button">验证码登录</button>
             <router-link to="/register" class="text-button">注册账号</router-link>
             <router-link to="/login/reset-password" class="text-button">忘记密码？</router-link>
+            <a @click="diagnoseLoginState" class="text-button" style="margin-left: auto;">登录诊断</a>
           </div>
         </div>
       </div>
@@ -186,6 +187,17 @@ const handleLogin = async () => {
       const { accessToken, refreshToken, ...userInfo } = data.data
 
       console.log(`成功登录用户: ${userInfo.username}, 角色: ${userInfo.role}`)
+      
+      // 处理头像URL
+      if (userInfo.avatar_url) {
+        // 确保avatar_url使用正确的格式
+        console.log('原始头像URL:', userInfo.avatar_url)
+        // 如果头像URL以public/开头，移除public/前缀
+        if (userInfo.avatar_url.startsWith('public/')) {
+          userInfo.avatar_url = userInfo.avatar_url.replace('public/', '')
+          console.log('处理后的头像URL:', userInfo.avatar_url)
+        }
+      }
 
       // 如果选择记住密码，则保存密码
       if (loginForm.remember) {
@@ -197,6 +209,12 @@ const handleLogin = async () => {
       userInfo.accessToken = accessToken
       userInfo.refreshToken = refreshToken
 
+      // 先删除之前的数据再添加新数据，确保数据完全刷新
+      localStorage.removeItem('userInfo')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('currentUsername')
+      
       // 保存用户信息到localStorage
       localStorage.setItem('userInfo', JSON.stringify(userInfo))
       localStorage.setItem('accessToken', accessToken)
@@ -210,10 +228,22 @@ const handleLogin = async () => {
         refreshToken
       })
 
+      // 触发全局事件，确保导航栏更新用户状态
+      window.dispatchEvent(new CustomEvent('userInfoChanged'))
+      
+      // 如果window中存在用户信息同步函数，调用它
+      if (typeof window.forceReloadUserInfo === 'function') {
+        console.log('手动同步用户状态')
+        window.forceReloadUserInfo()
+      }
+
+      // 添加登录时用户信息的临时验证
+      console.log('登录时用户信息：', JSON.parse(localStorage.getItem('userInfo')))
+      
       ElMessage.success('登录成功')
 
-      // 直接重定向到主页，避免可能的路由问题
-      window.location.href = '/home'
+      // 不使用location.href跳转，改用Vue Router
+      router.push('/home')
     } else {
       ElMessage.error(data.message || '登录失败')
     }
@@ -239,6 +269,50 @@ const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
   document.body.classList.toggle('dark-mode')
   localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
+}
+
+// 添加登录诊断功能
+const diagnoseLoginState = () => {
+  console.group('===== 登录状态诊断 =====')
+  
+  // 检查localStorage
+  console.log('LocalStorage 内容:')
+  const userInfoStr = localStorage.getItem('userInfo')
+  console.log('- userInfo:', userInfoStr ? JSON.parse(userInfoStr) : '未找到')
+  console.log('- accessToken:', localStorage.getItem('accessToken') ? '存在' : '未找到')
+  console.log('- refreshToken:', localStorage.getItem('refreshToken') ? '存在' : '未找到')
+  
+  // 检查sessionStorage
+  console.log('\nSessionStorage 内容:')
+  console.log('- current_user:', sessionStorage.getItem('current_user'))
+  console.log('- last_active_user:', sessionStorage.getItem('last_active_user'))
+  
+  // 诊断结果
+  console.log('\n诊断结果:')
+  if (userInfoStr) {
+    console.log('- 用户信息存在，正常情况下应当已登录')
+    
+    // 检查头像URL
+    try {
+      const userInfo = JSON.parse(userInfoStr)
+      if (userInfo.avatar_url) {
+        console.log('- 头像URL:', userInfo.avatar_url)
+        if (userInfo.avatar_url.startsWith('public/')) {
+          console.log('  ⚠️ 头像URL以public/开头，可能需要处理')
+        }
+      } else {
+        console.log('- 无头像URL')
+      }
+    } catch (e) {
+      console.error('解析用户信息失败:', e)
+    }
+  } else {
+    console.log('- 未找到用户信息，正常情况下应当未登录')
+  }
+  
+  console.groupEnd()
+  
+  ElMessage.info('登录诊断完成，请查看控制台输出')
 }
 
 onMounted(() => {

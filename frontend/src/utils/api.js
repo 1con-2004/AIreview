@@ -75,22 +75,29 @@ export const getResourceUrl = (path) => {
   // 添加调试日志，帮助定位问题
   console.log(`构建资源URL，原始路径: ${path}, 清理后: ${cleanPath}`)
 
+  // 获取配置的资源基础URL
+  const resourceBaseUrl = process.env.VUE_APP_RESOURCE_BASE_URL || ''
+  
   // 处理不同类型的资源路径
   if (cleanPath.includes('uploads/avatars/')) {
-    // 头像资源使用相对路径
-    return `/${cleanPath}`
+    // 添加时间戳避免缓存问题
+    if (cleanPath.includes('?t=')) {
+      return `${resourceBaseUrl}/${cleanPath}`
+    } else {
+      return `${resourceBaseUrl}/${cleanPath}?t=${Date.now()}`
+    }
   } else if (cleanPath.includes('icons/')) {
     // 图标资源使用相对路径
-    return `/${cleanPath}`
+    return `${resourceBaseUrl}/${cleanPath}`
   } else if (cleanPath.includes('public/')) {
     // 处理public目录下的资源
     const fileName = cleanPath.split('/').pop()
     const dirPath = cleanPath.split('/').slice(-2, -1)[0]
-    return `/${dirPath}/${fileName}`
+    return `${resourceBaseUrl}/${dirPath}/${fileName}`
   }
 
   // 默认使用相对路径
-  return `/${cleanPath}`
+  return `${resourceBaseUrl}/${cleanPath}`
 }
 
 /**

@@ -613,35 +613,40 @@
 - 将跨域处理集中到后端Express中，遵循"单一职责"原则，简化系统架构。
 - 详细配置CORS选项，确保跨域机制在各种场景下的正确工作。
 
-{ 2025-04-22 } 改动: 修复学习计划头像无法访问的问题
+{ 2025-04-22 } 改动: 修复头像无法显示的问题
 
 主要改动文件:
 
-1. - backend
-    |- src
-      |- app.js
-        |- description: 后端服务器配置文件，添加了静态文件服务中间件配置。
+1. - nginx
+    |- default.conf
+        |- description: Nginx配置文件，修改了静态资源Content-Type处理逻辑。
 
-2. - backend
-    |- public
-      |- icons
-        |- description: 新创建的图标目录，用于保存学习计划图标文件。
+2. - docker-compose.yml
+    |- description: 完善了卷挂载配置，确保头像目录正确挂载。
+
+3. - sync-avatars.sh（新增）
+    |- description: 添加同步头像文件到Nginx容器的脚本。
+    
+4. - project_information
+    |- bug_fixed_information
+        |- avatar_display_bug_fixed.md（新增）
+            |- description: 记录了头像显示问题的原因与解决方案。
 
 主要改动逻辑:
 
-- 在后端app.js中添加了`/icons`路径的静态文件服务配置，指向`../public/icons`目录
-- 创建后端`public/icons`目录，并从前端复制所有图标文件到该目录
-- 保证前端请求的图标资源能够正确通过后端服务访问
+- 修复了Nginx配置中的强制Content-Type设置问题，允许根据文件扩展名自动识别MIME类型。
+- 完善了Docker卷挂载配置，确保uploads/avatars目录正确挂载到Nginx容器中。
+- 创建了脚本工具，用于同步头像文件到Nginx容器并设置正确的文件权限。
 
 问题出现原因:
 
-- 前端通过URL`/icons/xxx.png`请求学习计划图标，但后端没有配置对应的静态文件服务
-- 虽然图标文件存在于前端的`public/icons`目录，但在生产环境中，请求是通过后端转发的
-- 导致图标请求返回404错误
+- Nginx配置中错误地强制设置了Content-Type为image/png，导致所有文件都以该类型返回。
+- Docker容器中没有正确挂载uploads目录或者文件不存在，导致返回了index.html而非图片文件。
+- 前端与后端对于文件路径的处理逻辑不一致。
 
 解决问题使用的简要方案:
 
-- 在后端配置静态文件中间件：`app.use('/icons', express.static(path.join(__dirname, '../public/icons')));`
-- 将前端的图标文件复制到后端对应目录
-- 更新项目文档记录此次修复
+- 修改Nginx配置，删除强制设置的Content-Type，让服务器根据文件扩展名自动识别。
+- 添加脚本工具确保所有头像文件都能同步到Nginx容器并设置正确的权限。
+- 优化Docker卷挂载配置，确保文件目录正确挂载。
 

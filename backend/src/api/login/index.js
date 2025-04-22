@@ -184,6 +184,25 @@ router.post('/', async (req, res) => {
       role: user.role
     })}`);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 访问令牌: ${accessToken.substring(0, 20)}...`);
+    
+    // 获取用户的头像URL
+    let avatarUrl = null;
+    try {
+      const [profileRows] = await pool.execute(
+        'SELECT avatar_url FROM user_profile WHERE user_id = ?',
+        [user.id]
+      );
+      
+      if (profileRows.length > 0 && profileRows[0].avatar_url) {
+        avatarUrl = profileRows[0].avatar_url;
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 获取到用户头像URL: ${avatarUrl}`);
+      } else {
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户没有头像`);
+      }
+    } catch (profileError) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 获取用户头像失败:`, profileError);
+    }
+    
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =====登录过程结束=====`);
     
     res.json({
@@ -191,6 +210,7 @@ router.post('/', async (req, res) => {
       data: {
         ...userInfo,
         role: user.role,
+        avatar_url: avatarUrl,
         accessToken,
         refreshToken
       }

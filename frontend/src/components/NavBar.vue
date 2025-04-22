@@ -64,9 +64,26 @@
           <img :src="getFullAvatarUrl(avatarUrl)" class="user-avatar" alt="用户头像">
           <span>{{ username }}</span>
         </div>
+        <a @click="handleRefreshUserState" class="refresh-btn" title="刷新用户状态">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </a>
+        <a @click="diagnoseLoginState" class="diagnose-btn" title="诊断登录状态">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4m0-4h.01"></path>
+          </svg>
+        </a>
         <a @click="handleLogout" class="logout-btn">登出</a>
       </template>
       <template v-else>
+        <a @click="diagnoseLoginState" class="diagnose-btn" title="诊断登录状态">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4m0-4h.01"></path>
+          </svg>
+        </a>
         <router-link to="/login" class="login-btn" @click="fixUserInfoBeforeNav">登录</router-link>
       </template>
     </div>
@@ -81,10 +98,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import UserProfileDialog from './UserProfileDialog.vue'
 import { getResourceUrl } from '@/utils/api'
+import { ElMessage } from 'element-plus'
+
+// 获取router实例
+const router = useRouter()
 
 // 添加简单的防抖函数实现
 const debounce = (fn, delay) => {
@@ -97,7 +118,6 @@ const debounce = (fn, delay) => {
   }
 }
 
-const router = useRouter()
 const isLoggedIn = ref(false)
 const username = ref('')
 const userRole = ref('')
@@ -106,38 +126,37 @@ const avatarUrl = ref(defaultAvatar.value)
 const profileDialogVisible = ref(false)
 
 const getFullAvatarUrl = (url) => {
+  // 检查URL是否为空或无效
   if (!url || url === 'null' || url === 'undefined') {
-    return defaultAvatar.value
+    console.log('无效的头像URL，使用默认头像')
+    return 'http://localhost/uploads/avatars/default-avatar.png?t=' + Date.now()
   }
 
+  // 已经是完整URL的情况
   if (url.startsWith('http')) {
     return url
   }
 
-  // 处理具体路径
-  if (url.includes('public/uploads/avatars/')) {
-    const fileName = url.split('/').pop()
-    return getResourceUrl(`uploads/avatars/${fileName}?t=${Date.now()}`)
-  }
-  
-  // 处理带有查询参数的URL
-  if (url.includes('?t=')) {
-    const baseUrl = url.split('?')[0]
-    return getResourceUrl(`${baseUrl}?t=${Date.now()}`)
+  // 处理以public开头的路径
+  if (url.startsWith('public/')) {
+    // 移除public前缀，因为在nginx配置中，public目录已经映射到根目录
+    const realPath = url.replace('public/', '')
+    return `http://localhost/${realPath}?t=${Date.now()}`
   }
 
-  // 处理直接存储为uploads/avatars路径的情况
+  // 如果url包含uploads/avatars，构建完整URL
   if (url.includes('uploads/avatars/')) {
-    return getResourceUrl(`${url}?t=${Date.now()}`)
+    const fileName = url.split('/').pop().split('?')[0] // 获取文件名，去除查询参数
+    return `http://localhost/uploads/avatars/${fileName}?t=${Date.now()}`
   }
 
-  // 处理其他情况，可能是直接文件名
-  if (!url.includes('/')) {
-    return getResourceUrl(`uploads/avatars/${url}?t=${Date.now()}`)
+  // 处理可能只有文件名的情况
+  if (!url.includes('/') && !url.includes('?')) {
+    return `http://localhost/uploads/avatars/${url}?t=${Date.now()}`
   }
 
-  // 处理任何其他情况
-  return getResourceUrl(`${url}?t=${Date.now()}`)
+  // 其他情况
+  return `http://localhost${url.startsWith('/') ? '' : '/'}${url}?t=${Date.now()}`
 }
 
 const isAdminOrTeacher = () => {
@@ -203,12 +222,13 @@ const checkLoginStatus = async () => {
       userRole.value = user.role
       console.log('Set userRole.value to:', userRole.value)
 
-      // 设置头像URL
+      // 优化头像URL处理逻辑，减少多次重复设置
       if (user.avatar_url) {
-        avatarUrl.value = user.avatar_url
-        console.log('使用localStorage中的头像URL:', avatarUrl.value)
+        // 确保每次获取都应用正确的URL转换逻辑
+        const processedAvatarUrl = getFullAvatarUrl(user.avatar_url)
+        console.log('处理后的头像URL:', processedAvatarUrl)
+        avatarUrl.value = processedAvatarUrl
       } else {
-        // 使用默认头像，不再主动请求用户资料
         console.log('没有头像URL，使用默认头像')
         avatarUrl.value = defaultAvatar.value
       }
@@ -220,11 +240,14 @@ const checkLoginStatus = async () => {
       avatarUrl.value = defaultAvatar.value
     }
   } else {
-    console.log('No user info found in localStorage')
-    isLoggedIn.value = false
-    username.value = ''
-    userRole.value = ''
-    avatarUrl.value = defaultAvatar.value
+    // 避免重复设置相同的值
+    if (isLoggedIn.value || username.value || userRole.value || avatarUrl.value !== defaultAvatar.value) {
+      console.log('No user info found in localStorage, resetting state')
+      isLoggedIn.value = false
+      username.value = ''
+      userRole.value = ''
+      avatarUrl.value = defaultAvatar.value
+    }
   }
 }
 
@@ -364,8 +387,11 @@ window.diagnoseUserInfo = diagnoseUserInfoStatus
 
 // 添加强制同步用户状态的函数
 const syncUserState = () => {
+  console.log('执行用户状态同步...')
   const userInfoStr = localStorage.getItem('userInfo')
+  
   if (!userInfoStr) {
+    console.log('localStorage中没有用户信息，设置为未登录状态')
     isLoggedIn.value = false
     username.value = ''
     userRole.value = ''
@@ -374,58 +400,232 @@ const syncUserState = () => {
   }
 
   try {
+    console.log('解析localStorage中的用户信息')
     const userInfo = JSON.parse(userInfoStr)
+    console.log('获取到用户信息:', userInfo)
+    
+    // 强制更新登录状态
     isLoggedIn.value = true
     username.value = userInfo.username
     userRole.value = userInfo.role
+    console.log('更新后的用户状态: 已登录=', isLoggedIn.value, '用户名=', username.value, '角色=', userRole.value)
 
     // 保存当前用户名到localStorage
     localStorage.setItem('currentUsername', userInfo.username)
 
+    // 优化头像URL处理逻辑
     if (userInfo.avatar_url) {
-      avatarUrl.value = userInfo.avatar_url
+      // 确保每次获取都应用正确的URL转换逻辑
+      const processedAvatarUrl = getFullAvatarUrl(userInfo.avatar_url)
+      console.log('同步用户状态：处理后的头像URL:', processedAvatarUrl)
+      avatarUrl.value = processedAvatarUrl
     } else {
+      console.log('同步用户状态：没有头像URL，使用默认头像')
       avatarUrl.value = defaultAvatar.value
     }
 
     console.log('已同步用户状态:', userInfo.username)
+    
+    // 触发DOM更新
+    nextTick(() => {
+      console.log('DOM已更新，登录状态:', isLoggedIn.value)
+    })
   } catch (error) {
     console.error('同步用户状态失败:', error)
   }
 }
 
+// 添加手动刷新用户状态的方法
+const handleRefreshUserState = () => {
+  console.log('用户点击了刷新按钮，正在刷新用户状态...')
+  // 首先检查localStorage中是否有用户信息
+  const userInfoStr = localStorage.getItem('userInfo')
+  
+  if (!userInfoStr) {
+    console.warn('localStorage中没有用户信息，无法刷新')
+    ElMessage.warning('未找到用户信息，请重新登录')
+    router.push('/login')
+    return
+  }
+  
+  try {
+    // 强制同步用户状态
+    syncUserState()
+    
+    // 触发全局事件通知其他组件
+    window.dispatchEvent(new CustomEvent('userInfoChanged'))
+    
+    ElMessage.success('用户状态已刷新')
+  } catch (error) {
+    console.error('刷新用户状态失败:', error)
+    ElMessage.error('刷新用户状态失败，请重新登录')
+  }
+}
+
+// 创建事件处理函数的引用，以便于绑定和解绑
+const userInfoChangeHandler = () => {
+  console.log('检测到用户信息变更事件，重新同步状态')
+  syncUserState()
+}
+
+const storageChangeHandler = (event) => {
+  if (event.key === 'userInfo' || event.key === 'currentUsername' || event.key === 'accessToken') {
+    console.log('检测到存储变化，重新同步用户状态')
+    syncUserState()
+  }
+}
+
+const beforeUnloadHandler = () => {
+  // 记录当前用户状态，以便页面刷新后恢复
+  if (isLoggedIn.value && username.value) {
+    console.log('页面即将刷新，保存当前用户状态:', username.value)
+    sessionStorage.setItem('last_active_user', username.value)
+  }
+}
+
 onMounted(() => {
+  console.log('NavBar组件挂载，开始检查登录状态...')
+  
   // 首先同步用户状态
   syncUserState()
+  console.log('初始同步完成，登录状态:', isLoggedIn.value, '用户名:', username.value)
 
   // 监听头像更新事件，使用防抖函数避免频繁调用
   window.addEventListener('userAvatarUpdated', debouncedCheckLoginStatus)
 
-  // 监听用户信息变更事件
-  window.addEventListener('userInfoChanged', checkUserConsistency)
+  // 监听用户信息变更事件，直接同步状态而不是仅检查一致性
+  window.addEventListener('userInfoChanged', userInfoChangeHandler)
 
   // 监听存储变化事件
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'userInfo' || event.key === 'currentUsername') {
-      console.log('检测到存储变化，重新同步用户状态')
-      syncUserState()
+  window.addEventListener('storage', storageChangeHandler)
+
+  // 添加页面刷新前检测
+  window.addEventListener('beforeunload', beforeUnloadHandler)
+
+  // 检查是否是页面刷新后的首次加载
+  const lastActiveUser = sessionStorage.getItem('last_active_user')
+  if (lastActiveUser) {
+    console.log('检测到页面刷新后重新加载，上次活跃用户:', lastActiveUser)
+    // 确保当前用户名与上次活跃用户一致
+    if (username.value && username.value !== lastActiveUser) {
+      console.warn('用户状态不一致，尝试恢复:', lastActiveUser)
+      // 尝试从localStorage恢复用户信息
+      const userInfoStr = localStorage.getItem('userInfo')
+      if (userInfoStr) {
+        try {
+          const userInfo = JSON.parse(userInfoStr)
+          if (userInfo.username === lastActiveUser) {
+            console.log('恢复用户状态:', lastActiveUser)
+            isLoggedIn.value = true
+            username.value = userInfo.username
+            userRole.value = userInfo.role
+            if (userInfo.avatar_url) {
+              avatarUrl.value = getFullAvatarUrl(userInfo.avatar_url)
+            }
+          }
+        } catch (e) {
+          console.error('恢复用户状态失败:', e)
+        }
+      }
     }
-  })
+  }
 
   // 添加全局方法以强制重新加载
-  window.forceReloadUserInfo = syncUserState
+  window.forceReloadUserInfo = () => {
+    console.log('执行全局强制重新加载用户信息')
+    syncUserState()
+  }
 })
 
 onUnmounted(() => {
   // 移除事件监听
   window.removeEventListener('userAvatarUpdated', debouncedCheckLoginStatus)
-  window.removeEventListener('userInfoChanged', checkUserConsistency)
+  window.removeEventListener('userInfoChanged', userInfoChangeHandler)
+  window.removeEventListener('storage', storageChangeHandler)
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
 
   // 移除全局方法
-  if (window.forceReloadUserInfo === syncUserState) {
+  if (typeof window.forceReloadUserInfo === 'function') {
     delete window.forceReloadUserInfo
   }
 })
+
+// 添加立即状态诊断函数
+const diagnoseLoginState = () => {
+  console.group('===== 实时登录状态诊断 =====')
+  
+  console.log('当前组件状态:')
+  console.log('- 是否登录:', isLoggedIn.value)
+  console.log('- 用户名:', username.value)
+  console.log('- 角色:', userRole.value)
+  console.log('- 头像URL:', avatarUrl.value)
+  
+  console.log('\nLocalStorage 内容:')
+  try {
+    const userInfoStr = localStorage.getItem('userInfo')
+    if (userInfoStr) {
+      const userInfo = JSON.parse(userInfoStr)
+      console.log('- userInfo 数据:', userInfo)
+      console.log('  - 用户名:', userInfo.username)
+      console.log('  - 角色:', userInfo.role)
+      console.log('  - token存在:', !!userInfo.accessToken)
+      console.log('  - 头像URL:', userInfo.avatar_url)
+    } else {
+      console.log('- userInfo: 未找到')
+    }
+  } catch (e) {
+    console.error('解析userInfo失败:', e)
+  }
+  console.log('- accessToken:', localStorage.getItem('accessToken') ? '存在' : '未找到')
+  console.log('- currentUsername:', localStorage.getItem('currentUsername'))
+  
+  // 检查可能的问题
+  console.log('\n可能的问题:')
+  if (!isLoggedIn.value && localStorage.getItem('userInfo')) {
+    console.error('× 组件显示未登录，但localStorage有用户数据，需要强制同步')
+  }
+  
+  if (isLoggedIn.value && !localStorage.getItem('userInfo')) {
+    console.error('× 组件显示已登录，但localStorage无用户数据，可能状态不一致')
+  }
+  
+  if (username.value !== localStorage.getItem('currentUsername')) {
+    console.error('× 当前用户名与localStorage中的currentUsername不匹配')
+  }
+  
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    try {
+      const userInfo = JSON.parse(userInfoStr)
+      if (!userInfo.accessToken) {
+        console.error('× userInfo中没有accessToken')
+      }
+    } catch (e) {
+      console.error('× 解析userInfo失败:', e)
+    }
+  }
+  
+  console.groupEnd()
+  
+  // 尝试修复问题
+  console.log('尝试修复登录状态...')
+  syncUserState()
+  
+  // 修复后再检查
+  setTimeout(() => {
+    console.log('修复后状态: isLoggedIn =', isLoggedIn.value, ', username =', username.value)
+  }, 100)
+  
+  return {
+    isLoggedIn: isLoggedIn.value,
+    username: username.value,
+    localStorageHasUser: !!localStorage.getItem('userInfo'),
+    hasAccessToken: !!localStorage.getItem('accessToken')
+  }
+}
+
+// 窗口对象添加诊断方法
+window.diagnoseLoginState = diagnoseLoginState
 </script>
 
 <style scoped>
@@ -649,5 +849,51 @@ a:hover {
 
 .admin-btn:hover i {
   transform: rotate(180deg);
+}
+
+.refresh-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e0e0e0;
+  padding: 6px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+  width: 30px;
+  height: 30px;
+}
+
+.refresh-btn:hover {
+  background: linear-gradient(145deg, rgba(24,144,255,0.15), rgba(24,144,255,0.05));
+  color: #1890ff;
+  border-color: rgba(24,144,255,0.3);
+  transform: rotate(180deg);
+  box-shadow: 0 0 10px rgba(24,144,255,0.2);
+}
+
+.diagnose-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e0e0e0;
+  padding: 6px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+  width: 30px;
+  height: 30px;
+}
+
+.diagnose-btn:hover {
+  background: linear-gradient(145deg, rgba(250,173,20,0.15), rgba(250,173,20,0.05));
+  color: #faad14;
+  border-color: rgba(250,173,20,0.3);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(250,173,20,0.2);
 }
 </style>

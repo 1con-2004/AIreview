@@ -52,6 +52,23 @@ backend/
 └── yarn.lock           # 依赖版本锁定文件
 ```
 
+## Docker部署相关
+
+### 容器配置
+- 后端服务使用`aireview-backend`容器名
+- 通过Docker卷挂载实现代码实时更新：
+  - `./backend:/app` 将本地backend目录挂载到容器内的/app目录
+  - `./backend/node_modules:/app/node_modules` 挂载模块目录
+
+### 日志管理
+- 支持通过API动态调整日志级别：`/api/log/level`和`/api/log/level/:level`
+- 日志级别分为5个等级(0-4)：静默、错误、标准、调试、详细
+- 使用`log-manager.sh`脚本管理日志级别
+
+### 热重载开发
+- 支持使用`mac-quick-reload.sh`脚本监控代码变更并自动重启服务
+- 通过`npm run restart`命令支持容器内服务重启
+
 ## 核心文件依赖关系
 
 ### 应用入口依赖关系
@@ -101,6 +118,11 @@ backend/
   - `utils/mysql.js`: MySQL数据库操作工具
   - `utils/zhipuAI.js`: 智谱AI集成工具
 
+## CORS和跨域配置
+- 在`app.js`中配置CORS中间件，允许前端跨域访问API
+- 支持通过Nginx反向代理解决生产环境跨域问题
+- 开发环境下直接启用全局CORS支持
+
 ## 关键业务流程
 
 ### 用户认证流程
@@ -148,3 +170,4 @@ backend/
 5. **在线判题系统**: 实现代码执行、测试用例验证、性能分析等功能
 6. **AI代码审核**: 集成智谱AI接口，提供代码审核、路径推荐等AI辅助功能
 7. **安全机制**: 实现密码加密、输入验证等安全措施
+8. **日志级别动态调整**: 支持运行时调整日志输出级别，便于调试和生产环境使用
