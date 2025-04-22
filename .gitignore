@@ -33,10 +33,17 @@ Thumbs.db
 /backend/temp/
 /frontend/dist/
 /.cursor/
-/大创
-/数据库文档
+# 忽略以下文件和文件夹
+/.idea/
+/.mvn/
+/.vscode/
+/project_information/
+/数据库文件
 
 # 其他
 *.pid
 *.seed
 *.pid.lock
+
+# 相关编译器配置
+/.cursor/
