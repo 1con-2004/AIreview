@@ -85,48 +85,48 @@
       </div>
 
       <!-- 讨论区 -->
-      <div class="discussion-section">
-        <div class="section-header">
-          <h2><i class="fas fa-comments"></i> 讨论区</h2>
-        </div>
-        <div class="discussion-messages" ref="discussionMessagesEl">
-          <div v-if="loading.discussions" class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>加载中...</p>
-          </div>
-          <div v-else-if="!discussionMessages || discussionMessages.length === 0" class="empty-message">
-            <p>暂无消息，开始讨论吧！</p>
-          </div>
-          <template v-else>
-            <div v-for="(message, index) in discussionMessages" :key="message.id || index" class="discussion-message" :class="{'my-message': message.user && message.user.id === userInfo.id}">
-              <div class="message-bubble">
-                <div class="message-sender">
-                  {{ message.user ? (message.user.display_name || message.user.username || '未知用户') : '未知用户' }}
-                  <span class="user-role" v-if="message.user && (message.user.role === 'teacher' || message.user.role === 'admin')">
-                    (老师)
-                  </span>
-                  <span class="student-info" v-if="message.user && message.user.id === userInfo.id && studentInfo.student_no">
-                    ({{ studentInfo.student_no }})
-                  </span>
-                </div>
-                <div class="message-content">{{ message.content || '空消息' }}</div>
-                <div class="message-time">{{ formatDate(message.created_at) }}</div>
-              </div>
-            </div>
-          </template>
-        </div>
-        <div class="discussion-input">
-          <input
-            type="text"
-            v-model="newMessage"
-            placeholder="输入消息..."
-            @keyup.enter="sendMessage"
-          >
-          <button class="send-btn" @click="sendMessage">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
+      <!-- <div class="discussion-section"> -->
+      <!--   <div class="section-header"> -->
+      <!--     <h2><i class="fas fa-comments"></i> 讨论区</h2> -->
+      <!--   </div> -->
+      <!--   <div class="discussion-messages" ref="discussionMessagesEl"> -->
+      <!--     <div v-if="loading.discussions" class="loading-container"> -->
+      <!--       <div class="loading-spinner"></div> -->
+      <!--       <p>加载中...</p> -->
+      <!--     </div> -->
+      <!--     <div v-else-if="!discussionMessages || discussionMessages.length === 0" class="empty-message"> -->
+      <!--       <p>暂无消息，开始讨论吧！</p> -->
+      <!--     </div> -->
+      <!--     <template v-else> -->
+      <!--       <div v-for="(message, index) in discussionMessages" :key="message.id || index" class="discussion-message" :class="{'my-message': message.user && message.user.id === userInfo.id}"> -->
+      <!--         <div class="message-bubble"> -->
+      <!--           <div class="message-sender"> -->
+      <!--             {{ message.user ? (message.user.display_name || message.user.username || '未知用户') : '未知用户' }} -->
+      <!--             <span class="user-role" v-if="message.user && (message.user.role === 'teacher' || message.user.role === 'admin')"> -->
+      <!--               (老师) -->
+      <!--             </span> -->
+      <!--             <span class="student-info" v-if="message.user && message.user.id === userInfo.id && studentInfo.student_no"> -->
+      <!--               ({{ studentInfo.student_no }}) -->
+      <!--             </span> -->
+      <!--           </div> -->
+      <!--           <div class="message-content">{{ message.content || '空消息' }}</div> -->
+      <!--           <div class="message-time">{{ formatDate(message.created_at) }}</div> -->
+      <!--         </div> -->
+      <!--       </div> -->
+      <!--     </template> -->
+      <!--   </div> -->
+      <!--   <div class="discussion-input"> -->
+      <!--     <input -->
+      <!--       type="text" -->
+      <!--       v-model="newMessage" -->
+      <!--       placeholder="输入消息..." -->
+      <!--       @keyup.enter="sendMessage" -->
+      <!--     > -->
+      <!--     <button class="send-btn" @click="sendMessage"> -->
+      <!--       <i class="fas fa-paper-plane"></i> -->
+      <!--     </button> -->
+      <!--   </div> -->
+      <!-- </div> -->
     </div>
   </div>
 </template>
@@ -979,4 +979,28 @@ onUnmounted(() => {
 ::-webkit-scrollbar-thumb:hover {
   background: #45b6af;
 }
+
+.live-classroom-page {
+        background: linear-gradient(135deg, #0d1117, #1e1e2e);
+        color: #e6edf3;
+        font-family: 'Roboto', sans-serif; /* 使用现代字体 */
+      }
+
+      .live-classroom-container {
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .section-header h2 {
+        color: #4ecdc4;
+        text-shadow: 0 0 5px rgba(78, 205, 196, 0.5); /* 添加阴影效果 */
+      }
+
+      .action-btn {
+        transition: transform 0.3s;
+      }
+
+      .action-btn:hover {
+        transform: scale(1.05); /* 鼠标悬停时放大 */
+      }
 </style>

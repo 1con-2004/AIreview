@@ -238,6 +238,7 @@ const showDeleteConfirm = ref(false)
 const currentClassroom = ref({})
 const messages = ref([])
 const files = ref([])
+const fileInputRef = ref(null)
 const newClassroom = ref({
   title: '',
   description: ''

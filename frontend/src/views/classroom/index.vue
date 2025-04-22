@@ -10,14 +10,14 @@
 
       <div class="classroom-cards">
         <!-- 课堂签到卡片 -->
-        <div class="classroom-card" @click="goToAttendance">
+        <!-- <div class="classroom-card" @click="goToAttendance">
           <div class="card-icon">
             <i class="fas fa-clipboard-check"></i>
           </div>
           <h2>课堂签到</h2>
           <p>快速完成课堂签到，记录出勤情况</p>
           <button class="card-btn">立即签到</button>
-        </div>
+        </div> -->
 
         <!-- 进入课堂卡片 -->
         <div class="classroom-card" @click="showClassroomDialog">
