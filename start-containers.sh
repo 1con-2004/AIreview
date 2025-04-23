@@ -57,11 +57,16 @@ server {
     gzip_min_length 1000;
     
     # 设置前端资源缓存策略
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|map)$ {
         root /usr/share/nginx/html;
         expires 30d;
         add_header Cache-Control "public, max-age=2592000";
         try_files $uri $uri/ /index.html;
+        
+        # 添加跨域头
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+        add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
     }
     
     # 前端静态文件
@@ -73,7 +78,7 @@ server {
 
     # API请求代理
     location /api/ {
-        proxy_pass http://backend:3000/api/;
+        proxy_pass http://aireview-backend:3000/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -83,23 +88,28 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
         
-        # 增加超时时间，适应长时间运行的API请求
+        # 增加超时时间
         proxy_connect_timeout 300s;
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;
+        
+        # 添加跨域头
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+        add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
     }
 
-    # 静态资源代理
+    # 上传文件目录
     location /uploads/ {
-        proxy_pass http://backend:3000/uploads/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_cache_bypass $http_upgrade;
-        
-        # 配置静态资源缓存
+        alias /usr/share/nginx/html/uploads/;
         expires 7d;
         add_header Cache-Control "public, max-age=604800";
+        try_files $uri $uri/ /index.html;
+        
+        # 添加跨域头
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+        add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
     }
     
     # 健康检查接口
@@ -109,17 +119,21 @@ server {
     }
 }
 EOF
+else
+  echo "Nginx配置文件已存在，跳过创建..."
 fi
 
 # 确保存在必要的目录
 mkdir -p backend/logs
 mkdir -p backend/uploads
 mkdir -p backend/temp
+mkdir -p uploads/avatars
 
 # 设置目录权限
 chmod -R 777 backend/logs
 chmod -R 777 backend/uploads
 chmod -R 777 backend/temp
+chmod -R 777 uploads
 
 # 启动容器
 echo "启动Docker容器..."
