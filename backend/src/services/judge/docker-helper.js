@@ -210,8 +210,8 @@ async function initializeDockerEnvironment() {
 async function getJudgeContainerCommand(containerName, image) {
   const networkName = await getDockerNetwork();
   
-  // 在Docker网络中创建容器
-  return `docker run -d --network=${networkName} --cpus=1 --memory=512m --name=${containerName} -w /app ${image} tail -f /dev/null`;
+  // 在Docker网络中创建容器，添加临时文件卷挂载
+  return `docker run -d --network=${networkName} --cpus=1 --memory=512m --name=${containerName} -w /app -v /tmp/${containerName}:/app/temp ${image} tail -f /dev/null`;
 }
 
 module.exports = {

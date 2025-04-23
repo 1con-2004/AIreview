@@ -11,26 +11,15 @@ const dockerHelper = require('./docker-helper');
 class Sandbox {
   constructor(containerId, workDir, language) {
     this.containerId = containerId;
-    this.workDir = workDir;
-    this.tempDir = path.join(__dirname, '../../temp');
+    this.workDir = workDir || '/app/temp';
     this.language = language;
   }
 
   async init() {
     try {
-      // 确保临时目录存在
-      await fs.mkdir(this.tempDir, { recursive: true });
-      
-      // 确保workDir存在，如果不存在则创建一个新的
-      if (!this.workDir) {
-        this.workDir = path.join(this.tempDir, uuidv4());
-        console.log('创建新的工作目录:', this.workDir);
-      }
-      
-      await fs.mkdir(this.workDir, { recursive: true });
-      
-      // 容器已由constructor创建，不需要重复创建
-      console.log('使用已创建的容器:', this.containerId);
+      // 在容器内创建临时目录
+      await execCommand(`docker exec ${this.containerId} mkdir -p ${this.workDir}`);
+      console.log('容器内临时目录创建成功:', this.workDir);
       
       return this;
     } catch (error) {
@@ -52,19 +41,17 @@ class Sandbox {
 
   async runCommand(command, input) {
     try {
-      // 创建临时输入文件
-      const inputFile = path.join(this.workDir, 'input.txt');
-      await fs.writeFile(inputFile, input);
-      
-      // 复制输入文件到容器
-      await this.copyToContainer(inputFile, '/app/input.txt');
+      // 在容器内创建临时输入文件
+      const inputFile = `${this.workDir}/input.txt`;
+      const base64Input = Buffer.from(input).toString('base64');
+      await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Input}' | base64 -d > ${inputFile}"`);
       
       // 执行命令，使用文件重定向
       const { stdout, stderr } = await execCommand(
-        `docker exec ${this.containerId} bash -c "${command} < /app/input.txt"`
+        `docker exec ${this.containerId} bash -c "${command} < ${inputFile}"`
       );
       
-      console.log('命令执行结果:', { stdout, stderr, input }); // 添加调试日志
+      console.log('命令执行结果:', { stdout, stderr, input });
       
       if (stderr) {
         return {
@@ -75,7 +62,7 @@ class Sandbox {
       }
       return {
         status: 'success',
-        output: stdout.replace(/\r\n/g, '\n').trim(),  // 统一处理换行符
+        output: stdout.replace(/\r\n/g, '\n').trim(),
         memory: await this.getMemoryUsage()
       };
     } catch (error) {
@@ -119,16 +106,6 @@ class Sandbox {
           console.error('删除容器失败:', error);
         }
       }
-      
-      // 删除临时文件
-      if (this.workDir) {
-        try {
-          await fs.rm(this.workDir, { recursive: true, force: true });
-          console.log('临时文件删除成功:', this.workDir);
-        } catch (error) {
-          console.error('删除临时文件失败:', error);
-        }
-      }
     } catch (error) {
       console.error('清理沙箱环境失败:', error);
     }
@@ -138,32 +115,30 @@ class Sandbox {
     try {
       console.log('开始编译代码...');
       
-      // 创建临时文件
+      // 在容器内创建临时文件
       const filename = `temp_${Date.now()}`;
-      const sourceFile = path.join(this.tempDir, `${filename}.${language === 'cpp' ? 'cpp' : 'c'}`);
-      const outputFile = path.join(this.tempDir, `${filename}.out`);
-
-      // 确保临时目录存在
-      await fs.mkdir(this.tempDir, { recursive: true });
+      const sourceFile = `${this.workDir}/${filename}.${language === 'cpp' ? 'cpp' : 'c'}`;
+      const outputFile = `${this.workDir}/${filename}.out`;
 
       // 预处理代码
       let processedCode = this.preprocessCode(code, language);
 
-      // 写入处理后的源代码
-      await fs.writeFile(sourceFile, processedCode);
+      // 将代码转换为 base64 并写入容器
+      const base64Code = Buffer.from(processedCode).toString('base64');
+      await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Code}' | base64 -d > ${sourceFile}"`);
 
       // 编译命令
       const compileCmd = language === 'cpp' 
         ? `g++ "${sourceFile}" -o "${outputFile}" -Wall`
         : `gcc "${sourceFile}" -o "${outputFile}" -Wall`;
 
-      // 执行编译
+      // 在容器内执行编译
       try {
-        await execCommand(compileCmd);
+        await execCommand(`docker exec ${this.containerId} bash -c "${compileCmd}"`);
         console.log('编译成功');
         
         // 清理源文件
-        await fs.unlink(sourceFile);
+        await execCommand(`docker exec ${this.containerId} rm -f ${sourceFile}`);
         
         return {
           outputFile
@@ -171,8 +146,7 @@ class Sandbox {
       } catch (error) {
         // 清理文件
         try {
-          await fs.unlink(sourceFile);
-          await fs.unlink(outputFile).catch(() => {});
+          await execCommand(`docker exec ${this.containerId} rm -f ${sourceFile} ${outputFile}`);
         } catch (e) {
           console.error('清理文件失败:', e);
         }
@@ -212,9 +186,10 @@ class Sandbox {
           return compileResult;
         }
 
-        // 创建输入文件
-        const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
-        await fs.writeFile(inputFile, input || '');
+        // 在容器内创建输入文件
+        const inputFile = `${this.workDir}/input.txt`;
+        const base64Input = Buffer.from(input || '').toString('base64');
+        await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Input}' | base64 -d > ${inputFile}"`);
 
         // 运行可执行文件
         try {
@@ -228,8 +203,7 @@ class Sandbox {
           const memory = await this.getMemoryUsage();
           
           // 清理文件
-          await fs.unlink(compileResult.outputFile);
-          await fs.unlink(inputFile);
+          await execCommand(`docker exec ${this.containerId} rm -f ${compileResult.outputFile} ${inputFile}`);
           
           return {
             output: result.stdout,
@@ -240,8 +214,7 @@ class Sandbox {
         } catch (error) {
           // 清理文件
           try {
-            await fs.unlink(compileResult.outputFile);
-            await fs.unlink(inputFile);
+            await execCommand(`docker exec ${this.containerId} rm -f ${compileResult.outputFile} ${inputFile}`);
           } catch (e) {
             console.error('清理文件失败:', e);
           }
@@ -252,11 +225,16 @@ class Sandbox {
         }
       } else if (standardLanguage === 'java') {
         // 创建Java源文件和输入文件
-        const javaFile = path.join(this.tempDir, `temp_${Date.now()}.java`);
-        const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
+        const javaFile = `${this.workDir}/temp_${Date.now()}.java`;
+        const inputFile = `${this.workDir}/input.txt`;
         
-        await fs.writeFile(javaFile, processedCode);
-        await fs.writeFile(inputFile, input || '');
+        // 将代码写入容器
+        const base64Code = Buffer.from(processedCode).toString('base64');
+        await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Code}' | base64 -d > ${javaFile}"`);
+        
+        // 将输入写入容器
+        const base64Input = Buffer.from(input || '').toString('base64');
+        await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Input}' | base64 -d > ${inputFile}"`);
 
         try {
           // 使用专门的Java执行方法
@@ -265,8 +243,7 @@ class Sandbox {
           if (result.error) {
             // 清理文件
             try {
-              await fs.unlink(javaFile);
-              await fs.unlink(inputFile);
+              await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
             } catch (e) {
               console.error('清理文件失败:', e);
             }
@@ -280,8 +257,7 @@ class Sandbox {
           const memory = await this.getMemoryUsage();
           
           // 清理文件
-          await fs.unlink(javaFile);
-          await fs.unlink(inputFile);
+          await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
           
           return {
             output: result.stdout,
@@ -291,8 +267,7 @@ class Sandbox {
         } catch (error) {
           // 清理文件
           try {
-            await fs.unlink(javaFile);
-            await fs.unlink(inputFile);
+            await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
           } catch (e) {
             console.error('清理文件失败:', e);
           }
@@ -303,11 +278,16 @@ class Sandbox {
         }
       } else if (standardLanguage === 'python') {
         // 创建Python源文件和输入文件
-        const pythonFile = path.join(this.tempDir, `temp_${Date.now()}.py`);
-        const inputFile = path.join(this.tempDir, `input_${Date.now()}.txt`);
+        const pythonFile = `${this.workDir}/temp_${Date.now()}.py`;
+        const inputFile = `${this.workDir}/input.txt`;
         
-        await fs.writeFile(pythonFile, processedCode);
-        await fs.writeFile(inputFile, input || '');
+        // 将代码写入容器
+        const base64Code = Buffer.from(processedCode).toString('base64');
+        await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Code}' | base64 -d > ${pythonFile}"`);
+        
+        // 将输入写入容器
+        const base64Input = Buffer.from(input || '').toString('base64');
+        await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Input}' | base64 -d > ${inputFile}"`);
 
         try {
           result = await this.runPython(pythonFile, inputFile);
@@ -320,8 +300,7 @@ class Sandbox {
           const memory = await this.getMemoryUsage();
           
           // 清理文件
-          await fs.unlink(pythonFile);
-          await fs.unlink(inputFile);
+          await execCommand(`docker exec ${this.containerId} rm -f ${pythonFile} ${inputFile}`);
           
           return {
             output: result.stdout,
@@ -332,8 +311,7 @@ class Sandbox {
         } catch (error) {
           // 清理文件
           try {
-            await fs.unlink(pythonFile);
-            await fs.unlink(inputFile);
+            await execCommand(`docker exec ${this.containerId} rm -f ${pythonFile} ${inputFile}`);
           } catch (e) {
             console.error('清理文件失败:', e);
           }
@@ -356,11 +334,53 @@ class Sandbox {
   }
 
   async runExecutable(executablePath, inputPath) {
-    return await execCommand(`"${executablePath}" < "${inputPath}"`);
+    try {
+      // 在容器内执行可执行文件
+      const { stdout, stderr } = await execCommand(
+        `docker exec ${this.containerId} bash -c "cat ${inputPath} | ${executablePath}"`
+      );
+      
+      if (stderr) {
+        return {
+          error: stderr
+        };
+      }
+      
+      return {
+        stdout,
+        stderr
+      };
+    } catch (error) {
+      console.error('执行可执行文件失败:', error);
+      return {
+        error: error.message || '执行可执行文件失败'
+      };
+    }
   }
 
   async runPython(pythonFile, inputPath) {
-    return await execCommand(`python3 "${pythonFile}" < "${inputPath}"`);
+    try {
+      // 在容器内执行Python文件
+      const { stdout, stderr } = await execCommand(
+        `docker exec ${this.containerId} bash -c "cat ${inputPath} | python3 ${pythonFile}"`
+      );
+      
+      if (stderr) {
+        return {
+          error: stderr
+        };
+      }
+      
+      return {
+        stdout,
+        stderr
+      };
+    } catch (error) {
+      console.error('执行Python文件失败:', error);
+      return {
+        error: error.message || '执行Python文件失败'
+      };
+    }
   }
 
   async runJava(javaFile, inputPath) {
@@ -399,25 +419,21 @@ class Sandbox {
         console.log(`未找到类定义，使用默认类名: ${className}`);
       }
       
-      // 在容器中运行Java代码 - 使用cat命令读取输入文件并通过管道传递给java程序
+      // 在容器中运行Java代码
       console.log(`运行Java类: ${className}`);
-      const runCommand = `docker exec ${this.containerId} bash -c "cat ${containerInputPath} | java -cp /app ${className}"`;
+      const { stdout, stderr } = await execCommand(
+        `docker exec ${this.containerId} bash -c "cat ${containerInputPath} | java -cp /app ${className}"`
+      );
       
-      const startTime = process.hrtime();
-      const result = await execCommand(runCommand);
-      const [seconds, nanoseconds] = process.hrtime(startTime);
-      const runtime = seconds * 1000 + nanoseconds / 1000000;
-      
-      if (result.stderr) {
+      if (stderr) {
         return {
-          error: result.stderr
+          error: stderr
         };
       }
       
       return {
-        stdout: result.stdout,
-        stderr: result.stderr,
-        runtime
+        stdout,
+        stderr
       };
     } catch (error) {
       console.error('执行Java代码失败:', error);
