@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul 
 echo ===== AIreview 项目重置工具 =====
 echo 此工具将重置整个项目环境到初始状态
 echo 警告: 所有数据库数据将被清除!
