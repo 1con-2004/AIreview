@@ -11,7 +11,7 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 23/04/2025 00:59:55
+ Date: 23/04/2025 23:05:46
 */
 
 SET NAMES utf8mb4;
@@ -261,21 +261,21 @@ CREATE TABLE `learning_path_directions` (
   KEY `tag` (`tag`),
   CONSTRAINT `learning_path_directions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `learning_path_directions_ibfk_2` FOREIGN KEY (`tag`) REFERENCES `learning_path_weakness_analysis` (`tag`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=163 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_directions
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (145, 1, '判断', 'https://search.bilibili.com/all?keyword=编程%E5%88%A4%E6%96%AD', '判断编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (146, 1, '判断', 'https://www.douyin.com/search/编程%E5%88%A4%E6%96%AD', '判断相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (147, 1, '判断', 'https://so.csdn.net/so/search?q=编程%E5%88%A4%E6%96%AD', '判断学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (148, 1, '序列', 'https://search.bilibili.com/all?keyword=编程%E5%BA%8F%E5%88%97', '序列编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (149, 1, '序列', 'https://www.douyin.com/search/编程%E5%BA%8F%E5%88%97', '序列相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (150, 1, '序列', 'https://so.csdn.net/so/search?q=编程%E5%BA%8F%E5%88%97', '序列学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (151, 1, '数学', 'https://search.bilibili.com/all?keyword=编程%E6%95%B0%E5%AD%A6', '数学编程教学视频集锦', '哔哩哔哩', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (152, 1, '数学', 'https://www.douyin.com/search/编程%E6%95%B0%E5%AD%A6', '数学相关短视频教程', '抖音', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (153, 1, '数学', 'https://so.csdn.net/so/search?q=编程%E6%95%B0%E5%AD%A6', '数学学习资料大全', 'CSDN', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (154, 1, '判断', 'https://search.bilibili.com/all?keyword=编程%E5%88%A4%E6%96%AD', '判断编程教学视频集锦', '哔哩哔哩', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (155, 1, '判断', 'https://www.douyin.com/search/编程%E5%88%A4%E6%96%AD', '判断相关短视频教程', '抖音', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (156, 1, '判断', 'https://so.csdn.net/so/search?q=编程%E5%88%A4%E6%96%AD', '判断学习资料大全', 'CSDN', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (157, 1, '字符串', 'https://search.bilibili.com/all?keyword=编程%E5%AD%97%E7%AC%A6%E4%B8%B2', '字符串编程教学视频集锦', '哔哩哔哩', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (158, 1, '字符串', 'https://www.douyin.com/search/编程%E5%AD%97%E7%AC%A6%E4%B8%B2', '字符串相关短视频教程', '抖音', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (159, 1, '字符串', 'https://so.csdn.net/so/search?q=编程%E5%AD%97%E7%AC%A6%E4%B8%B2', '字符串学习资料大全', 'CSDN', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (160, 1, '动态规划', 'https://search.bilibili.com/all?keyword=编程%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92', '动态规划编程教学视频集锦', '哔哩哔哩', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (161, 1, '动态规划', 'https://www.douyin.com/search/编程%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92', '动态规划相关短视频教程', '抖音', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_directions` (`id`, `user_id`, `tag`, `url`, `title`, `source`, `created_at`, `updated_at`) VALUES (162, 1, '动态规划', 'https://so.csdn.net/so/search?q=编程%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92', '动态规划学习资料大全', 'CSDN', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
 COMMIT;
 
 -- ----------------------------
@@ -295,19 +295,19 @@ CREATE TABLE `learning_path_recommend` (
   KEY `tag` (`tag`),
   CONSTRAINT `learning_path_recommend_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `learning_path_recommend_ibfk_2` FOREIGN KEY (`tag`) REFERENCES `learning_path_weakness_analysis` (`tag`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_recommend
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (73, 1, '递归', '0031', '合并两个有序链表', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (74, 1, '递归', '0023', '斐波那契数列计算', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (75, 1, '递归', '0004', '阶乘计算', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (76, 1, '字符串', '0030', '最长回文子串', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (77, 1, '字符串', '0022', '字符串反转', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (78, 1, '字符串', '0008', '字符串拼接', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (79, 1, '序列', '0026', '最长连续序列1', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (80, 1, '序列', '0026', '最长连续序列1', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (81, 1, '递归', '0031', '合并两个有序链表', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (82, 1, '递归', '0023', '斐波那契数列计算', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (83, 1, '递归', '0004', '阶乘计算', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (84, 1, '字符串', '0030', '最长回文子串', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (85, 1, '字符串', '0022', '字符串反转', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_recommend` (`id`, `user_id`, `tag`, `problem_number`, `title`, `created_at`, `updated_at`) VALUES (86, 1, '字符串', '0008', '字符串拼接', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
 COMMIT;
 
 -- ----------------------------
@@ -325,17 +325,17 @@ CREATE TABLE `learning_path_weakness_analysis` (
   KEY `user_id` (`user_id`),
   KEY `idx_tag` (`tag`),
   CONSTRAINT `learning_path_weakness_analysis_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb3;
 
 -- ----------------------------
 -- Records of learning_path_weakness_analysis
 -- ----------------------------
 BEGIN;
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (74, 1, '递归', '🌟 递归核心思路 🌟\n- 重复自己解决问题\n- 每次调用解决一小部分\n- 最终解决整个问题\n\n🔍 关键点\n- 明确递归终止条件\n- 每次递归缩小问题规模\n- 递归调用自身\n\n📝 常见解题技巧\n- 分解问题：将大问题拆成小问题\n- 模拟递归过程：画出递归树\n- 避免重复计算：使用缓存或记忆化搜索\n\n📌 递归要点\n- 确定递归基\n- 确定递归关系\n- 避免无限递归\n\n🚀 快速掌握递归，让你的代码更简洁高效！🚀', '2025-04-22 16:45:14', '2025-04-22 16:45:14');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (75, 1, '字符串', '🌟 **字符串核心思路**：\n- 字符串是字符序列，用于存储文本信息。\n- 操作包括拼接、查找、替换等。\n\n🔍 **关键点**：\n- **索引**：从0开始，正向递增。\n- **长度**：`len()` 函数获取。\n- **遍历**：使用 `for` 循环逐个字符处理。\n\n🎯 **常见解题技巧**：\n- **拼接**：使用 `+` 运算符或 `join()` 方法。\n- **查找**：`in` 关键字判断子字符串。\n- **替换**：`replace()` 方法或正则表达式。\n- **分割**：`split()` 方法按指定分隔符分割字符串。\n\n🔧 **实践要点**：\n- 熟练使用索引和切片。\n- 掌握常用字符串函数。\n- 理解正则表达式的简单应用。\n\n📚 **总结**：\n- 字符串处理是编程的基础技能。\n- 多练习，逐步提高处理复杂字符串的能力。', '2025-04-22 16:45:16', '2025-04-22 16:45:16');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (76, 1, '序列', '🌟 序列算法核心思路 🌟\n- **理解序列**：序列是一系列按特定顺序排列的元素。\n- **核心操作**：遍历、查找、排序、搜索等。\n\n🔍 关键点\n- **顺序性**：元素排列有固定顺序。\n- **类型**：数字序列、字符序列、字符串序列等。\n\n🛠️ 常见解题技巧\n- **遍历**：使用循环结构逐一访问序列元素。\n- **查找**：根据条件筛选或定位特定元素。\n- **排序**：使用冒泡、选择、插入等算法排序序列。\n- **搜索**：使用二分查找优化查找效率。\n\n📌 快速记忆\n- 遍历：for 循环、while 循环\n- 查找：if-else 条件判断\n- 排序：冒泡、选择、插入\n- 搜索：二分查找\n\n🎯 算法实例\n- 数字序列求和\n- 字符串查找子串\n- 排序数组元素\n- 二分查找目标值', '2025-04-22 16:45:16', '2025-04-22 16:45:16');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (77, 1, '判断', '学习 \"判断\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
-INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (78, 1, '数学', '学习 \"数学\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-22 16:45:17', '2025-04-22 16:45:17');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (79, 1, '序列', '🔍 **序列核心思路**:\n- 序列处理是算法中的基础，常用于处理数组、链表等数据结构。\n- 核心是理解如何遍历、搜索、排序和操作序列。\n\n🔧 **关键点**:\n- **遍历**: 使用循环结构（for, while）逐一访问序列元素。\n- **搜索**: 使用条件判断和循环寻找特定元素。\n- **排序**: 掌握冒泡、选择、插入等基本排序算法。\n- **操作**: 理解如何插入、删除、更新序列元素。\n\n📌 **常见解题技巧**:\n- **模拟**: 通过手动操作理解算法逻辑。\n- **图解**: 用图表展示算法步骤，直观易懂。\n- **测试**: 编写测试用例，验证算法的正确性。\n\n🔐 **序列学习小贴士**:\n- **基础扎实**: 熟悉基本数据结构和算法。\n- **实践为主**: 多写代码，积累经验。\n- **循序渐进**: 从简单到复杂，逐步提升。', '2025-04-23 15:03:06', '2025-04-23 15:03:06');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (80, 1, '递归', '🌟 递归核心思路 🌟\n- 递归就是函数自己调用自己\n- 解决问题时，先分解成更小的子问题\n- 当子问题足够小，可以直接解决时，开始返回结果\n\n🔍 关键点 🔍\n- 明确递归终止条件（基准情况）\n- 每次递归都向基准情况靠近\n- 避免无限递归\n\n📝 常见解题技巧 📝\n- 分解问题：将大问题拆成小问题\n- 模拟递归过程：手动写出递归调用过程\n- 尝试非递归解法：理解递归的本质后，尝试用循环实现\n\n🔧 注意事项 🔧\n- 递归可能导致栈溢出，注意递归深度\n- 理解递归的逻辑，不要盲目使用\n\n🌈 递归小贴士 🌈\n- 递归是一种强大的工具，但使用不当会出问题\n- 多练习，理解递归的本质\n- 递归不是万能的，有时循环更高效', '2025-04-23 15:03:06', '2025-04-23 15:03:06');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (81, 1, '字符串', '🔍 **核心思路**：\n- 字符串是编程中的文本数据，处理时要注意区分大小写和空格。\n- 主要操作包括拼接、查找、替换和长度计算。\n\n🔧 **关键点**：\n- 使用 `+` 或 `str.join()` 进行字符串拼接。\n- 利用 `str.find()` 和 `str.index()` 查找子串。\n- `str.replace()` 用于替换子串。\n- `len()` 获取字符串长度。\n\n🎯 **常见解题技巧**：\n- 避免重复拼接，使用 `join()` 提高效率。\n- 处理大小写敏感问题时，使用 `str.lower()` 或 `str.upper()`。\n- 使用列表推导式简化操作。\n- 熟练掌握字符串方法，如 `split()`, `strip()`, `startswith()`, `endswith()`。\n\n📝 **要点总结**：\n- 拼接：`\"Hello\" + \" World\"` 或 `\"Hello\".join([\" \", \"World\"])`\n- 查找：`\"Hello\".find(\"l\")`\n- 替换：`\"Hello\".replace(\"l\", \"L\")`\n- 长度：`len(\"Hello\")`\n- 大小写：`\"Hello\".lower()`, `\"hello\".upper()`', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (82, 1, '判断', '学习 \"判断\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
+INSERT INTO `learning_path_weakness_analysis` (`id`, `user_id`, `tag`, `idea`, `created_at`, `updated_at`) VALUES (83, 1, '动态规划', '学习 \"动态规划\" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪', '2025-04-23 15:03:07', '2025-04-23 15:03:07');
 COMMIT;
 
 -- ----------------------------
@@ -683,7 +683,7 @@ BEGIN;
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (2, '0002', '合并两个有序链表', '简单', '链表,递归', '将两个升序链表合并为一个新的升序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。', 1000, 256, '8', '原创', 1, 2, 1, '2025-04-11 16:43:41', '2025-04-22 14:45:17');
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (3, '0003', '最长回文子串', '中等', '字符串,动态规划', '给你一个字符串 s，找到 s 中最长的回文子串。', 1500, 512, '4', '原创', 1, 3, 1, '2025-04-11 16:43:41', '2025-04-16 22:33:52');
 INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (4, '0004', '买卖股票的最佳时机', '简单', '数组,动态规划', '给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。你只能选择某一天买入这只股票，并选择在未来的某一个不同的日子卖出该股票。设计一个算法来计算你所能获取的最大利润。', 1000, 256, '5', '原创', 1, 1, 1, '2025-04-11 16:43:41', '2025-04-11 17:08:03');
-INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (5, '0005', '二叉树的层序遍历', '中等', '树,广度优先搜索', '给你一个二叉树，请你返回其按层序遍历得到的节点值。（即逐层地，从左到右访问所有节点）。', 1000, 256, '9', '原创', 1, 3, 1, '2025-04-11 16:43:41', '2025-04-20 11:05:04');
+INSERT INTO `problem_pool` (`id`, `problem_number`, `title`, `difficulty`, `tags`, `description`, `time_limit`, `memory_limit`, `category`, `source`, `create_user_id`, `reference_count`, `status`, `created_at`, `updated_at`) VALUES (5, '0005', '二叉树的层序遍历', '中等', '树,广度优先搜索', '给你一个二叉树，请你返回其按层序遍历得到的节点值。（即逐层地，从左到右访问所有节点）。', 1000, 256, '9', '原创', 1, 4, 1, '2025-04-11 16:43:41', '2025-04-23 15:03:54');
 COMMIT;
 
 -- ----------------------------
@@ -880,7 +880,7 @@ CREATE TABLE `problem_test_cases` (
   PRIMARY KEY (`id`),
   KEY `problem_id` (`problem_id`),
   CONSTRAINT `fk_problem_test_cases` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=94 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——题目测试样例表';
+) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——题目测试样例表';
 
 -- ----------------------------
 -- Records of problem_test_cases
@@ -953,14 +953,14 @@ CREATE TABLE `problems` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_problem_number` (`problem_number`),
   CONSTRAINT `check_submissions` CHECK ((`accepted_submissions` <= `total_submissions`))
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb3 COMMENT='题目——题目详细表';
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb3 COMMENT='题目——题目详细表';
 
 -- ----------------------------
 -- Records of problems
 -- ----------------------------
 BEGIN;
-INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 161, 90.68, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 146);
-INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (2, '0002', '寻找最大值', '简单', 300, 84.00, '基础,数组', '给定一个整数数组，找出其中的最大值。第一行输入一个整数n表示数组长度，第二行输入n个整数表示数组元素。', 1000, 256, 252);
+INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (1, '0001', '两数相加问题', '简单', 169, 89.35, '基础,数学', '给定两个整数A和B，求它们的和。', 1000, 256, 151);
+INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (2, '0002', '寻找最大值', '简单', 301, 84.05, '基础,数组', '给定一个整数数组，找出其中的最大值。第一行输入一个整数n表示数组长度，第二行输入n个整数表示数组元素。', 1000, 256, 253);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (3, '0003', '字符串反转', '中等', 240, 94.58, '字符串', '将一个字符串进行反转。', 1000, 256, 227);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (4, '0004', '阶乘计算', '中等', 151, 65.56, '数学,递归', '计算一个正整数的阶乘。', 1000, 256, 99);
 INSERT INTO `problems` (`id`, `problem_number`, `title`, `difficulty`, `total_submissions`, `acceptance_rate`, `tags`, `description`, `time_limit`, `memory_limit`, `accepted_submissions`) VALUES (5, '0005', '质数判断', '困难', 314, 66.56, '数学,判断', '判断一个数是否为质数。', 1000, 256, 209);
@@ -1009,7 +1009,7 @@ CREATE TABLE `solution_code` (
   KEY `fk_code_language` (`language_id`),
   CONSTRAINT `fk_code_language` FOREIGN KEY (`language_id`) REFERENCES `solution_languages` (`id`),
   CONSTRAINT `fk_code_main` FOREIGN KEY (`solution_id`) REFERENCES `solution_main` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=172 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答代码';
+) ENGINE=InnoDB AUTO_INCREMENT=176 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答代码';
 
 -- ----------------------------
 -- Records of solution_code
@@ -1180,7 +1180,7 @@ CREATE TABLE `solution_main` (
   PRIMARY KEY (`id`),
   KEY `fk_main_problem` (`problem_id`),
   CONSTRAINT `fk_main_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答方案、时空复杂度';
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='答案——题目解答方案、时空复杂度';
 
 -- ----------------------------
 -- Records of solution_main
@@ -1216,7 +1216,7 @@ INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_app
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (35, 34, '0028', '对应题目0029', '11', '11', '2025-02-25 19:00:52', '2025-04-16 22:44:58');
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (37, 38, '0029', '使用队列实现广度优先搜索，逐层处理二叉树节点。', 'O(n)', 'O(n)', '2025-04-14 09:37:43', '2025-04-16 22:54:48');
 INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (41, 42, '0030', '动态规划方法：利用状态转移方程 P(i,j)=(P(i+1,j−1) and S[i]==S[j])，逐步找到最长回文子串。', 'O(n²)', 'O(n²)', '2025-04-16 22:33:52', '2025-04-16 22:54:48');
-INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (43, 44, NULL, '使用递归或迭代方法，比较两个链表的头节点，选择较小的一个作为新链表的头，然后递归处理剩余部分。', 'O(n+m)', 'O(1)', '2025-04-22 14:45:17', '2025-04-22 14:45:17');
+INSERT INTO `solution_main` (`id`, `problem_id`, `problem_number`, `solution_approach`, `time_complexity`, `space_complexity`, `created_at`, `updated_at`) VALUES (43, 44, '0031', '使用递归或迭代方法，比较两个链表的头节点，选择较小的一个作为新链表的头，然后递归处理剩余部分。', 'O(n+m)', 'O(1)', '2025-04-22 14:45:17', '2025-04-23 15:04:01');
 COMMIT;
 
 -- ----------------------------
@@ -1291,7 +1291,7 @@ CREATE TABLE `submissions` (
   KEY `fk_submission_problem` (`problem_id`),
   CONSTRAINT `fk_submission_problem` FOREIGN KEY (`problem_id`) REFERENCES `problems` (`id`),
   CONSTRAINT `fk_submission_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——用户提交记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='题目——用户提交记录表';
 
 -- ----------------------------
 -- Records of submissions
@@ -1403,6 +1403,15 @@ INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `cod
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (116, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 1727, 596, NULL, '2025-04-19 10:48:36', 'Accepted', '2025-04-19 10:48:48');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (117, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    printf(\"5\");\n    return 0;\n}', 'C', 647, 600, '答案错误（隐藏用例）\n请检查您的代码逻辑是否正确。', '2025-04-20 10:12:44', 'Wrong Answer', '2025-04-20 10:12:49');
 INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (118, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 314, 3, NULL, '2025-04-22 12:20:36', 'Accepted', '2025-04-22 12:20:48');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (119, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 280, 616, NULL, '2025-04-23 13:58:40', 'Accepted', '2025-04-23 13:58:52');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (120, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 234, 588, NULL, '2025-04-23 14:11:31', 'Accepted', '2025-04-23 14:11:43');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (121, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 225, 596, NULL, '2025-04-23 14:26:08', 'Accepted', '2025-04-23 14:26:19');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (122, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 214, 592, NULL, '2025-04-23 14:47:39', 'Accepted', '2025-04-23 14:47:50');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (123, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 0, 0, '编译错误：\n编译过程发生系统错误\n\n请检查代码的语法是否正确。', '2025-04-23 14:51:39', 'System Error', '2025-04-23 14:51:40');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (124, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 0, 0, '运行时错误：\n/bin/sh: /app/src/temp/463360a5-69c5-49c0-aab6-5bdb33c7b992/temp_1745420015719.out: not found\n\n\n请检查代码是否存在数组越界、空指针等问题。', '2025-04-23 14:53:33', 'Runtime Error', '2025-04-23 14:53:36');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (125, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 0, 0, '运行时错误：\n程序执行时发生错误\n\n请检查代码是否存在数组越界、空指针等问题。', '2025-04-23 14:54:31', 'Runtime Error', '2025-04-23 14:54:36');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (126, 1, 1, '0001', '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}', 'C', 1811, 736, NULL, '2025-04-23 14:55:47', 'Accepted', '2025-04-23 14:55:59');
+INSERT INTO `submissions` (`id`, `user_id`, `problem_id`, `problem_number`, `code`, `language`, `runtime`, `memory`, `error_message`, `created_at`, `status`, `completed_at`) VALUES (127, 1, 2, '0002', '#include <stdio.h>\n\nint main() {\n    int n;\n    scanf(\"%d\", &n);\n    int arr[100], max;\n    for(int i = 0; i < n; i++) {\n        scanf(\"%d\", &arr[i]);\n    }\n    max = arr[0];\n    for(int i = 1; i < n; i++) {\n        if(arr[i] > max) max = arr[i];\n    }\n    printf(\"%d\\n\", max);\n    return 0;\n}', 'C', 295, 2, NULL, '2025-04-23 14:57:50', 'Accepted', '2025-04-23 14:57:55');
 COMMIT;
 
 -- ----------------------------
@@ -1426,7 +1435,7 @@ CREATE TABLE `user_profile` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_profile_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb3 COMMENT='全局——用户显示资料表';
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb3 COMMENT='全局——用户显示资料表';
 
 -- ----------------------------
 -- Records of user_profile
@@ -1443,7 +1452,7 @@ INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (29, 13, 'bobsmith', '鲍勃', 'public/uploads/avatars/avatar-1744910090N-000000003.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (30, 14, 'alicewang', '艾丽丝', 'public/uploads/avatars/avatar-1744910092N-000000004.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (31, 15, 'mikebrown', '迈克', 'public/uploads/avatars/avatar-1744910093N-000000005.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
-INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (32, 16, 'sarahlee', '莎拉', 'public/uploads/avatars/avatar-1744910094N-000000006.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-22 14:19:16');
+INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (32, 16, 'sarahlee', '莎拉', 'public/uploads/avatars/avatar-1744910094N-000000006.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-23 15:03:46');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (33, 17, 'davidzhou', '大卫', 'public/uploads/avatars/avatar-1744910096N-000000007.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (34, 18, 'lindachen', '琳达', 'public/uploads/avatars/avatar-1744910097N-000000008.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
 INSERT INTO `user_profile` (`id`, `user_id`, `nickname`, `display_name`, `avatar_url`, `gender`, `birth_date`, `location`, `bio`, `expertise_level`, `learning_goal`, `created_at`, `updated_at`) VALUES (35, 19, 'tomwilson', '汤姆', 'public/uploads/avatars/avatar-1744910098N-000000009.png', NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 01:15:56', '2025-04-18 01:15:56');
@@ -1497,7 +1506,7 @@ CREATE TABLE `user_visits` (
   UNIQUE KEY `uk_user_date` (`user_id`,`visit_date`),
   KEY `idx_visit_date` (`visit_date`),
   CONSTRAINT `fk_visit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=355 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=382 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
 
 -- ----------------------------
 -- Records of user_visits
@@ -1540,6 +1549,7 @@ INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `v
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (332, 1, '2025-04-20', '2025-04-20 01:51:46', 4);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (336, 1, '2025-04-21', '2025-04-21 11:07:18', 4);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (340, 1, '2025-04-22', '2025-04-22 03:19:13', 15);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (355, 1, '2025-04-23', '2025-04-23 13:47:59', 27);
 COMMIT;
 
 -- ----------------------------
