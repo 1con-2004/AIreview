@@ -24,6 +24,22 @@ export UID=$CURRENT_UID
 
 echo "设置环境变量: DOCKER_GROUP_ID=$DOCKER_GROUP_ID, UID=$CURRENT_UID"
 
+# 构建前端代码
+echo "正在构建前端代码..."
+cd frontend
+if [ -f "yarn.lock" ]; then
+    yarn install
+    yarn build
+else
+    npm install
+    npm run build
+fi
+cd ..
+
+# 拉取必要的Docker镜像
+echo "正在拉取必要的Docker镜像..."
+docker-compose pull nginx db
+
 # 确保Nginx配置目录存在
 mkdir -p nginx
 

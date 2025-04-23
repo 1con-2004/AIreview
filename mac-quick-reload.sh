@@ -15,6 +15,37 @@ if [[ "$(uname)" != "Darwin" ]]; then
     exit 1
 fi
 
+# 检查前端构建目录
+if [ ! -d "frontend/dist" ]; then
+    echo "前端构建目录不存在，正在构建前端代码..."
+    cd frontend
+    if [ -f "yarn.lock" ]; then
+        yarn install
+        yarn build
+    else
+        npm install
+        npm run build
+    fi
+    cd ..
+fi
+
+# 检查Docker镜像
+echo "检查Docker镜像..."
+if ! docker images | grep -q "aireview-backend"; then
+    echo "警告: 未找到后端镜像，正在拉取..."
+    docker-compose pull backend
+fi
+
+if ! docker images | grep -q "nginx:alpine"; then
+    echo "警告: 未找到Nginx镜像，正在拉取..."
+    docker-compose pull nginx
+fi
+
+if ! docker images | grep -q "mysql:8.0"; then
+    echo "警告: 未找到MySQL镜像，正在拉取..."
+    docker-compose pull db
+fi
+
 # 检查fswatch工具
 if ! command -v fswatch &> /dev/null; then
     echo "正在安装必要的工具: fswatch"
