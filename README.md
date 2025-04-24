@@ -170,6 +170,13 @@ chmod +x log-manager.sh
    icacls uploads /grant Everyone:(OI)(CI)F
    ```
 
+5. **ESLINT错误**
+   ```bash
+   例如index.vue文件 有错误 执行
+   cd frontend && npx eslint --fix src/views/login/index.vue
+   ```
+   
+
 ## 默认账号
 
 - 管理员账号：admin

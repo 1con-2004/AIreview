@@ -18,6 +18,13 @@ fi
 CURRENT_UID=$(id -u)
 echo "当前用户ID: $CURRENT_UID"
 
+# 获取当前用户的组ID
+if command -v id >/dev/null 2>&1; then
+    GROUP_ID=$(id -g)
+else
+    GROUP_ID=20 # macOS 的 staff 组ID
+fi
+
 # 导出环境变量
 export DOCKER_GROUP_ID=$DOCKER_GROUP_ID
 export UID=$CURRENT_UID
@@ -26,21 +33,34 @@ echo "设置环境变量: DOCKER_GROUP_ID=$DOCKER_GROUP_ID, UID=$CURRENT_UID"
 
 # 设置前端构建目录权限
 echo "设置前端构建目录权限..."
+# 确保目录存在
 mkdir -p frontend/dist/uploads
-chmod -R 777 frontend/dist
-chmod -R 777 frontend/public/uploads
 
-# 构建前端代码
+# 递归删除 dist 目录（如果存在）
+if [ -d "frontend/dist" ]; then
+    sudo rm -rf frontend/dist
+fi
+
+# 创建新的 dist 目录并设置权限
+mkdir -p frontend/dist
+sudo chown -R $USER:$GROUP_ID frontend/dist
+sudo chmod -R 755 frontend/dist
+
 echo "正在构建前端代码..."
 cd frontend
-if [ -f "yarn.lock" ]; then
-    yarn install
-    yarn build
-else
-    npm install
-    npm run build
-fi
+yarn install
+FORCE_COLOR=true yarn build
 cd ..
+
+# 确保构建后的目录权限正确
+if [ -d "frontend/dist" ]; then
+    sudo chown -R $USER:$GROUP_ID frontend/dist
+    sudo chmod -R 755 frontend/dist
+    
+    # 特别处理 uploads 目录
+    mkdir -p frontend/dist/uploads
+    sudo chmod -R 777 frontend/dist/uploads
+fi
 
 # 拉取必要的Docker镜像
 echo "正在拉取必要的Docker镜像..."

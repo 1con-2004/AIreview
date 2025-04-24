@@ -5,7 +5,7 @@
     <div class="hero-section">
       <div class="hero-content">
         <div class="hero-title">
-          <span class="wave-text">重新</span>
+          <span class="wave-text">重新1</span>
           <span class="wave-text">定义</span>
           <span class="wave-text">你的</span>
           <span class="wave-text">编程</span>
