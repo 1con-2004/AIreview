@@ -24,6 +24,12 @@ export UID=$CURRENT_UID
 
 echo "设置环境变量: DOCKER_GROUP_ID=$DOCKER_GROUP_ID, UID=$CURRENT_UID"
 
+# 设置前端构建目录权限
+echo "设置前端构建目录权限..."
+mkdir -p frontend/dist/uploads
+chmod -R 777 frontend/dist
+chmod -R 777 frontend/public/uploads
+
 # 构建前端代码
 echo "正在构建前端代码..."
 cd frontend
