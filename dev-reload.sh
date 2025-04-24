@@ -20,8 +20,12 @@ if ! docker ps &> /dev/null; then
     exit 1
 fi
 
+# 定义容器名称
+NGINX_CONTAINER="aireview-nginx"
+BACKEND_CONTAINER="aireview-backend"
+
 # 检查容器是否正在运行
-if ! docker ps | grep -q "aireview-frontend\|aireview-backend\|aireview-nginx"; then
+if ! docker ps | grep -q "$BACKEND_CONTAINER\|$NGINX_CONTAINER"; then
     echo "警告: 未检测到AIreview容器在运行。"
     read -p "是否要启动Docker环境? (y/n): " start_docker
     if [[ "$start_docker" =~ ^[Yy]$ ]]; then
@@ -32,20 +36,39 @@ if ! docker ps | grep -q "aireview-frontend\|aireview-backend\|aireview-nginx"; 
     fi
 fi
 
+# 检查前端构建工具
+check_frontend_tool() {
+    if [ -f "frontend/yarn.lock" ]; then
+        echo "yarn"
+    else
+        echo "npm"
+    fi
+}
+
+FRONTEND_TOOL=$(check_frontend_tool)
+
 # 定义重载函数
 reload_frontend() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - 检测到前端文件变化，重新编译..."
-    # 在Docker容器内构建前端
-    docker exec aireview-backend sh -c "cd /app && npm run build"
+    
+    # 在前端目录构建
+    cd frontend
+    if [ "$FRONTEND_TOOL" = "yarn" ]; then
+        yarn build
+    else
+        npm run build
+    fi
+    cd ..
+    
     # 更新nginx容器中的文件
-    docker exec aireview-nginx sh -c "nginx -s reload"
+    docker exec $NGINX_CONTAINER sh -c "nginx -s reload"
     echo "前端重新加载完成。"
 }
 
 reload_backend() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - 检测到后端文件变化，重启服务..."
     # 重启Node.js进程
-    docker exec aireview-backend sh -c "npm run restart"
+    docker exec $BACKEND_CONTAINER sh -c "NODE_ENV=development npm run restart"
     echo "后端重新加载完成。"
 }
 
@@ -66,6 +89,7 @@ show_menu() {
     echo "4) 停止监控"
     echo "5) 查看容器日志"
     echo "6) 运行数据库命令"
+    echo "7) 启用前端热重载模式（推荐）"
     echo "q) 退出"
     echo "=========================="
     echo ""
@@ -131,8 +155,8 @@ view_logs() {
     read -p "请选择: " log_choice
     
     case $log_choice in
-        1) docker logs aireview-nginx --tail 100 -f ;;
-        2) docker logs aireview-backend --tail 100 -f ;;
+        1) docker logs $NGINX_CONTAINER --tail 100 -f ;;
+        2) docker logs $BACKEND_CONTAINER --tail 100 -f ;;
         3) docker logs aireview-db --tail 100 -f ;;
         4) docker-compose logs --tail 100 -f ;;
         q|Q) return ;;
@@ -179,12 +203,21 @@ run_db_command() {
     esac
 }
 
+# 启用前端热重载模式
+enable_frontend_hot_reload() {
+    echo "启用前端热重载模式..."
+    # 停止当前监控
+    stop_monitoring
+    # 调用前端热重载脚本
+    ./frontend-hot-reload.sh
+}
+
 # 主循环
 start_monitoring
 
 while true; do
     show_menu
-    read -p "请选择操作 [1-6/q]: " choice
+    read -p "请选择操作 [1-7/q]: " choice
     
     case $choice in
         1) reload_frontend ;;
@@ -199,6 +232,11 @@ while true; do
             ;;
         5) view_logs ;;
         6) run_db_command ;;
+        7) 
+            stop_monitoring
+            enable_frontend_hot_reload
+            exit 0
+            ;;
         q|Q) 
             stop_monitoring
             echo "脚本已退出。"
@@ -206,4 +244,4 @@ while true; do
             ;;
         *) echo "无效选择，请重试。" ;;
     esac
-done 
+done

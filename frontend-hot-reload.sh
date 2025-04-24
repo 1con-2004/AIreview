@@ -22,33 +22,34 @@ if ! docker ps -a | grep -q "$NGINX_CONTAINER"; then
     exit 1
 fi
 
-# 检查前端构建目录是否存在
-if [ ! -d "frontend/dist" ]; then
-    echo "警告: 前端构建目录不存在，将进行初始构建..."
-    
-    if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
-        echo "检测到前端项目，开始构建..."
-        cd frontend
-        
-        # 尝试使用yarn或npm构建
-        if [ -f "yarn.lock" ]; then
-            echo "使用yarn构建..."
-            yarn install && yarn build
-        else
-            echo "使用npm构建..."
-            npm install && npm run build
-        fi
-        
-        cd ..
-        
-        if [ ! -d "frontend/dist" ]; then
-            echo "错误: 前端构建失败。"
-            exit 1
-        fi
+# 检查前端目录和依赖
+if [ ! -d "frontend" ] || [ ! -f "frontend/package.json" ]; then
+    echo "错误: 未找到有效的前端项目。"
+    exit 1
+fi
+
+# 检查前端构建工具
+check_frontend_tool() {
+    if [ -f "frontend/yarn.lock" ]; then
+        echo "yarn"
     else
-        echo "错误: 未找到有效的前端项目。"
-        exit 1
+        echo "npm"
     fi
+}
+
+FRONTEND_TOOL=$(check_frontend_tool)
+echo "检测到前端使用 $FRONTEND_TOOL 作为包管理工具"
+
+# 检查node_modules是否已安装
+if [ ! -d "frontend/node_modules" ]; then
+    echo "警告: 未检测到node_modules，正在安装依赖..."
+    cd frontend
+    if [ "$FRONTEND_TOOL" = "yarn" ]; then
+        yarn install
+    else
+        npm install
+    fi
+    cd ..
 fi
 
 # 启用前端开发模式
@@ -64,13 +65,21 @@ start_dev_mode() {
         sleep 2
     fi
     
+    # 获取主机IP (用于Docker桥接网络)
+    HOST_IP=$(hostname -I | awk '{print $1}')
+    if [ -z "$HOST_IP" ]; then
+        HOST_IP="host.docker.internal" # macOS和Windows Docker Desktop默认设置
+    fi
+    
+    echo "使用主机IP: $HOST_IP 进行热重载通信"
+    
     # 启动开发服务器
-    if [ -f "yarn.lock" ]; then
+    if [ "$FRONTEND_TOOL" = "yarn" ]; then
         echo "使用yarn启动开发服务器..."
-        yarn dev &
+        yarn dev --host 0.0.0.0 &
     else
         echo "使用npm启动开发服务器..."
-        npm run dev &
+        npm run dev -- --host 0.0.0.0 &
     fi
     
     DEV_SERVER_PID=$!
@@ -78,7 +87,7 @@ start_dev_mode() {
     
     # 更新Nginx配置来代理到开发服务器
     echo "更新Nginx配置..."
-    cat > nginx/default.conf << 'EOF'
+    cat > nginx/default.conf << EOF
 server {
     listen 80;
     server_name localhost;
@@ -87,34 +96,36 @@ server {
     location /api/ {
         proxy_pass http://backend:3000/api/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 300s;
     }
     
-    # 前端开发服务器代理 (默认在localhost:5173运行)
+    # 前端开发服务器代理
     location / {
-        proxy_pass http://host.docker.internal:5173;
+        proxy_pass http://$HOST_IP:5173;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 300s;
     }
     
     # 静态资源代理
     location /uploads/ {
         proxy_pass http://backend:3000/uploads/;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_cache_bypass \$http_upgrade;
     }
     
     # 健康检查接口
@@ -181,6 +192,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 300s;
     }
 
     # 静态资源代理
@@ -211,8 +223,18 @@ build_deploy() {
     
     cd frontend
     
+    # 安装依赖（如果需要）
+    if [ ! -d "node_modules" ]; then
+        echo "安装依赖..."
+        if [ "$FRONTEND_TOOL" = "yarn" ]; then
+            yarn install
+        else
+            npm install
+        fi
+    fi
+    
     # 构建前端
-    if [ -f "yarn.lock" ]; then
+    if [ "$FRONTEND_TOOL" = "yarn" ]; then
         echo "使用yarn构建..."
         yarn build
     else
@@ -220,6 +242,13 @@ build_deploy() {
         npm run build
     fi
     
+    if [ ! -d "dist" ]; then
+        echo "错误: 构建失败，未生成dist目录"
+        cd ..
+        return 1
+    fi
+    
+    echo "构建成功，dist目录已生成"
     cd ..
     
     # 重新加载Nginx配置
@@ -232,10 +261,21 @@ build_deploy() {
 restart_backend() {
     echo "重启后端服务..."
     if docker ps | grep -q "$BACKEND_CONTAINER"; then
-        docker exec $BACKEND_CONTAINER sh -c "npm run restart"
+        docker exec $BACKEND_CONTAINER sh -c "NODE_ENV=development npm run restart"
         echo "后端服务已重启。"
     else
         echo "错误: 后端容器未运行。"
+    fi
+}
+
+# 验证Nginx配置
+validate_nginx_config() {
+    echo "验证Nginx配置..."
+    docker exec $NGINX_CONTAINER nginx -t
+    if [ $? -eq 0 ]; then
+        echo "Nginx配置有效。"
+    else
+        echo "Nginx配置无效，请检查配置文件。"
     fi
 }
 
@@ -248,6 +288,7 @@ show_menu() {
     echo "3) 构建并部署前端"
     echo "4) 重启后端服务"
     echo "5) 显示Nginx访问日志"
+    echo "6) 验证Nginx配置"
     echo "q) 退出"
     echo "======================"
     echo ""
@@ -267,7 +308,7 @@ trap cleanup SIGINT SIGTERM
 # 主循环
 while true; do
     show_menu
-    read -p "请选择操作 [1-5/q]: " choice
+    read -p "请选择操作 [1-6/q]: " choice
     
     case $choice in
         1) start_dev_mode ;;
@@ -275,6 +316,7 @@ while true; do
         3) build_deploy ;;
         4) restart_backend ;;
         5) docker exec $NGINX_CONTAINER tail -f /var/log/nginx/access.log ;;
+        6) validate_nginx_config ;;
         q|Q) 
             cleanup
             ;;
