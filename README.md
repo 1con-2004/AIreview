@@ -82,17 +82,63 @@ AIreview/
 
 ### 开发模式
 
-1. **前端开发（热重载）**
+1. **如果只修改了前端代码**
+   第一步
    ```bash
-   chmod +x frontend-hot-reload.sh
-   ./frontend-hot-reload.sh
+   # 删除旧的dist目录
+   sudo rm -rf dist
+
+   # 创建新的dist目录并设置权限
+   mkdir -p dist
+   sudo chown -R apple:staff dist  # 把 apple 换成你的用户名
+   chmod -R 755 dist
+
+   # 构建项目
+   yarn build
+   ```
+   第二步
+   ```bash
+   cd ..
+   docker restart aireview-nginx
    ```
 
-2. **后端开发**
+2. **如果只修改了后端**
    ```bash
-   chmod +x dev-reload.sh
-   ./dev-reload.sh
+   # 在项目根目录下
+   sudo chown -R apple:staff backend
+   chmod -R 755 backend
+   docker restart aireview-backend
    ```
+
+3. **如果同时修改了前端和后端**
+   ```bash
+   # 处理前端
+   cd frontend
+   sudo rm -rf dist
+   mkdir -p dist
+   sudo chown -R apple:staff dist
+   chmod -R 755 dist
+   yarn build
+   cd ..
+
+   # 处理后端
+   sudo chown -R apple:staff backend
+   chmod -R 755 backend
+
+   # 重启两个容器
+   docker restart aireview-nginx aireview-backend
+   ```
+
+3. **关于数据同步问题**
+   这些更改会同步到Docker容器中，因为在`docker-compose.yml`中配置了卷挂载：
+   前端: `./frontend/dist:/usr/share/nginx/html `- 意味着本地的dist目录会映射到nginx容器中
+   后端: `./backend:/app:rw` - 意味着本地的backend目录会映射到后端容器中
+   所以只要你们用相同的docker-compose配置启动容器，其他人就能看到你的最新修改
+   补充说明：
+   前端build后的文件会自动同步到nginx容器，因为dist目录是挂载的
+   后端代码修改后会直接反映在容器中，因为整个backend目录都是挂载的
+   如果修改了后端配置文件或需要安装新的npm包，需要重启后端容器
+   如果修改了nginx配置，需要重启nginx容器
 
 ## 容器服务
 
