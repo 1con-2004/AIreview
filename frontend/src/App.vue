@@ -29,17 +29,16 @@ const ensureUserConsistency = () => {
     if (!accessToken && userInfo.accessToken) {
       console.log('userInfo中存在token但localStorage中不存在，正在同步...')
       localStorage.setItem('accessToken', userInfo.accessToken)
-      
       if (userInfo.refreshToken) {
         localStorage.setItem('refreshToken', userInfo.refreshToken)
       }
     }
 
     // 检查token在请求头中是否设置
-    if (!axios.defaults.headers.common['Authorization'] && userInfo.accessToken) {
+    if (!axios.defaults.headers.common.Authorization && userInfo.accessToken) {
       console.log('设置请求头中的token...')
-      axios.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
-      request.defaults.headers.common['Authorization'] = `Bearer ${userInfo.accessToken}`
+      axios.defaults.headers.common.Authorization = `Bearer ${userInfo.accessToken}`
+      request.defaults.headers.common.Authorization = `Bearer ${userInfo.accessToken}`
     }
 
     // 检查Vuex中的用户数据与localStorage是否一致
@@ -56,7 +55,6 @@ const ensureUserConsistency = () => {
         refreshToken: userInfo.refreshToken
       })
     }
-    
     return true
   } catch (error) {
     console.error('检查用户一致性失败:', error)

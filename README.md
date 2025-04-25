@@ -71,7 +71,10 @@ AIreview/
 
    Mac/Linux:
    ```bash
+   如果你是第一次运行
    chmod +x start-containers.sh
+
+   之后只需要
    ./start-containers.sh
    ```
 
@@ -80,11 +83,14 @@ AIreview/
    - 后端API：http://localhost/api
    - 健康检查：http://localhost/health
 
-### 开发模式
+### 开发模式(针对MacOS系统)
 
 1. **如果只修改了前端代码**
    第一步
    ```bash
+   # 进入前端
+   cd frontend
+
    # 删除旧的dist目录
    sudo rm -rf dist
 
@@ -98,7 +104,10 @@ AIreview/
    ```
    第二步
    ```bash
+   # 退出到项目根目录
    cd ..
+
+   # 重启Nginx代理
    docker restart aireview-nginx
    ```
 
@@ -121,7 +130,7 @@ AIreview/
    yarn build
    cd ..
 
-   # 处理后端
+   # 处理后端(如果遇到权限问题)
    sudo chown -R apple:staff backend
    chmod -R 755 backend
 
@@ -216,9 +225,9 @@ chmod +x log-manager.sh
    icacls uploads /grant Everyone:(OI)(CI)F
    ```
 
-5. **ESLINT错误**
+5. **快速修复ESlint错误**
    ```bash
-   例如index.vue文件 有错误 执行
+   例如前端登录部分的index.vue文件 有错误 执行
    cd frontend && npx eslint --fix src/views/login/index.vue
    ```
    

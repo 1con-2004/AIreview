@@ -36,5 +36,8 @@ RUN echo "前端构建完成，输出在 /app/dist 目录"
 # 安装全局的serve包和vue-cli-service
 RUN yarn global add serve @vue/cli @vue/cli-service
 
+# 安装图标依赖
+RUN yarn add @iconify/vue @iconify-icons/material-symbols @iconify-icons/carbon
+
 # 暴露端口
 EXPOSE 8080 

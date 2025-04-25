@@ -33,12 +33,12 @@ initDefaultUser()
 
 // 密码登录
 router.post('/', async (req, res) => {
-  const { username, password } = req.body
+  const { username, password, remember, getRemembered } = req.body
   const requestId = `login-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
   try {
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =====登录过程开始=====`);
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到的登录信息: username=${username}, passwordLength=${password ? password.length : 0}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到的登录信息: username=${username}, passwordLength=${password ? password.length : 0}, remember=${remember}, getRemembered=${getRemembered}`);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 客户端IP: ${req.ip}`);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 请求头: ${JSON.stringify(req.headers)}`);
 
@@ -67,6 +67,36 @@ router.post('/', async (req, res) => {
         success: false,
         message: '账号已被封禁，请联系管理员'
       })
+    }
+
+    // 如果是获取记住的密码
+    if (getRemembered) {
+      try {
+        const [profileRows] = await pool.execute(
+          'SELECT remembered_password FROM user_profile WHERE user_id = ?',
+          [user.id]
+        );
+
+        if (profileRows.length > 0 && profileRows[0].remembered_password) {
+          return res.json({
+            success: true,
+            data: {
+              rememberedPassword: profileRows[0].remembered_password
+            }
+          });
+        } else {
+          return res.json({
+            success: false,
+            message: '没有找到记住的密码'
+          });
+        }
+      } catch (error) {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 获取记住的密码失败:`, error);
+        return res.status(500).json({
+          success: false,
+          message: '获取记住的密码失败'
+        });
+      }
     }
 
     // 尝试使用bcrypt进行密码验证
@@ -122,6 +152,47 @@ router.post('/', async (req, res) => {
         success: false,
         message: '用户名或密码错误'
       })
+    }
+
+    // 处理记住密码功能
+    if (remember) {
+      try {
+        // 检查用户配置表是否存在记住的密码
+        const [profileRows] = await pool.execute(
+          'SELECT * FROM user_profile WHERE user_id = ?',
+          [user.id]
+        );
+
+        // 直接使用原始密码，而不是加密后的密码
+        if (profileRows.length > 0) {
+          // 更新现有记录
+          await pool.execute(
+            'UPDATE user_profile SET remembered_password = ? WHERE user_id = ?',
+            [password, user.id]
+          );
+        } else {
+          // 创建新记录
+          await pool.execute(
+            'INSERT INTO user_profile (user_id, remembered_password) VALUES (?, ?)',
+            [user.id, password]
+          );
+        }
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 已保存记住的密码`);
+      } catch (rememberError) {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 保存记住的密码失败:`, rememberError);
+        // 不影响登录流程继续
+      }
+    } else {
+      // 如果用户取消记住密码，清除已保存的密码
+      try {
+        await pool.execute(
+          'UPDATE user_profile SET remembered_password = NULL WHERE user_id = ?',
+          [user.id]
+        );
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 已清除记住的密码`);
+      } catch (clearError) {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 清除记住的密码失败:`, clearError);
+      }
     }
 
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 密码验证成功，准备生成令牌`);
@@ -474,5 +545,55 @@ router.get('/check-username/:username', async (req, res) => {
     })
   }
 })
+
+// 获取记住的密码
+router.get('/remembered-password/:username', async (req, res) => {
+  const { username } = req.params;
+  
+  try {
+    // 首先获取用户信息
+    const [users] = await pool.execute(
+      'SELECT id FROM users WHERE username = ?',
+      [username]
+    );
+
+    if (users.length === 0) {
+      return res.json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    const userId = users[0].id;
+
+    // 获取记住的密码
+    const [profiles] = await pool.execute(
+      'SELECT remembered_password FROM user_profile WHERE user_id = ?',
+      [userId]
+    );
+
+    if (profiles.length > 0 && profiles[0].remembered_password) {
+      res.json({
+        success: true,
+        data: {
+          hasRememberedPassword: true
+        }
+      });
+    } else {
+      res.json({
+        success: true,
+        data: {
+          hasRememberedPassword: false
+        }
+      });
+    }
+  } catch (error) {
+    console.error('获取记住的密码失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '服务器错误，请稍后再试'
+    });
+  }
+});
 
 module.exports = router 
