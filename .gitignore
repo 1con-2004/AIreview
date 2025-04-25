@@ -39,6 +39,7 @@ Thumbs.db
 /.vscode/
 /project_information/
 /数据库文件
+/target/
 
 # 其他
 *.pid
