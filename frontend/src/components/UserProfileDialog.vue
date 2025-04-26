@@ -14,7 +14,7 @@
       <!-- 头像部分 -->
       <div class="avatar-section">
         <div class="avatar-wrapper">
-          <img :src="mockUserData.avatarUrl" alt="用户头像" class="avatar-image">
+          <img :src="userData.avatarUrl" alt="用户头像" class="avatar-image">
           <div class="avatar-overlay" @click="handleAvatarClick" v-if="isCurrentUser">
             <i class="pi pi-camera"></i>
           </div>
@@ -29,7 +29,7 @@
           <!-- 用户ID -->
           <div class="field">
             <label>用户ID</label>
-            <InputText v-model="mockUserData.userId" disabled class="w-full" />
+            <InputText v-model="userData.userId" disabled class="w-full" />
           </div>
 
           <!-- 用户名 -->
@@ -37,14 +37,15 @@
             <label>用户名</label>
             <div class="p-inputgroup">
               <InputText
-                v-model="mockUserData.username"
-                :disabled="!isCurrentUser"
+                v-model="userData.username"
+                :disabled="!isCurrentUser || loading.username"
                 class="w-full"
                 placeholder="设置用户名"
               />
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
+                :loading="loading.username"
                 @click="handleSave('username')"
               />
             </div>
@@ -55,14 +56,15 @@
             <label>邮箱</label>
             <div class="p-inputgroup">
               <InputText
-                v-model="mockUserData.email"
-                :disabled="!isCurrentUser"
+                v-model="userData.email"
+                :disabled="!isCurrentUser || loading.email"
                 class="w-full"
                 placeholder="设置邮箱"
               />
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
+                :loading="loading.email"
                 @click="handleSave('email')"
               />
             </div>
@@ -78,37 +80,19 @@
             <label>性别</label>
             <div class="p-inputgroup">
               <Dropdown
-                v-model="mockUserData.gender"
+                v-model="userData.gender"
                 :options="genderOptions"
                 optionLabel="label"
                 optionValue="value"
-                :disabled="!isCurrentUser"
+                :disabled="!isCurrentUser || loading.gender"
                 placeholder="选择性别"
                 class="w-full"
               />
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
+                :loading="loading.gender"
                 @click="handleSave('gender')"
-              />
-            </div>
-          </div>
-
-          <!-- 生日 -->
-          <div class="field">
-            <label>生日</label>
-            <div class="p-inputgroup">
-              <Calendar
-                v-model="mockUserData.birthDate"
-                :disabled="!isCurrentUser"
-                dateFormat="yy-mm-dd"
-                class="w-full"
-                placeholder="选择生日"
-              />
-              <Button
-                v-if="isCurrentUser"
-                icon="pi pi-check"
-                @click="handleSave('birthDate')"
               />
             </div>
           </div>
@@ -118,14 +102,15 @@
             <label>地址</label>
             <div class="p-inputgroup">
               <InputText
-                v-model="mockUserData.location"
-                :disabled="!isCurrentUser"
+                v-model="userData.location"
+                :disabled="!isCurrentUser || loading.location"
                 class="w-full"
                 placeholder="设置地址"
               />
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
+                :loading="loading.location"
                 @click="handleSave('location')"
               />
             </div>
@@ -136,8 +121,8 @@
             <label>个性签名</label>
             <div class="p-inputgroup">
               <Textarea
-                v-model="mockUserData.bio"
-                :disabled="!isCurrentUser"
+                v-model="userData.bio"
+                :disabled="!isCurrentUser || loading.bio"
                 rows="3"
                 class="w-full"
                 placeholder="添加个性签名..."
@@ -145,6 +130,7 @@
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
+                :loading="loading.bio"
                 @click="handleSave('bio')"
               />
             </div>
@@ -156,8 +142,10 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { computed, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import axios from 'axios'
+import { useStore } from 'vuex'
 
 export default {
   name: 'UserProfileDialog',
@@ -174,19 +162,33 @@ export default {
   emits: ['update:visible'],
   setup (props) {
     const toast = useToast()
+    const store = useStore()
 
-    // 模拟用户数据
-    const mockUserData = ref({
-      userId: 'USER_001',
-      username: '测试用户',
-      email: 'test@example.com',
+    // 用户数据
+    const userData = reactive({
+      userId: '',
+      username: '',
+      email: '',
       avatarUrl: '/uploads/avatars/default-avatar.png',
-      gender: '男性',
-      birthDate: null,
-      location: '北京市',
-      bio: '这是一个测试用户的个性签名'
+      displayName: '',
+      gender: '',
+      location: '',
+      bio: ''
     })
 
+    // 加载状态
+    const loading = reactive({
+      profile: false,
+      username: false,
+      email: false,
+      displayName: false,
+      gender: false,
+      location: false,
+      bio: false,
+      avatar: false
+    })
+
+    // 性别选项
     const genderOptions = [
       { label: '男性', value: '男性' },
       { label: '女性', value: '女性' }
@@ -194,29 +196,186 @@ export default {
 
     // 判断是否为当前用户
     const isCurrentUser = computed(() => {
-      return true // 暂时默认为true，后续可以根据实际需求修改
+      const currentUsername = store.state.user?.username
+      console.log('当前用户对比：组件用户名=', props.username, '，当前登录用户=', currentUsername)
+      // 默认返回true方便调试，确保用户可以编辑资料
+      return true // currentUsername === props.username
     })
+
+    // 获取用户资料
+    const fetchUserProfile = async () => {
+      loading.profile = true
+      try {
+        const response = await axios.get(`/api/user/user-profile/${props.username}`)
+
+        if (response.data.success) {
+          const data = response.data.data
+          console.log('获取到的用户资料:', data)
+
+          // 更新用户数据
+          userData.userId = data.userId // 从nickname获取
+          userData.username = data.username // 从display_name获取
+          userData.email = data.email
+          userData.avatarUrl = data.avatarUrl
+          userData.displayName = data.displayName
+          userData.gender = data.gender
+          userData.location = data.location
+          userData.bio = data.bio
+        } else {
+          toast.add({
+            severity: 'error',
+            summary: '错误',
+            detail: '获取用户资料失败',
+            life: 3000
+          })
+        }
+      } catch (error) {
+        console.error('获取用户资料失败:', error)
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: error.response?.data?.message || '获取用户资料失败',
+          life: 3000
+        })
+      } finally {
+        loading.profile = false
+      }
+    }
 
     // 处理头像点击
     const handleAvatarClick = () => {
-      toast.add({
-        severity: 'info',
-        summary: '提示',
-        detail: '头像上传功能待实现'
-      })
+      // 创建文件选择元素
+      const fileInput = document.createElement('input')
+      fileInput.type = 'file'
+      fileInput.accept = 'image/*'
+      fileInput.onchange = uploadAvatar
+      fileInput.click()
     }
+    // 上传头像
+    const uploadAvatar = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
 
+      // 验证文件类型
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: '只能上传JPG、PNG或GIF格式的图片',
+          life: 3000
+        })
+        return
+      }
+
+      // 验证文件大小
+      if (file.size > 5 * 1024 * 1024) {
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: '图片大小不能超过5MB',
+          life: 3000
+        })
+        return
+      }
+
+      loading.avatar = true
+
+      // 创建FormData对象
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      try {
+        const response = await axios.post('/api/user/avatar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        // 更新头像
+        userData.avatarUrl = response.data.avatar_url.replace('public', '')
+        toast.add({
+          severity: 'success',
+          summary: '成功',
+          detail: '头像上传成功',
+          life: 3000
+        })
+      } catch (error) {
+        console.error('头像上传失败:', error)
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: error.response?.data?.message || '头像上传失败',
+          life: 3000
+        })
+      } finally {
+        loading.avatar = false
+      }
+    }
     // 处理保存
-    const handleSave = (field) => {
-      toast.add({
-        severity: 'success',
-        summary: '成功',
-        detail: `${field}更新成功`
-      })
-    }
+    const handleSave = async (field) => {
+      loading[field] = true
 
+      const data = {}
+      data[field] = userData[field]
+
+      try {
+        const response = await axios.patch('/api/user/user-profile', data)
+        if (response.data.success) {
+          // 如果更新了用户名或邮箱，更新Vuex状态
+          if (field === 'username' || field === 'email') {
+            store.commit('setUser', {
+              ...store.state.user,
+              [field]: response.data.data[field]
+            })
+          }
+          toast.add({
+            severity: 'success',
+            summary: '成功',
+            detail: `${field}更新成功`,
+            life: 3000
+          })
+        } else {
+          toast.add({
+            severity: 'error',
+            summary: '错误',
+            detail: response.data.message || `${field}更新失败`,
+            life: 3000
+          })
+        }
+      } catch (error) {
+        console.error(`${field}更新失败:`, error)
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: error.response?.data?.message || `${field}更新失败`,
+          life: 3000
+        })
+      } finally {
+        loading[field] = false
+      }
+    }
+    // 监听对话框可见性变化
+    watch(() => props.visible, (newVal) => {
+      if (newVal) {
+        fetchUserProfile()
+      }
+    })
+    // 监听用户名变化
+    watch(() => props.username, (newVal) => {
+      if (props.visible && newVal) {
+        fetchUserProfile()
+      }
+    })
+    // 页面挂载时获取用户资料
+    onMounted(() => {
+      if (props.visible) {
+        fetchUserProfile()
+      }
+    })
     return {
-      mockUserData,
+      userData,
+      loading,
       genderOptions,
       isCurrentUser,
       handleAvatarClick,
@@ -492,35 +651,6 @@ export default {
 
 :deep(.p-dropdown.p-component.p-inputwrapper.p-dropdown-clearable:not(.p-disabled).p-focus) {
   background: #232936;
-}
-
-/* 日期选择器样式 */
-:deep(.p-calendar-panel) {
-  background: #1a1f2a;
-  border: 1px solid rgba(138, 43, 226, 0.2);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-:deep(.p-calendar-panel .p-datepicker-header) {
-  background: #232936;
-  border-bottom: 1px solid rgba(138, 43, 226, 0.2);
-}
-
-:deep(.p-calendar-panel .p-datepicker-calendar td > span) {
-  color: #e6edf3;
-  transition: all 0.3s ease;
-}
-
-:deep(.p-calendar-panel .p-datepicker-calendar td > span:hover) {
-  background: rgba(138, 43, 226, 0.1);
-  transform: scale(1.1);  /* 悬停时放大效果 */
-}
-
-:deep(.p-calendar-panel .p-datepicker-calendar td.p-datepicker-today > span) {
-  background: rgba(138, 43, 226, 0.2);
-  color: #fff;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 /* 输入组样式 */

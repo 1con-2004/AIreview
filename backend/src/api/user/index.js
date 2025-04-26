@@ -209,128 +209,244 @@ router.get('/problem-status', authenticateToken, async (req, res) => {
 router.get('/user-profile/:username', async (req, res) => {
   try {
     const { username } = req.params;
-    // 添加详细日志
-    console.log(`[DEBUG] [${new Date().toISOString()}] 获取用户资料请求开始`);
-    console.log(`[DEBUG] [${new Date().toISOString()}] 请求参数: username=${username}`);
-    console.log(`[DEBUG] [${new Date().toISOString()}] 请求头: ${JSON.stringify(req.headers)}`);
+    console.log(`[INFO] [${new Date().toISOString()}] 获取用户资料请求: username=${username}`);
     
-    // 检查认证信息
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      console.log(`[DEBUG] [${new Date().toISOString()}] 认证令牌: ${token}`);
-      
-      try {
-        const decoded = jwt.verify(token, jwtConfig.SECRET_KEY);
-        console.log(`[DEBUG] [${new Date().toISOString()}] 令牌解析结果: ${JSON.stringify(decoded)}`);
-        console.log(`[DEBUG] [${new Date().toISOString()}] 当前请求用户ID: ${decoded.id}, 用户名: ${decoded.username}`);
-        console.log(`[DEBUG] [${new Date().toISOString()}] 尝试获取的用户资料: ${username}`);
-      } catch (error) {
-        console.log(`[DEBUG] [${new Date().toISOString()}] 令牌验证失败: ${error.message}`);
-      }
-    } else {
-      console.log(`[DEBUG] [${new Date().toISOString()}] 请求中没有认证令牌`);
-    }
-    
+    // 联合查询users表和user_profile表获取完整用户信息
     const query = `
-      SELECT u.id, u.username, u.email, up.* 
-      FROM users u 
-      LEFT JOIN user_profile up ON u.id = up.user_id 
+      SELECT 
+        u.id, 
+        u.username, 
+        u.email, 
+        u.role,
+        up.display_name, 
+        up.avatar_url, 
+        up.gender, 
+        up.location, 
+        up.bio,
+        up.nickname
+      FROM users u
+      LEFT JOIN user_profile up ON u.id = up.user_id
       WHERE u.username = ?
     `;
-    console.log(`[DEBUG] [${new Date().toISOString()}] 执行SQL查询: ${query.replace(/\s+/g, ' ')}`);
-    console.log(`[DEBUG] [${new Date().toISOString()}] 查询参数: [${username}]`);
     
     const [users] = await pool.query(query, [username]);
     
-    console.log(`[DEBUG] [${new Date().toISOString()}] 查询结果数量: ${users.length}`);
-    
     if (users.length === 0) {
-      console.log(`[DEBUG] [${new Date().toISOString()}] 未找到用户: ${username}`);
-      return res.status(404).json({ message: '用户不存在' });
+      console.log(`[INFO] [${new Date().toISOString()}] 未找到用户: ${username}`);
+      return res.status(404).json({ 
+        success: false,
+        message: '用户不存在' 
+      });
     }
 
     const user = users[0];
-    // 删除敏感信息
-    delete user.password;
     
-    console.log(`[DEBUG] [${new Date().toISOString()}] 返回用户资料: ${JSON.stringify(user)}`);
-    res.json(user);
+    // 转换数据格式，适配前端需求
+    const result = {
+      userId: user.nickname || user.username, // 用户ID使用nickname字段
+      username: user.display_name || user.username, // 用户名使用display_name字段
+      email: user.email || '',
+      role: user.role,
+      displayName: user.display_name || user.username,
+      avatarUrl: user.avatar_url ? 
+        (user.avatar_url.startsWith('public/') ? 
+          user.avatar_url.replace('public', '') : 
+          user.avatar_url) : 
+        '/uploads/avatars/default-avatar.png',
+      gender: user.gender || '',
+      location: user.location || '',
+      bio: user.bio || ''
+    };
+
+    console.log(`[INFO] [${new Date().toISOString()}] 成功获取用户资料: ${username}`);
+    res.json({
+      success: true,
+      data: result
+    });
   } catch (error) {
     console.error(`[ERROR] [${new Date().toISOString()}] 获取用户资料失败:`, error);
-    res.status(500).json({ message: '服务器错误' });
+    res.status(500).json({ 
+      success: false,
+      message: '服务器错误' 
+    });
   }
 });
 
 // 更新用户资料
 router.patch('/user-profile', authenticateToken, async (req, res) => {
+  const connection = await pool.getConnection();
   try {
     const userId = req.user.id;
-    const updates = req.body;
+    const { username, email, displayName, gender, location, bio } = req.body;
     
-    // 验证更新字段
-    const allowedUpdates = ['display_name', 'gender', 'birth_date', 'location', 'bio'];
-    const isValidOperation = Object.keys(updates).every(update => allowedUpdates.includes(update));
+    console.log(`[INFO] [${new Date().toISOString()}] 更新用户资料请求，用户ID: ${userId}`);
+    console.log(`[INFO] [${new Date().toISOString()}] 请求数据:`, req.body);
     
-    if (!isValidOperation) {
-      return res.status(400).json({ message: '无效的更新字段' });
-    }
-
     // 开始事务
-    const connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    try {
+    
+    // 1. 更新users表中的字段(用户名和邮箱)
+    if (username || email) {
+      // 检查用户名唯一性
+      if (username) {
+        const [usernameCheck] = await connection.query(
+          'SELECT id FROM users WHERE username = ? AND id != ?',
+          [username, userId]
+        );
+        
+        if (usernameCheck.length > 0) {
+          await connection.rollback();
+          return res.status(400).json({ 
+            success: false,
+            message: '用户名已存在' 
+          });
+        }
+      }
+      
+      // 检查邮箱唯一性
+      if (email) {
+        const [emailCheck] = await connection.query(
+          'SELECT id FROM users WHERE email = ? AND id != ?',
+          [email, userId]
+        );
+        
+        if (emailCheck.length > 0) {
+          await connection.rollback();
+          return res.status(400).json({ 
+            success: false,
+            message: '邮箱已被使用' 
+          });
+        }
+      }
+      
+      // 构建更新语句
+      let updateUserSql = 'UPDATE users SET ';
+      const updateUserParams = [];
+      
+      if (username) {
+        updateUserSql += 'username = ?, ';
+        updateUserParams.push(username);
+      }
+      
+      if (email) {
+        updateUserSql += 'email = ?, ';
+        updateUserParams.push(email);
+      }
+      
+      // 移除最后的逗号和空格
+      updateUserSql = updateUserSql.slice(0, -2);
+      
+      updateUserSql += ' WHERE id = ?';
+      updateUserParams.push(userId);
+      
+      await connection.query(updateUserSql, updateUserParams);
+      console.log(`[INFO] [${new Date().toISOString()}] 已更新users表`);
+    }
+    
+    // 2. 更新user_profile表中的字段
+    if (displayName || gender || location || bio) {
       // 检查用户资料是否存在
-      const [existingProfile] = await connection.query(
+      const [profileExists] = await connection.query(
         'SELECT id FROM user_profile WHERE user_id = ?',
         [userId]
       );
-
-      if (existingProfile.length === 0) {
-        // 如果不存在，创建新记录，使用username作为nickname
+      
+      if (profileExists.length === 0) {
+        // 如果不存在，创建新的资料记录
         const [userResult] = await connection.query(
           'SELECT username FROM users WHERE id = ?',
           [userId]
         );
         
-        const username = userResult[0].username;
-        const insertFields = ['user_id', 'nickname', ...Object.keys(updates)];
-        const insertValues = [userId, username, ...Object.values(updates)];
-        const insertQuery = `
-          INSERT INTO user_profile (${insertFields.join(', ')})
-          VALUES (${insertFields.map(() => '?').join(', ')})
-        `;
-        await connection.query(insertQuery, insertValues);
+        if (!userResult || userResult.length === 0) {
+          await connection.rollback();
+          return res.status(404).json({
+            success: false,
+            message: '用户不存在'
+          });
+        }
+        
+        // 创建新的用户资料记录
+        await connection.query(
+          `INSERT INTO user_profile 
+           (user_id, nickname, display_name, gender, location, bio) 
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            userId, 
+            userResult[0].username, 
+            displayName || userResult[0].username, 
+            gender || null,
+            location || null, 
+            bio || null
+          ]
+        );
+        
+        console.log(`[INFO] [${new Date().toISOString()}] 已创建新的用户资料记录`);
       } else {
-        // 如果存在，只更新允许的字段
-        const updateFields = Object.keys(updates)
-          .map(field => `${field} = ?`)
-          .join(', ');
-        const values = [...Object.values(updates), userId];
-        const updateQuery = `
-          UPDATE user_profile 
-          SET ${updateFields}
-          WHERE user_id = ?
-        `;
-        await connection.query(updateQuery, values);
+        // 如果存在，更新现有记录
+        let updateProfileSql = 'UPDATE user_profile SET ';
+        const updateProfileParams = [];
+        
+        if (displayName) {
+          updateProfileSql += 'display_name = ?, ';
+          updateProfileParams.push(displayName);
+        }
+        
+        if (gender) {
+          updateProfileSql += 'gender = ?, ';
+          updateProfileParams.push(gender);
+        }
+        
+        if (location) {
+          updateProfileSql += 'location = ?, ';
+          updateProfileParams.push(location);
+        }
+        
+        if (bio) {
+          updateProfileSql += 'bio = ?, ';
+          updateProfileParams.push(bio);
+        }
+        
+        // 移除最后的逗号和空格
+        updateProfileSql = updateProfileSql.slice(0, -2);
+        
+        updateProfileSql += ' WHERE user_id = ?';
+        updateProfileParams.push(userId);
+        
+        await connection.query(updateProfileSql, updateProfileParams);
+        console.log(`[INFO] [${new Date().toISOString()}] 已更新用户资料`);
       }
-
-      // 提交事务
-      await connection.commit();
-      console.log('用户资料更新成功');
-      res.json({ message: '更新成功' });
-    } catch (error) {
-      // 回滚事务
-      await connection.rollback();
-      throw error;
-    } finally {
-      // 释放连接
-      connection.release();
     }
+    
+    // 提交事务
+    await connection.commit();
+    
+    // 查询最新用户名和邮箱，返回给前端
+    const [userRow] = await connection.query(
+      'SELECT username, email FROM users WHERE id = ?', 
+      [userId]
+    );
+    
+    console.log(`[INFO] [${new Date().toISOString()}] 用户资料更新成功`);
+    res.json({
+      success: true,
+      message: '更新成功',
+      data: {
+        username: userRow[0].username,
+        email: userRow[0].email
+      }
+    });
   } catch (error) {
-    console.error('更新用户资料失败:', error);
-    res.status(500).json({ message: '服务器错误' });
+    // 如果发生错误，回滚事务
+    await connection.rollback();
+    console.error(`[ERROR] [${new Date().toISOString()}] 更新用户资料失败:`, error);
+    res.status(500).json({
+      success: false,
+      message: '服务器错误: ' + error.message
+    });
+  } finally {
+    // 释放连接
+    connection.release();
   }
 });
 
@@ -799,11 +915,19 @@ router.post('/profiles', async (req, res) => {
     `;
     
     const [rows] = await pool.query(query, userIds);
-    console.log('获取到的用户资料:', rows);
+    
+    // 转换数据以符合新的字段定义
+    const transformedRows = rows.map(row => ({
+      ...row,
+      userId: row.nickname || row.username,
+      username: row.display_name || row.username
+    }));
+    
+    console.log('获取到的用户资料:', transformedRows);
     
     res.json({
       success: true,
-      data: rows
+      data: transformedRows
     });
   } catch (error) {
     console.error('获取用户资料失败:', error);

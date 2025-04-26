@@ -286,7 +286,12 @@ const debouncedCheckLoginStatus = debounce(async () => {
 }, 300)
 
 const openUserProfileDialog = () => {
-  // 确保使用当前显示的用户名，避免自动切换
+  // 每次打开弹窗前，强制同步一次登录状态
+  checkLoginStatus()
+  if (!username.value || username.value === 'undefined') {
+    ElMessage.error('用户信息异常，请刷新页面或重新登录')
+    return
+  }
   profileDialogVisible.value = true
 }
 

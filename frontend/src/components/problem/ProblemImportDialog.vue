@@ -260,7 +260,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch, defineProps, defineEmits, onMounted } from 'vue'
+import { ref, computed, reactive, defineProps, defineEmits, onMounted } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -284,10 +284,10 @@ const languages = ref([
 ])
 
 // 获取语言名称
-const getLanguageName = (languageId) => {
+/* const getLanguageName = (languageId) => {
   const language = languages.value.find(lang => lang.id === languageId)
   return language ? language.name : '未知语言'
-}
+} */
 
 // 表单数据
 const formData = reactive({
