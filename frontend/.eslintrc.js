@@ -22,7 +22,7 @@ module.exports = {
     'vue/no-unused-components': 'warn',
     'import/no-duplicates': 'warn',
     'node/no-callback-literal': 'off',
-    'brace-style': 'warn',
+    'brace-style': 'off',
     'vue/no-use-v-if-with-v-for': 'warn',
     'no-dupe-keys': 'warn',
     'vue/no-dupe-keys': 'warn',

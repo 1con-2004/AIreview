@@ -98,14 +98,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+// import { useRouter } from 'vue-router'
 import UserProfileDialog from './UserProfileDialog.vue'
 import { getResourceUrl } from '@/utils/api'
 import { ElMessage } from 'element-plus'
 
 // 获取router实例
-const router = useRouter()
+// const router = useRouter()
 
 // 添加简单的防抖函数实现
 const debounce = (fn, delay) => {
@@ -190,7 +190,7 @@ const checkUserConsistency = () => {
     }
 
     // 保存之前的用户名以便于日志对比
-    const prevUsername = username.value
+    // const prevUsername = username.value
 
     // 检查组件内状态与localStorage是否一致
     if (username.value && username.value !== userInfo.username) {
@@ -244,7 +244,7 @@ const checkLoginStatus = async () => {
 
       // 调试日志：详细输出头像URL信息
       console.log('用户头像URL信息:', user.avatar_url)
-      
+
       // 优化头像URL处理逻辑，减少多次重复设置
       if (user.avatar_url) {
         // 确保每次获取都应用正确的URL转换逻辑
@@ -274,10 +274,10 @@ const checkLoginStatus = async () => {
   }
 }
 
-const forceReloadUserInfo = () => {
+/* const forceReloadUserInfo = () => {
   console.log('强制刷新用户信息')
   checkLoginStatus()
-}
+} */
 
 // 使用防抖函数包装checkLoginStatus
 const debouncedCheckLoginStatus = debounce(async () => {
@@ -291,12 +291,12 @@ const openUserProfileDialog = () => {
 }
 
 // 创建变量存储定时器引用
-let statusCheckInterval = null;
+let statusCheckInterval = null
 
 // 添加一个会话存储管理器
 const sessionStorageManager = {
   // 保存用户信息到sessionStorage
-  saveUserInfo(userInfo) {
+  saveUserInfo (userInfo) {
     try {
       sessionStorage.setItem('session_user_info', JSON.stringify(userInfo))
       sessionStorage.setItem('session_username', userInfo.username)
@@ -315,16 +315,16 @@ const sessionStorageManager = {
       return false
     }
   },
-  
+
   // 获取用户信息从sessionStorage
-  getUserInfo() {
+  getUserInfo () {
     try {
       // 先尝试获取完整对象
       const userInfoStr = sessionStorage.getItem('session_user_info')
       if (userInfoStr) {
         return JSON.parse(userInfoStr)
       }
-      
+
       // 如果没有完整对象，但有用户名，则构建基本对象
       const username = sessionStorage.getItem('session_username')
       if (username) {
@@ -342,9 +342,9 @@ const sessionStorageManager = {
       return null
     }
   },
-  
+
   // 清除所有用户相关的会话存储
-  clearUserInfo() {
+  clearUserInfo () {
     try {
       sessionStorage.removeItem('session_user_info')
       sessionStorage.removeItem('session_username')
@@ -359,13 +359,13 @@ const sessionStorageManager = {
       return false
     }
   },
-  
+
   // 同步会话存储到localStorage
-  syncToLocalStorage() {
+  syncToLocalStorage () {
     try {
       const userInfo = this.getUserInfo()
       if (!userInfo) return false
-      
+
       // 尝试保存到localStorage
       try {
         localStorage.setItem('userInfo', JSON.stringify(userInfo))
@@ -388,13 +388,13 @@ const sessionStorageManager = {
 // 修改诊断登录状态函数
 const diagnoseLoginState = () => {
   console.group('===== 实时登录状态诊断 =====')
-  
+
   console.log('当前组件状态:')
   console.log('- 是否登录:', isLoggedIn.value)
   console.log('- 用户名:', username.value)
   console.log('- 角色:', userRole.value)
   console.log('- 头像URL:', avatarUrl.value)
-  
+
   // 检查会话存储
   const sessionUserInfo = sessionStorageManager.getUserInfo()
   console.log('\n会话存储内容:')
@@ -406,33 +406,33 @@ const diagnoseLoginState = () => {
   } else {
     console.log('会话存储中没有用户信息')
   }
-  
+
   // 检查localStorage
   console.log('\nLocalStorage 内容:')
-  let userInfo = null
+  // let userInfo = null
   let userInfoStr = null
   try {
     userInfoStr = localStorage.getItem('userInfo')
     if (userInfoStr) {
-      userInfo = JSON.parse(userInfoStr)
+      // userInfo = JSON.parse(userInfoStr)
       console.log('- userInfo 数据存在')
     } else {
       console.log('- userInfo: 未找到')
     }
   } catch (e) {
     console.log('解析userInfo失败:', e)
-    userInfo = null
+    // userInfo = null
   }
-  
+
   // 检查可能的问题
   console.log('\n可能的问题:')
   let problemsFound = false
-  
+
   // 检查组件状态与会话存储的一致性
   if (isLoggedIn.value && !sessionUserInfo) {
     console.log('× 组件显示已登录，但会话存储中没有用户信息')
     problemsFound = true
-    
+
     // 恢复会话存储
     if (username.value) {
       const userData = {
@@ -442,7 +442,7 @@ const diagnoseLoginState = () => {
         accessToken: localStorage.getItem('accessToken') || '',
         refreshToken: localStorage.getItem('refreshToken') || ''
       }
-      
+
       sessionStorageManager.saveUserInfo(userData)
       console.log('已从组件状态恢复会话存储')
     }
@@ -450,32 +450,32 @@ const diagnoseLoginState = () => {
     console.log('× 组件显示未登录，但会话存储中有用户信息')
     problemsFound = true
   }
-  
+
   // 检查头像URL是否丢失
-  if (isLoggedIn.value && (!avatarUrl.value || avatarUrl.value === defaultAvatar.value) && 
+  if (isLoggedIn.value && (!avatarUrl.value || avatarUrl.value === defaultAvatar.value) &&
       sessionUserInfo && sessionUserInfo.avatar_url) {
     avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
     console.log('已恢复丢失的头像URL')
   }
-  
+
   console.groupEnd()
-  
+
   // 修复问题
   if (problemsFound) {
     console.log('尝试修复登录状态...')
-    
+
     // 从会话存储恢复组件状态
     if (!isLoggedIn.value && sessionUserInfo) {
       isLoggedIn.value = true
       username.value = sessionUserInfo.username
       userRole.value = sessionUserInfo.role || 'user'
-      
+
       if (sessionUserInfo.avatar_url) {
         avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
       }
-      
+
       console.log('已从会话存储恢复登录状态')
-      
+
       // 尝试同步到localStorage
       sessionStorageManager.syncToLocalStorage()
     }
@@ -488,14 +488,14 @@ const diagnoseLoginState = () => {
         accessToken: localStorage.getItem('accessToken') || '',
         refreshToken: localStorage.getItem('refreshToken') || ''
       }
-      
+
       sessionStorageManager.saveUserInfo(userData)
       console.log('已从组件状态恢复会话存储')
-      
+
       // 尝试同步到localStorage
       sessionStorageManager.syncToLocalStorage()
     }
-    
+
     // 添加消息提示
     ElMessage({
       message: '已修复登录状态',
@@ -505,7 +505,7 @@ const diagnoseLoginState = () => {
   } else {
     console.log('诊断完成，未发现需要修复的问题')
   }
-  
+
   return {
     isLoggedIn: isLoggedIn.value,
     username: username.value,
@@ -517,17 +517,17 @@ const diagnoseLoginState = () => {
 // 修改同步用户状态函数
 const syncUserState = () => {
   console.log('执行用户状态同步...')
-  
+
   // 优先从会话存储获取用户信息
   const sessionUserInfo = sessionStorageManager.getUserInfo()
   if (sessionUserInfo) {
     console.log('从会话存储获取到用户信息:', sessionUserInfo.username)
-    
+
     // 更新组件状态
     isLoggedIn.value = true
     username.value = sessionUserInfo.username
     userRole.value = sessionUserInfo.role || 'user'
-    
+
     // 处理头像URL
     if (sessionUserInfo.avatar_url) {
       avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
@@ -536,23 +536,23 @@ const syncUserState = () => {
       avatarUrl.value = defaultAvatar.value
       console.log('同步用户状态：会话存储中没有头像URL，使用默认头像')
     }
-    
+
     console.log('已从会话存储同步用户状态')
-    
+
     // 尝试同步到localStorage
     sessionStorageManager.syncToLocalStorage()
     return
   }
-  
+
   // 如果会话存储中没有，再尝试从localStorage获取
   const userInfoStr = localStorage.getItem('userInfo')
   if (!userInfoStr) {
     console.log('localStorage和会话存储中没有用户信息')
-    
+
     // 检查是否当前显示为已登录状态
     if (isLoggedIn.value && username.value) {
       console.log('检测到用户已登录但存储中无数据，保存当前状态...')
-      
+
       // 保存当前状态到会话存储
       const userData = {
         username: username.value,
@@ -561,15 +561,15 @@ const syncUserState = () => {
         accessToken: localStorage.getItem('accessToken') || '',
         refreshToken: localStorage.getItem('refreshToken') || ''
       }
-      
+
       sessionStorageManager.saveUserInfo(userData)
       console.log('已保存当前登录状态到会话存储')
-      
+
       // 尝试同步到localStorage
       sessionStorageManager.syncToLocalStorage()
       return
     }
-    
+
     // 如果没有登录状态，则设置为未登录
     console.log('设置为未登录状态')
     isLoggedIn.value = false
@@ -583,15 +583,15 @@ const syncUserState = () => {
     console.log('解析localStorage中的用户信息')
     const userInfo = JSON.parse(userInfoStr)
     console.log('获取到用户信息:', userInfo)
-    
+
     // 保存到会话存储
     sessionStorageManager.saveUserInfo(userInfo)
-    
+
     // 更新组件状态
     isLoggedIn.value = true
     username.value = userInfo.username
     userRole.value = userInfo.role || 'user'
-    
+
     // 处理头像URL
     if (userInfo.avatar_url) {
       avatarUrl.value = getFullAvatarUrl(userInfo.avatar_url)
@@ -610,29 +610,29 @@ const syncUserState = () => {
 // 修改挂载函数
 onMounted(() => {
   console.log('NavBar组件挂载，开始检查登录状态...')
-  
+
   // 先从会话存储恢复状态
   const sessionUserInfo = sessionStorageManager.getUserInfo()
   if (sessionUserInfo) {
     console.log('从会话存储恢复用户状态:', sessionUserInfo.username)
-    
+
     isLoggedIn.value = true
     username.value = sessionUserInfo.username
     userRole.value = sessionUserInfo.role || 'user'
-    
+
     if (sessionUserInfo.avatar_url) {
       avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
       console.log('已恢复头像URL:', sessionUserInfo.avatar_url)
     }
-    
+
     // 尝试同步到localStorage
     sessionStorageManager.syncToLocalStorage()
-  } 
+  }
   // 如果会话存储中没有，则同步用户状态
   else {
     syncUserState()
   }
-  
+
   console.log('初始同步完成，登录状态:', isLoggedIn.value, '用户名:', username.value)
 
   // 监听头像更新事件，使用防抖函数避免频繁调用
@@ -652,26 +652,26 @@ onMounted(() => {
     console.log('执行全局强制重新加载用户信息')
     syncUserState()
   }
-  
+
   // 定期检查登录状态保持一致性
   statusCheckInterval = setInterval(() => {
     const sessionUserInfo = sessionStorageManager.getUserInfo()
     const hasSessionUserInfo = !!sessionUserInfo
-    
+
     // 检查状态是否一致
     if (isLoggedIn.value !== hasSessionUserInfo) {
       console.warn('登录状态不一致，会话存储:', hasSessionUserInfo, '组件状态:', isLoggedIn.value)
-      
+
       if (hasSessionUserInfo && !isLoggedIn.value) {
         // 会话存储有用户信息但组件显示未登录，同步到组件
         isLoggedIn.value = true
         username.value = sessionUserInfo.username
         userRole.value = sessionUserInfo.role || 'user'
-        
+
         if (sessionUserInfo.avatar_url) {
           avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
         }
-        
+
         console.log('已从会话存储恢复组件状态')
       } else if (isLoggedIn.value && !hasSessionUserInfo) {
         // 组件显示已登录但会话存储无用户信息，保存到会话存储
@@ -682,14 +682,14 @@ onMounted(() => {
           accessToken: localStorage.getItem('accessToken') || '',
           refreshToken: localStorage.getItem('refreshToken') || ''
         }
-        
+
         sessionStorageManager.saveUserInfo(userData)
         console.log('已从组件状态恢复会话存储')
       }
     }
-    
+
     // 检查头像是否丢失
-    if (isLoggedIn.value && (!avatarUrl.value || avatarUrl.value === defaultAvatar.value) && 
+    if (isLoggedIn.value && (!avatarUrl.value || avatarUrl.value === defaultAvatar.value) &&
         sessionUserInfo && sessionUserInfo.avatar_url) {
       avatarUrl.value = getFullAvatarUrl(sessionUserInfo.avatar_url)
       console.log('已恢复丢失的头像URL')
@@ -708,7 +708,7 @@ onUnmounted(() => {
   if (typeof window.forceReloadUserInfo === 'function') {
     delete window.forceReloadUserInfo
   }
-  
+
   // 清除定时器
   if (statusCheckInterval) {
     clearInterval(statusCheckInterval)
@@ -724,7 +724,7 @@ const handleLogout = () => {
   try {
     // 清除会话存储
     sessionStorageManager.clearUserInfo()
-    
+
     // 使用Vuex的logout action
     import('@/store').then(({ default: store }) => {
       store.dispatch('logout')
@@ -755,18 +755,18 @@ const handleLogout = () => {
 // 手动清理所有存储的函数
 const manualCleanup = () => {
   console.log('执行手动数据清理...')
-  
+
   // 清除所有localStorage
   localStorage.removeItem('userInfo')
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('currentUsername')
   localStorage.removeItem('last_active_user')
-  
+
   // 清除所有sessionStorage
   sessionStorage.removeItem('current_user')
   sessionStorage.removeItem('last_active_user')
-  
+
   console.log('手动数据清理完成')
 }
 
@@ -783,18 +783,18 @@ const fixUserInfoBeforeNav = (event) => {
 
   try {
     const currentUserInfo = JSON.parse(currentUserInfoStr)
-    
+
     // 重新同步令牌到localStorage，确保令牌可用
     if (currentUserInfo.accessToken) {
       localStorage.setItem('accessToken', currentUserInfo.accessToken)
       console.log('导航前已更新令牌: accessToken')
     }
-    
+
     if (currentUserInfo.refreshToken) {
       localStorage.setItem('refreshToken', currentUserInfo.refreshToken)
       console.log('导航前已更新令牌: refreshToken')
     }
-    
+
     const currentUsername = currentUserInfo.username
 
     // 如果当前组件显示的用户名与localStorage不一致，则阻止导航并刷新页面
