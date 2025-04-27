@@ -151,4 +151,10 @@ ${code}
   }
 });
 
+// 添加DeepSeek API路由
+const deepseekRoutes = require('../../routes/api/ai/deepseek.routes');
+router.use('/deepseek', deepseekRoutes);
+
+console.log('DeepSeek API路由已注册');
+
 module.exports = router; 
