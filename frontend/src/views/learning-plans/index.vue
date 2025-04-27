@@ -79,9 +79,9 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import NavBar from '@/components/NavBar.vue'
 import { ElMessage } from 'element-plus'
+import learningPlansApi from '@/api/learningPlans'
 
 export default {
   name: 'LearningPlans',
@@ -157,10 +157,10 @@ export default {
 
     const fetchPlans = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/learning-plans')
+        const data = await learningPlansApi.getAllPlans()
 
-        if (response.data) {
-          plans.value = response.data.map(plan => ({
+        if (data) {
+          plans.value = data.map(plan => ({
             id: plan.id,
             title: plan.title || '',
             description: plan.description || '',
@@ -172,13 +172,13 @@ export default {
             creator_avatar: plan.creator_avatar,
             created_at: plan.created_at,
             icon: plan.icon
-              ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon}`)
+              ? (plan.icon.startsWith('http') ? plan.icon : `${plan.icon}`)
               : '/icons/default.png'
           }))
           filteredPlans.value = plans.value // 初始化过滤后的计划
           console.log('获取学习计划列表成功:', plans.value)
         } else {
-          console.error('获取学习计划列表失败:', response.data.message)
+          console.error('获取学习计划列表失败')
           ElMessage.error('获取学习计划列表失败')
         }
       } catch (error) {

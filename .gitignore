@@ -48,3 +48,6 @@ Thumbs.db
 
 # 相关编译器配置
 /.cursor/
+mvnw
+mvnw.cmd
+pom.xml

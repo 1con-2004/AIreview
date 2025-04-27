@@ -21,7 +21,6 @@
               <span>创建者: {{ creatorName }}</span>
             </div>
           </div>
-          <button class="start-button" @click="startLearning">开始</button>
         </div>
       </div>
 
@@ -79,6 +78,7 @@
 import NavBar from '@/components/NavBar.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import learningPlansApi from '@/api/learningPlans'
 
 export default {
   name: 'LearningPlanDetail',
@@ -111,15 +111,15 @@ export default {
         console.log('开始获取计划详情，计划ID:', this.planId)
 
         // 获取学习计划详情
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}`)
+        const response = await learningPlansApi.getPlanDetails(this.planId)
         console.log('获取到的原始响应:', response)
 
-        if (!response.data || !response.data.success) {
-          console.error('API返回格式不正确:', response.data)
+        if (!response || !response.success) {
+          console.error('API返回格式不正确:', response)
           throw new Error('获取计划详情失败')
         }
 
-        const plan = response.data.data
+        const plan = response.data
         console.log('处理后的计划数据:', plan)
 
         // 设置默认图标
@@ -127,8 +127,8 @@ export default {
 
         // 处理图标路径
         this.planIcon = plan.icon
-          ? (plan.icon.startsWith('http') ? plan.icon : `http://localhost:8080${plan.icon.startsWith('/') ? plan.icon : `/${plan.icon}`}`)
-          : `http://localhost:8080${defaultIcon}`
+          ? (plan.icon.startsWith('http') ? plan.icon : `${plan.icon.startsWith('/') ? plan.icon : `/${plan.icon}`}`)
+          : `${defaultIcon}`
 
         this.planTag = plan.tag || '算法'
         this.planTitle = plan.title || '学习计划'
@@ -164,15 +164,15 @@ export default {
         console.log('开始获取计划题目，计划ID:', this.planId)
 
         // 获取学习路径的题目列表
-        const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/problems`)
-        console.log('API返回的原始数据:', response.data)
+        const response = await learningPlansApi.getPlanProblems(this.planId)
+        console.log('API返回的原始数据:', response)
 
-        if (!response.data || !response.data.success) {
-          console.error('API返回格式不正确:', response.data)
+        if (!response || !response.success) {
+          console.error('API返回格式不正确:', response)
           throw new Error('获取计划题目失败')
         }
 
-        const problemsData = response.data.data
+        const problemsData = response.data
         if (!Array.isArray(problemsData)) {
           console.error('API返回的题目数据不是数组格式:', problemsData)
           throw new Error('题目数据格式错误')
@@ -210,18 +210,17 @@ export default {
           return
         }
 
-        const headers = { Authorization: `Bearer ${token}` }
         try {
           // 先从学习计划进度API获取数据
-          const response = await axios.get(`http://localhost:3000/api/learning-plans/${this.planId}/progress`, { headers })
+          const response = await learningPlansApi.getUserProgress(this.planId)
 
-          console.log('获取到的用户进度数据:', response.data)
+          console.log('获取到的用户进度数据:', response)
 
-          if (!response.data || !response.data.success) {
+          if (!response || !response.success) {
             throw new Error('获取用户进度失败')
           }
 
-          this.userProgress = response.data.data
+          this.userProgress = response.data
 
           // 更新题目完成状态
           if (this.userProgress?.completed_problems) {
@@ -240,8 +239,9 @@ export default {
             const problemIds = this.problems.map(p => p.id).filter(id => id)
             if (problemIds.length === 0) return
 
+            const headers = { Authorization: `Bearer ${token}` }
             // 方案1：使用问题状态API
-            const problemStatusResponse = await axios.get('http://localhost:3000/api/problems/user-status', {
+            const problemStatusResponse = await axios.get('/api/problems/user-status', {
               params: { problem_ids: problemIds.join(',') },
               headers
             })
@@ -268,7 +268,8 @@ export default {
 
             // 方案2：使用用户问题状态API
             try {
-              const userStatusResponse = await axios.get('http://localhost:3000/api/user/problem-status', { headers })
+              const headers = { Authorization: `Bearer ${token}` }
+              const userStatusResponse = await axios.get('/api/user/problem-status', { headers })
 
               if (userStatusResponse.data && userStatusResponse.data.success) {
                 const statusMap = {}
@@ -301,43 +302,10 @@ export default {
           ElMessage.error('登录已过期，请重新登录')
         }
       }
-    },
-
-    async startLearning () {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const token = userInfo.token
-        if (!token) {
-          ElMessage.error('请先登录再开始学习')
-          return
-        }
-
-        const headers = { Authorization: `Bearer ${token}` }
-        if (!this.userProgress) {
-          // 如果还没有进度记录，创建一个
-          await axios.post(`http://localhost:3000/api/learning-plans/${this.planId}/start`, {}, { headers })
-          // 重新获取进度
-          await this.fetchUserProgress()
-        }
-
-        // 获取第一个未完成的题目
-        const firstUncompletedProblem = this.problems.find(p => !p.completed)
-        if (firstUncompletedProblem) {
-          this.$router.push(`/problems/detail/${firstUncompletedProblem.problem_number}`)
-        } else {
-          this.$router.push(`/problems/detail/${this.problems[0].problem_number}`)
-        }
-      } catch (error) {
-        console.error('开始学习失败:', error)
-        ElMessage.error('开始学习失败，请确保已登录并稍后重试')
-      }
-    },
-
-    goToProblem (problemNumber) {
-      this.$router.push(`/problems/detail/${problemNumber}`)
     }
   }
 }
+
 </script>
 
 <style scoped>
