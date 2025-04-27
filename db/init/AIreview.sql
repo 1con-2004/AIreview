@@ -11,7 +11,7 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 27/04/2025 08:23:32
+ Date: 27/04/2025 19:42:55
 */
 
 SET NAMES utf8mb4;
@@ -1507,7 +1507,7 @@ CREATE TABLE `user_visits` (
   UNIQUE KEY `uk_user_date` (`user_id`,`visit_date`),
   KEY `idx_visit_date` (`visit_date`),
   CONSTRAINT `fk_visit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=397 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=400 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='全局——用户访问网站记录表';
 
 -- ----------------------------
 -- Records of user_visits
@@ -1553,6 +1553,7 @@ INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `v
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (355, 1, '2025-04-23', '2025-04-23 13:47:59', 27);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (382, 1, '2025-04-25', '2025-04-25 13:49:26', 2);
 INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (384, 1, '2025-04-26', '2025-04-26 02:01:58', 13);
+INSERT INTO `user_visits` (`id`, `user_id`, `visit_date`, `first_visit_time`, `visit_count`) VALUES (397, 1, '2025-04-27', '2025-04-27 11:25:03', 3);
 COMMIT;
 
 -- ----------------------------
@@ -1581,7 +1582,7 @@ CREATE TABLE `users` (
 -- Records of users
 -- ----------------------------
 BEGIN;
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (1, 'admin', '$2b$10$3t1seTn59uEoBtMfEsAaLO6R7/g7ny8rthOtP1Plh3dXLB1ibiO7W', 'admin@example.com', NULL, '2025-01-22 12:15:35', 1, NULL, 'admin', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDU2NjAxNDAsImV4cCI6MTc0NjI2NDk0MCwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.pSPd5oddHj5NRsZY5ZUIUqI_RS7OuaCjhhJl0iLzO6c');
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (1, 'admin', '$2b$10$3t1seTn59uEoBtMfEsAaLO6R7/g7ny8rthOtP1Plh3dXLB1ibiO7W', 'admin@example.com', NULL, '2025-01-22 12:15:35', 1, NULL, 'admin', NULL, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NDU3NTMwNzQsImV4cCI6MTc0NjM1Nzg3NCwiYXVkIjoiQUlyZXZpZXctY2xpZW50IiwiaXNzIjoiQUlyZXZpZXcifQ.IwAztNkU4epLZrfgp2FmHEDH5uZLUsA_01n27CVCrb8');
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (3, 'test', 'test123', '123@qq.com', NULL, '2025-01-24 10:03:39', 1, NULL, 'teacher', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (6, 'student1', '$2b$10$kti7yxUgaM9A3Mngg4VAk.aXB0F/4cd7MFTq0MYMgT42HiYSXvWsK', 'xuesheng@qq.com', NULL, '2025-02-05 11:53:55', 1, NULL, 'normal', NULL, NULL);
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `phone`, `created_at`, `status`, `token`, `role`, `role_expire_time`, `refresh_token`) VALUES (7, 'VIP1', '$2b$10$pw2KRFpKOgR8SDm/si.UmuCVI0k5Yv5pbX8cv30D2KM7T8XooJETK', 'vip1@qq.com', NULL, '2025-02-05 11:57:34', 1, NULL, 'vip', NULL, NULL);

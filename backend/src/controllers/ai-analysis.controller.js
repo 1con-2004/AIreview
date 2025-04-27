@@ -62,7 +62,7 @@ async function codeAnalysis(req, res) {
  * @param {Object} res 响应对象
  * @returns {Promise<void>}
  */
-async function balanceQuery(req, res) {
+async function getBalance(req, res) {
   try {
     const balanceInfo = await deepseekService.queryBalance();
     return res.status(200).json(successResponse(balanceInfo));
@@ -108,6 +108,6 @@ async function getModels(req, res) {
 
 module.exports = {
   codeAnalysis,
-  balanceQuery,
+  getBalance,
   getModels
 }; 
