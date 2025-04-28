@@ -441,13 +441,24 @@
                         </div>
                         <div v-else>
                           <!-- 思考过程显示 -->
-                          <div v-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
+                          <div v-if="aiAnalysisResult.reasoning" class="result-block">
+                            <div class="result-title">思考过程 (Reasoning)</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.reasoning }}</pre>
+                          </div>
+
+                          <!-- 分析结果显示 -->
+                          <div v-if="aiAnalysisResult.analysis" class="result-block" style="margin-top: 20px;">
+                            <div class="result-title">分析结果 (Analysis)</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.analysis }}</pre>
+                          </div>
+                          <!-- 后备data对象支持 -->
+                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
                             <div class="result-title">思考过程 (Reasoning)</div>
                             <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.reasoning }}</pre>
                           </div>
 
-                          <!-- 分析结果显示 -->
-                          <div v-if="aiAnalysisResult.data && aiAnalysisResult.data.analysis" class="result-block" style="margin-top: 20px;">
+                          <!-- 后备data对象支持 -->
+                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.analysis" class="result-block" style="margin-top: 20px;">
                             <div class="result-title">分析结果 (Analysis)</div>
                             <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.analysis }}</pre>
                           </div>
@@ -457,7 +468,6 @@
                             <div class="result-title">分析结果</div>
                             <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult }}</pre>
                           </div>
-
                           <!-- 其他情况：显示原始JSON -->
                           <div v-else class="result-block">
                             <div class="result-title">原始数据</div>
@@ -1782,42 +1792,52 @@ export default defineComponent({
         // 根据不同模型处理响应
         if (selectedAiModel.value === 'deepseek-reasoner') {
           console.log('【调试】处理DeepSeek-R1响应')
+          console.log('【调试】完整响应数据:', JSON.stringify(response.data))
 
-          // 检查是否有message结构
-          if (response.data && response.data.message) {
-            console.log('【调试】检测到message结构:', Object.keys(response.data.message))
+          // 尝试直接从顶层获取reasoning和analysis
+          if (response.data && response.data.reasoning && response.data.analysis) {
+            console.log('【调试】检测到顶层reasoning和analysis结构')
             aiAnalysisResult.value = response.data
           }
-          // 检查是否有嵌套的data.data结构
+          // 检查是否有嵌套的data结构
           else if (response.data && response.data.data) {
-            console.log('【调试】检测到data.data结构, 类型:', typeof response.data.data)
-
-            // 尝试处理data.data是对象的情况
-            if (typeof response.data.data === 'object') {
+            console.log('【调试】检测到data结构, 类型:', typeof response.data.data)
+            // 如果data是对象且包含reasoning和analysis
+            if (typeof response.data.data === 'object' &&
+                (response.data.data.reasoning || response.data.data.analysis)) {
+              console.log('【调试】从data对象中提取数据')
               aiAnalysisResult.value = response.data.data
             }
-            // 处理data.data是字符串的情况
+            // 处理data是字符串的情况
             else if (typeof response.data.data === 'string') {
               try {
                 // 尝试解析字符串为JSON
                 const parsedData = JSON.parse(response.data.data)
                 console.log('【调试】成功将data.data解析为JSON对象:', Object.keys(parsedData))
-                aiAnalysisResult.value = parsedData
+                // 检查解析的数据是否包含reasoning/analysis
+                if (parsedData.reasoning || parsedData.analysis) {
+                  aiAnalysisResult.value = parsedData
+                } else {
+                  aiAnalysisResult.value = response.data
+                }
               } catch (e) {
                 // 如果不是JSON格式，直接作为字符串处理
                 console.log('【调试】data.data不是JSON格式，作为字符串处理')
                 aiAnalysisResult.value = response.data.data
               }
+            } else {
+              // 如果data结构不符合预期，使用原始响应
+              aiAnalysisResult.value = response.data
             }
           }
           // 直接使用外层数据
           else {
-            console.log('【调试】未检测到特殊结构，使用外层数据')
+            console.log('【调试】未检测到预期结构，使用原始响应数据')
             aiAnalysisResult.value = response.data
           }
 
           console.log('【调试】最终设置的aiAnalysisResult值类型:', typeof aiAnalysisResult.value)
-          console.log('【调试】最终设置的aiAnalysisResult值:',
+          console.log('【调试】最终设置的aiAnalysisResult键值:',
             typeof aiAnalysisResult.value === 'object'
               ? Object.keys(aiAnalysisResult.value)
               : aiAnalysisResult.value)
