@@ -43,7 +43,7 @@ const learningPlansApi = {
       if (!token) {
         return null
       }
-      
+
       const headers = { Authorization: `Bearer ${token}` }
       const response = await axios.get(`/api/learning-plans/${planId}/progress`, { headers })
       return response.data
@@ -61,7 +61,7 @@ const learningPlansApi = {
       if (!token) {
         throw new Error('用户未登录')
       }
-      
+
       const headers = { Authorization: `Bearer ${token}` }
       const response = await axios.post(`/api/learning-plans/${planId}/start`, {}, { headers })
       return response.data
@@ -72,4 +72,4 @@ const learningPlansApi = {
   }
 }
 
-export default learningPlansApi 
+export default learningPlansApi

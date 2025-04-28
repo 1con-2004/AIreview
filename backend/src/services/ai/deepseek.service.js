@@ -12,7 +12,7 @@ const API_KEY = config.DEEPSEEK_API_KEY;
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // 忽略SSL错误，仅在开发环境使用
   keepAlive: true,
-  timeout: 60000
+  timeout: 120000
 });
 
 // 创建axios实例 - 修改配置
@@ -22,7 +22,7 @@ const deepseekClient = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 60000, // 增加到60秒
+  timeout: 120000, // 增加到60秒
   // 强制禁用代理
   proxy: false,
   httpsAgent: httpsAgent,
@@ -83,13 +83,29 @@ async function analyzeCode(codeContent, modelType = 'deepseek-chat', temperature
       // 处理不同模型的返回结果
       if (modelType === 'deepseek-reasoner') {
         // 根据实际响应格式调整
+        console.log('DeepSeek Reasoner API响应结构:', JSON.stringify(response.data.choices[0], null, 2));
+        
+        // 检查并提取reasoning字段（如果存在）
+        let reasoningContent = '无推理过程';
+        // 根据API文档，正确的字段是message.reasoning_content
+        if (response.data.choices[0].message.reasoning_content) {
+          reasoningContent = response.data.choices[0].message.reasoning_content;
+          console.log('从message.reasoning_content获取思考过程');
+        } else if (response.data.choices[0].message.reasoning) {
+          reasoningContent = response.data.choices[0].message.reasoning;
+          console.log('从message.reasoning获取思考过程');
+        } else if (response.data.choices[0].reasoning) {
+          reasoningContent = response.data.choices[0].reasoning;
+          console.log('从reasoning获取思考过程');
+        } else if (response.data.choices[0].reasoning_steps) {
+          reasoningContent = response.data.choices[0].reasoning_steps;
+          console.log('从reasoning_steps获取思考过程');
+        }
+        
         return {
           model: modelType,
           content: response.data.choices[0].message.content,
-          // 如果response中包含reasoning_steps或类似字段，则提取
-          reasoning_content: response.data.choices[0].message.reasoning_steps || 
-                          response.data.choices[0].message.reasoning || 
-                          '无推理过程',
+          reasoning_content: reasoningContent,
           usage: response.data.usage
         };
       } else {

@@ -27,7 +27,7 @@ const getBaseUrl = () => {
  */
 const apiService = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 60000
+  timeout: 120000
 })
 
 /**
@@ -71,7 +71,6 @@ export const getResourceUrl = (path) => {
 
   // 确保path不以/开头，避免重复
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
-  
   // 移除public/前缀，因为资源文件在静态目录中不包含此前缀
   let processedPath = cleanPath
   if (processedPath.startsWith('public/')) {
@@ -84,7 +83,6 @@ export const getResourceUrl = (path) => {
 
   // 获取配置的资源基础URL
   const resourceBaseUrl = process.env.VUE_APP_RESOURCE_BASE_URL || ''
-  
   // 处理不同类型的资源路径
   if (processedPath.includes('uploads/avatars/')) {
     // 添加时间戳避免缓存问题
@@ -120,13 +118,12 @@ apiService.interceptors.request.use(
 
     // 增强令牌获取逻辑，从多个位置尝试获取令牌
     let accessToken = null
-    
     // 先从localStorage直接获取accessToken
     const directToken = localStorage.getItem('accessToken')
     if (directToken) {
       accessToken = directToken
       console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从localStorage直接获取到令牌`)
-    } 
+    }
     // 如果直接获取失败，尝试从userInfo获取
     else {
       const userInfoStr = localStorage.getItem('userInfo')
@@ -136,7 +133,6 @@ apiService.interceptors.request.use(
           if (userInfo.accessToken) {
             accessToken = userInfo.accessToken
             console.log(`[前端日志] [${new Date().toISOString()}] [${requestId}] 从userInfo中获取到令牌，用户: ${userInfo.username || '未知'}`)
-            
             // 同步到localStorage中的独立令牌项
             localStorage.setItem('accessToken', userInfo.accessToken)
           }
@@ -145,7 +141,6 @@ apiService.interceptors.request.use(
         }
       }
     }
-    
     // 如果找到令牌，添加到请求头
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`

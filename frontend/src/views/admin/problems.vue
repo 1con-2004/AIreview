@@ -1162,7 +1162,7 @@ const handleEditContent = async () => {
     }
 
     console.log('开始获取题目信息，ID:', currentProblem.value.id)
-    
+
     const response = await axios.get(`/api/problems/${currentProblem.value.id}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -1203,7 +1203,7 @@ const handleEditContent = async () => {
       console.error('错误信息:', error.message)
       errorMessage = error.message
     }
-    
+
     toast.add({
       severity: 'error',
       summary: '错误',
@@ -1239,7 +1239,7 @@ const handleEditSolution = async () => {
     }
 
     console.log('开始获取题目解答，ID:', currentProblem.value.id)
-    
+
     const response = await axios.get(`/api/problems/${currentProblem.value.id}/solution`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -1271,7 +1271,7 @@ const handleEditSolution = async () => {
       console.error('错误信息:', error.message)
       errorMessage = error.message
     }
-    
+
     toast.add({
       severity: 'error',
       summary: '错误',
@@ -1304,12 +1304,12 @@ const saveContentEdit = async () => {
       })
       return
     }
-    
+
     const formData = { ...editForm.value }
     formData.tags = processTagString(formData.tags)
 
     console.log('开始保存题目内容修改，ID:', currentProblem.value.id)
-    
+
     // 更新题目基本信息
     await axios.put(`/api/problems/${currentProblem.value.id}`, formData, {
       headers: {
@@ -1349,7 +1349,7 @@ const saveContentEdit = async () => {
       console.error('错误信息:', error.message)
       errorMessage = error.message
     }
-    
+
     toast.add({
       severity: 'error',
       summary: '错误',
@@ -1410,7 +1410,7 @@ const saveSolutionEdit = async () => {
     }
 
     console.log('开始保存题目答案修改，ID:', currentProblem.value.id)
-    
+
     await axios.put(`/api/problems/${currentProblem.value.id}/solution`, {
       solution_approach: solutionForm.value.solution_approach,
       solutions: {
@@ -1446,7 +1446,7 @@ const saveSolutionEdit = async () => {
       console.error('错误信息:', error.message)
       errorMessage = error.message
     }
-    
+
     toast.add({
       severity: 'error',
       summary: '错误',

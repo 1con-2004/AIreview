@@ -84,7 +84,7 @@
         <button @click="fixTokens" class="btn warning">修复Token</button>
         <button @click="clearTokens" class="btn danger">清除Token</button>
       </div>
-      
+
       <div v-if="apiResult" class="api-result">
         <h4>API请求结果:</h4>
         <pre>{{ JSON.stringify(apiResult, null, 2) }}</pre>
@@ -108,9 +108,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import axios from 'axios'
-import request from '@/utils/request'
+import request, { setGlobalToken } from '@/utils/request'
 import { useStore } from 'vuex'
-import { setGlobalToken } from '@/utils/request'
 
 const store = useStore()
 
@@ -167,13 +166,13 @@ const loadStoreInfo = () => {
 }
 
 const loadHeaderInfo = () => {
-  headerInfo.axiosGlobal = axios.defaults.headers.common['Authorization'] || null
-  headerInfo.serviceInstance = request.defaults.headers.common['Authorization'] || null
+  headerInfo.axiosGlobal = axios.defaults.headers.common.Authorization || null
+  headerInfo.serviceInstance = request.defaults.headers.common.Authorization || null
 }
 
 const loadEnvInfo = () => {
   envInfo.baseURL = request.defaults.baseURL
-  
+
   // 测试localStorage是否可用
   try {
     const testKey = '_test_' + Date.now()
@@ -217,7 +216,7 @@ const fixTokens = () => {
     // 1. 首先从userInfo中获取token（如果有）
     let accessToken = null
     let refreshToken = null
-    
+
     const userInfoStr = localStorage.getItem('userInfo')
     if (userInfoStr) {
       const userInfo = JSON.parse(userInfoStr)
@@ -227,22 +226,22 @@ const fixTokens = () => {
         console.log('从userInfo中获取到token')
       }
     }
-    
+
     // 2. 如果userInfo中没有，从store中获取
     if (!accessToken && store.getters.token) {
       accessToken = store.getters.token
       refreshToken = store.getters.getRefreshToken
       console.log('从store中获取到token')
     }
-    
+
     if (accessToken) {
       // 3. 将token同步到所有位置
       localStorage.setItem('accessToken', accessToken)
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
-      
+
       // 4. 更新请求头
       setGlobalToken(accessToken)
-      
+
       // 5. 刷新显示
       refreshStorage()
       alert('已同步Token到localStorage和请求头')
@@ -260,14 +259,14 @@ const clearTokens = () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('userInfo')
-    
+
     // 清除请求头
-    delete axios.defaults.headers.common['Authorization']
-    delete request.defaults.headers.common['Authorization']
-    
+    delete axios.defaults.headers.common.Authorization
+    delete request.defaults.headers.common.Authorization
+
     // 清除store
     store.dispatch('logout')
-    
+
     // 刷新显示
     refreshStorage()
     alert('已清除所有token和用户信息')
@@ -293,7 +292,7 @@ const decodeToken = () => {
       )
       return JSON.parse(jsonPayload)
     }
-    
+
     decodedToken.value = parseJwt(tokenToDecode.value)
   } catch (e) {
     console.error('解码token失败:', e)
@@ -442,4 +441,4 @@ pre {
   border-top: 1px solid #eee;
   padding-top: 10px;
 }
-</style> 
+</style>

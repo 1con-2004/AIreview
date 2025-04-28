@@ -220,7 +220,7 @@ import DeleteConfirmDialog from '@/components/common/DeleteConfirmDialog.vue'
 const router = useRouter()
 
 // 添加API基础URL常量
-const API_BASE_URL = ''  // 从 'http://localhost:3000' 修改为空字符串，使用相对路径
+const API_BASE_URL = '' // 从 'http://localhost:3000' 修改为空字符串，使用相对路径
 
 // 数据状态
 const problems = ref([])

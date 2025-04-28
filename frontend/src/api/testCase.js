@@ -3,7 +3,7 @@ import axios from 'axios'
 // 创建axios实例
 const request = axios.create({
   baseURL: process.env.VUE_APP_BASE_API || '', // url = base url + request url
-  timeout: 60000 // 请求超时时间
+  timeout: 120000 // 请求超时时间
 })
 
 // 请求拦截器

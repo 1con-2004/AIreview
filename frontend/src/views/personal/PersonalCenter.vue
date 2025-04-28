@@ -372,10 +372,10 @@ const fetchLearningPath = async (forceRefresh = false) => {
     // 1. 首先请求弱点分析
     const weaknessRes = await axios.get('/api/learning-path/weakness', { params: { refresh: forceRefresh } })
     weaknessAnalysis.value = weaknessRes.data.data || []
-    
+
     // 2. 然后请求学习方向
     const directionsRes = await axios.get('/api/learning-path/directions', { params: { refresh: forceRefresh } })
-    
+
     // 处理学习方向数据，按标签分组
     const directions = directionsRes.data.data || []
     const groupedDirections = {}
@@ -409,7 +409,7 @@ const fetchLearningPath = async (forceRefresh = false) => {
       tag,
       items
     }))
-    
+
     // 3. 最后请求推荐题目
     const recommendRes = await axios.get('/api/learning-path/recommend', { params: { refresh: forceRefresh } })
     recommendProblems.value = recommendRes.data.data || []

@@ -6,7 +6,7 @@
       <div class="problem-description">
         <div class="problem-header">
           <div class="action-buttons">
-            <button class="back-button" @click="goBack">题目列表</button>
+            <button class="back-button" @click="goBack">题目列表2</button>
           </div>
           <div class="title-section">
             <div class="title-row">
@@ -435,30 +435,35 @@
                       </div>
 
                       <!-- DeepSeek-R1的思考文本区域 -->
-                      <div v-else-if="selectedAiModel === 'deepseek-reasoner' && aiAnalysisResult && aiAnalysisResult.reasoning">
-                        <!-- 思考过程折叠面板 -->
-                        <div class="reasoning-panel" style="margin-bottom: 20px; border: 1px solid rgba(78, 205, 255, 0.2); border-radius: 8px; overflow: hidden;">
-                          <div
-                            class="reasoning-header"
-                            @click="isReasoningExpanded = !isReasoningExpanded"
-                            style="display: flex; align-items: center; padding: 12px; background: rgba(78, 205, 255, 0.1); cursor: pointer;"
-                          >
-                            <i
-                              :class="isReasoningExpanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"
-                              style="margin-right: 8px; color: #4facfe;"
-                            ></i>
-                            <span style="font-weight: 500; color: #e6edf3;">DeepSeek思考过程</span>
+                      <div v-else-if="selectedAiModel === 'deepseek-reasoner'" class="deepseek-reasoner-container">
+                        <div v-if="!aiAnalysisResult || Object.keys(aiAnalysisResult).length === 0">
+                          <el-empty description="请点击代码编辑器中的 AI 分析按钮获取分析结果" />
+                        </div>
+                        <div v-else>
+                          <!-- 思考过程显示 -->
+                          <div v-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
+                            <div class="result-title">思考过程 (Reasoning)</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.reasoning }}</pre>
                           </div>
-                          <div
-                            v-show="isReasoningExpanded"
-                            class="reasoning-content"
-                            style="padding: 16px; background: rgba(40, 44, 52, 0.5); max-height: 400px; overflow-y: auto;"
-                          >
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #a6accd;">{{ aiAnalysisResult.reasoning }}</pre>
+
+                          <!-- 分析结果显示 -->
+                          <div v-if="aiAnalysisResult.data && aiAnalysisResult.data.analysis" class="result-block" style="margin-top: 20px;">
+                            <div class="result-title">分析结果 (Analysis)</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.analysis }}</pre>
+                          </div>
+
+                          <!-- 字符串格式 -->
+                          <div v-else-if="typeof aiAnalysisResult === 'string'" class="result-block">
+                            <div class="result-title">分析结果</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult }}</pre>
+                          </div>
+
+                          <!-- 其他情况：显示原始JSON -->
+                          <div v-else class="result-block">
+                            <div class="result-title">原始数据</div>
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ JSON.stringify(aiAnalysisResult, null, 2) }}</pre>
                           </div>
                         </div>
-                        <!-- 分析结果 -->
-                        <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-html="highlightInlineCode(aiAnalysisResult.analysis)"></pre>
                       </div>
 
                       <!-- 其他AI模型的标准展示 -->
@@ -1101,78 +1106,118 @@ export default defineComponent({
 
     // 统一处理AI分析结果的函数
     const processAiAnalysisResponse = (response) => {
-      // 初始化分析结果变量
-      let analysis = ''
+      // 记录日志
+      console.log('AI分析响应:', response)
 
-      // 检查响应格式
-      if (response && response.data && response.data.success === true) {
-        console.log('处理AI分析响应 - 响应成功')
-
-        // 从response.data.data获取分析内容（现在是字符串）
-        if (typeof response.data.data === 'string') {
-          analysis = response.data.data
-          console.log('从response.data.data获取分析结果字符串')
-        } else if (response.data.data) {
-          // 处理可能的对象格式
-          if (response.data.data.codeAnalysis) {
-            // 旧格式响应
-            analysis = response.data.data.codeAnalysis
-            console.log('从response.data.data.codeAnalysis获取分析结果')
-          } else {
-            // 其他对象格式
-            analysis = JSON.stringify(response.data.data)
-            console.log('response.data.data是对象，转为字符串')
+      try {
+        // DeepSeek-Reasoner处理逻辑
+        if (selectedAiModel.value === 'deepseek-reasoner') {
+          // 检查是否可以直接返回整个响应
+          if (response?.data?.message?.content) {
+            return parseDeepSeekResponseString(response.data)
           }
-        } else {
-          // 处理data为null或undefined的情况
-          console.warn('response.data.data为空')
-          analysis = '分析结果不可用'
+
+          // 2. 处理data.data包含reasoning/analysis的情况
+          if (response?.data?.data) {
+            // 对象格式
+            if (typeof response.data.data === 'object') {
+              if (response.data.data.reasoning || response.data.data.analysis) {
+                return response.data
+              }
+            }
+
+            // 字符串格式需要解析
+            if (typeof response.data.data === 'string') {
+              return parseDeepSeekResponseString(response.data.data)
+            }
+          }
         }
-      } else if (response && response.data && typeof response.data === 'string') {
-        // 直接返回字符串
-        analysis = response.data
-        console.log('响应直接返回字符串')
-      } else {
-        console.warn('AI分析响应格式异常:', JSON.stringify(response.data, null, 2))
-        // 尝试从各种可能的位置提取数据
-        if (response?.data?.data) {
+
+        // 标准处理流程(非DeepSeek或上述处理失败)
+        let analysis = ''
+
+        if (response?.data?.success === true) {
           if (typeof response.data.data === 'string') {
             analysis = response.data.data
+          } else if (typeof response.data.data === 'object') {
+            if (response.data.data.analysis) {
+              analysis = response.data.data.analysis
+            } else {
+              analysis = JSON.stringify(response.data.data)
+            }
           } else {
-            analysis = JSON.stringify(response.data.data)
+            analysis = JSON.stringify(response.data)
           }
-        } else if (response?.data?.message) {
-          analysis = response.data.message
-        } else if (typeof response?.data === 'string') {
-          analysis = response.data
         } else {
-          analysis = '分析结果不可用'
-        }
-      }
-
-      // 检查分析内容是否是被双引号包围的JSON字符串（表示过度转义）
-      if (typeof analysis === 'string' && analysis.startsWith('"') && analysis.endsWith('"') && analysis.length > 2) {
-        try {
-          // 尝试去除额外的转义
-          const unescaped = JSON.parse(analysis)
-          if (typeof unescaped === 'string') {
-            console.log('修复了过度转义的分析结果')
-            analysis = unescaped
+          if (response?.data?.data) {
+            analysis = typeof response.data.data === 'string'
+              ? response.data.data
+              : JSON.stringify(response.data.data)
+          } else if (response?.data?.message) {
+            analysis = response.data.message
+          } else {
+            analysis = JSON.stringify(response.data || {})
           }
-        } catch (error) {
-          console.warn('尝试解析转义字符串失败:', error)
-          // 保持原样
         }
+
+        return !analysis || analysis === 'undefined' || analysis === 'null'
+          ? '无法获取分析结果，请重试'
+          : analysis
+      } catch (error) {
+        console.error('处理AI分析响应出错:', error)
+        return '处理分析结果时出错: ' + error.message
       }
+    }
 
-      // 确保analysis有值
-      if (!analysis || analysis === 'undefined' || analysis === 'null') {
-        analysis = '无法获取分析结果，请重试'
+    // 解析DeepSeek响应字符串的辅助函数
+    const parseDeepSeekResponseString = (responseStr) => {
+      try {
+        // 1. 尝试直接解析
+        try {
+          const directParsed = JSON.parse(responseStr)
+          if (directParsed.reasoning && directParsed.analysis) {
+            return {
+              reasoning: directParsed.reasoning,
+              analysis: directParsed.analysis
+            }
+          }
+        } catch (e) {
+          // 直接解析失败，继续下一步
+        }
+
+        // 2. 处理带转义的情况
+        let processedStr = responseStr
+
+        // 去除可能的外层引号
+        if (processedStr.startsWith('"') && processedStr.endsWith('"')) {
+          processedStr = processedStr.substring(1, processedStr.length - 1)
+        }
+
+        // 替换转义字符
+        processedStr = processedStr.replace(/\\"/g, '"')
+        processedStr = processedStr.replace(/\\n/g, '\n')
+        processedStr = processedStr.replace(/\\\\/g, '\\')
+
+        // 再次尝试解析
+        try {
+          const parsedData = JSON.parse(processedStr)
+          if (parsedData.reasoning && parsedData.analysis) {
+            return {
+              reasoning: parsedData.reasoning,
+              analysis: parsedData.analysis
+            }
+          }
+        } catch (e) {
+          // 处理转义后解析仍失败
+          console.warn('处理转义后解析仍失败:', e)
+        }
+
+        // 3. 如果所有解析尝试都失败，返回原字符串
+        return responseStr
+      } catch (error) {
+        console.error('解析DeepSeek响应字符串失败:', error)
+        return responseStr
       }
-
-      console.log('最终分析文本前50个字符:', analysis.substring(0, 50) + '...')
-
-      return analysis
     }
 
     const clearConsole = () => {
@@ -1711,46 +1756,84 @@ export default defineComponent({
         // 立即切换到左侧AI分析标签页
         activeTab.value = 'aiAnalysis'
 
-        console.log('尝试使用token进行AI分析:', accessToken ? '找到token' : '未找到token')
-        console.log('选择的AI模型:', selectedAiModel.value)
+        console.log('【调试】准备调用AI分析API - 选择的模型:', selectedAiModel.value)
 
-        // 调用API进行代码分析，传递选择的模型参数
-        const response = await analyzeCode({
+        // 构建请求参数
+        const params = {
           code: code.value,
           language: selectedLanguageForCode.value,
           problemId: route.params.id,
-          model: selectedAiModel.value // 添加模型选择参数
-        }, accessToken)
+          model: selectedAiModel.value
+        }
 
-        console.log('AI分析原始响应:', response)
+        console.log('【调试】发送的请求参数:', JSON.stringify(params))
+
+        // 调用API进行代码分析
+        const response = await apiService.post(
+          'ai/analyze-code',
+          params,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          }
+        )
+
+        console.log('【调试】收到AI分析原始响应:', JSON.stringify(response))
 
         // 根据不同模型处理响应
-        if (selectedAiModel.value === 'deepseek-reasoner' && response.data && response.data.data) {
-          // DeepSeek-R1包含思考过程和分析结果
-          if (response.data.data.reasoning && response.data.data.analysis) {
-            aiAnalysisResult.value = {
-              reasoning: response.data.data.reasoning,
-              analysis: response.data.data.analysis
-            }
-            console.log('设置DeepSeek-R1思考和分析结果')
-          } else {
-            // 可能没有按预期格式返回，尝试处理字符串结果
-            aiAnalysisResult.value = processAiAnalysisResponse(response)
-            console.log('DeepSeek-R1返回的不是预期格式，进行标准处理')
+        if (selectedAiModel.value === 'deepseek-reasoner') {
+          console.log('【调试】处理DeepSeek-R1响应')
+
+          // 检查是否有message结构
+          if (response.data && response.data.message) {
+            console.log('【调试】检测到message结构:', Object.keys(response.data.message))
+            aiAnalysisResult.value = response.data
           }
+          // 检查是否有嵌套的data.data结构
+          else if (response.data && response.data.data) {
+            console.log('【调试】检测到data.data结构, 类型:', typeof response.data.data)
+
+            // 尝试处理data.data是对象的情况
+            if (typeof response.data.data === 'object') {
+              aiAnalysisResult.value = response.data.data
+            }
+            // 处理data.data是字符串的情况
+            else if (typeof response.data.data === 'string') {
+              try {
+                // 尝试解析字符串为JSON
+                const parsedData = JSON.parse(response.data.data)
+                console.log('【调试】成功将data.data解析为JSON对象:', Object.keys(parsedData))
+                aiAnalysisResult.value = parsedData
+              } catch (e) {
+                // 如果不是JSON格式，直接作为字符串处理
+                console.log('【调试】data.data不是JSON格式，作为字符串处理')
+                aiAnalysisResult.value = response.data.data
+              }
+            }
+          }
+          // 直接使用外层数据
+          else {
+            console.log('【调试】未检测到特殊结构，使用外层数据')
+            aiAnalysisResult.value = response.data
+          }
+
+          console.log('【调试】最终设置的aiAnalysisResult值类型:', typeof aiAnalysisResult.value)
+          console.log('【调试】最终设置的aiAnalysisResult值:',
+            typeof aiAnalysisResult.value === 'object'
+              ? Object.keys(aiAnalysisResult.value)
+              : aiAnalysisResult.value)
         } else {
-          // 智谱AI和DeepSeek-V3使用标准处理
+          // 其他模型的标准处理
           aiAnalysisResult.value = processAiAnalysisResponse(response)
-          console.log('使用标准处理函数处理其他模型的结果')
         }
 
         ElMessage.success('代码分析完成')
       } catch (error) {
-        console.error('AI分析失败:', error)
+        console.error('【调试】AI分析失败:', error)
+
         // 添加更详细的错误处理
         if (error.response) {
-          console.error('响应状态:', error.response.status)
-          console.error('响应数据:', error.response.data)
+          console.error('【调试】响应状态:', error.response.status)
+          console.error('【调试】响应数据:', error.response.data)
 
           if (error.response.status === 401) {
             ElMessage.error('登录已过期，请重新登录')
@@ -1760,6 +1843,9 @@ export default defineComponent({
         } else {
           ElMessage.error('AI分析失败，请稍后重试')
         }
+
+        // 设置一个错误标识，以便在UI中显示
+        aiAnalysisResult.value = { error: true, message: error.message || '分析失败' }
       } finally {
         isAnalyzing.value = false
       }
@@ -1995,6 +2081,49 @@ export default defineComponent({
       return aiModelMap[selectedAiModel.value] || 'AI'
     }
 
+    // 添加 hasActualAnalysisContent 函数
+    const hasActualAnalysisContent = (result) => {
+      // 检查是否为空值
+      if (!result) return false
+
+      // 检查字符串类型
+      if (typeof result === 'string') {
+        return result.trim().length > 0
+      }
+
+      // 检查对象类型
+      if (typeof result === 'object') {
+        // 检查特定的DeepSeek内容属性
+        if (result.reasoning || result.reasoning_content || result.analysis || result.content) {
+          return true
+        }
+
+        // 检查message结构
+        if (result.message && result.message.content) {
+          return true
+        }
+
+        // 检查是否是空的初始化对象
+        if (Array.isArray(result.errors) && result.errors.length === 0 &&
+            Array.isArray(result.improvements) && result.improvements.length === 0 &&
+            result.performance === null &&
+            result.rawAnalysis === null) {
+          return false
+        }
+
+        // 检查其他可能有内容的属性
+        for (const key in result) {
+          const value = result[key]
+          if (value && ((typeof value === 'string' && value.trim().length > 0) ||
+              (typeof value === 'object' && Object.keys(value).length > 0 && !Array.isArray(value)))) {
+            return true
+          }
+        }
+      }
+
+      return false
+    }
+
     return {
       problem,
       activeTab,
@@ -2086,7 +2215,8 @@ export default defineComponent({
       syncScroll,
       selectedAiModel,
       isReasoningExpanded,
-      getAiName
+      getAiName,
+      hasActualAnalysisContent
     }
   }
 })
@@ -5955,5 +6085,30 @@ pre {
   flex-direction: column;
   gap: 12px;
   flex: 1;
+}
+
+.deepseek-reasoner-container {
+  background: rgba(40, 44, 52, 0.5);
+  border: 1px solid rgba(78, 205, 255, 0.15);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.result-block {
+  margin-bottom: 16px;
+}
+
+.result-block:last-child {
+  margin-bottom: 0;
+}
+
+.result-title {
+  color: #4facfe;
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 14px;
+  border-left: 3px solid #4facfe;
+  padding-left: 8px;
 }
 </style>

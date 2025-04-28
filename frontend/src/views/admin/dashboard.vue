@@ -94,7 +94,7 @@ const fetchStats = async () => {
     const storeToken = store.getters.token
     const localToken = localStorage.getItem('accessToken')
     const token = storeToken || localToken
-    
+
     console.log('当前token从store获取:', token)
 
     if (!token) {
@@ -103,9 +103,9 @@ const fetchStats = async () => {
     }
 
     // 确保token设置在请求头中
-    if (!request.defaults.headers.common['Authorization']) {
+    if (!request.defaults.headers.common.Authorization) {
       console.log('请求头中未设置token，正在设置...')
-      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      request.defaults.headers.common.Authorization = `Bearer ${token}`
     }
 
     const response = await request.get('/api/stats/dashboard')
@@ -154,7 +154,7 @@ const recordVisit = async () => {
     const storeToken = store.getters.token
     const localToken = localStorage.getItem('accessToken')
     const token = storeToken || localToken
-    
+
     console.log('当前token从store获取:', token)
 
     if (!token) {
@@ -163,9 +163,9 @@ const recordVisit = async () => {
     }
 
     // 确保token设置在请求头中
-    if (!request.defaults.headers.common['Authorization']) {
+    if (!request.defaults.headers.common.Authorization) {
       console.log('请求头中未设置token，正在设置...')
-      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      request.defaults.headers.common.Authorization = `Bearer ${token}`
     }
 
     await request.post('/api/stats/record-visit')
@@ -195,9 +195,9 @@ const fetchChartData = async (type, days) => {
     }
 
     // 确保token设置在请求头中
-    if (!request.defaults.headers.common['Authorization']) {
+    if (!request.defaults.headers.common.Authorization) {
       console.log('请求头中未设置token，正在设置...')
-      request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      request.defaults.headers.common.Authorization = `Bearer ${token}`
     }
 
     const response = await request.get(`/api/stats/trend/${type}`, {

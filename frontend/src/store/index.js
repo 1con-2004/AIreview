@@ -12,23 +12,23 @@ export default createStore({
   },
   mutations: {
     // 初始化状态
-    INITIALIZE_STATE(state) {
+    INITIALIZE_STATE (state) {
       // 尝试从localStorage读取token和用户信息
       try {
         const accessToken = localStorage.getItem('accessToken')
         const refreshToken = localStorage.getItem('refreshToken')
         const userInfoStr = localStorage.getItem('userInfo')
-        
+
         if (accessToken) state.accessToken = accessToken
         if (refreshToken) state.refreshToken = refreshToken
         if (userInfoStr) state.userInfo = JSON.parse(userInfoStr)
-        
+
         console.log('状态初始化完成，accessToken存在:', !!accessToken)
         console.log('状态初始化完成，userInfo存在:', !!userInfoStr)
       } catch (e) {
         console.error('初始化状态出错:', e)
       }
-      
+
       state.initialized = true
     },
     // 设置用户信息
@@ -89,18 +89,18 @@ export default createStore({
     },
     CLEAR_AUTH (state) {
       console.log('执行清除认证状态操作')
-      
+
       // 清除Vuex状态
       state.userInfo = null
       state.accessToken = null
       state.refreshToken = null
-      
+
       // 清除所有与用户相关的localStorage项
       try {
         // 先获取原始值，用于记录日志
         const originalUserInfo = localStorage.getItem('userInfo')
         const originalToken = localStorage.getItem('accessToken')
-        
+
         if (originalUserInfo) {
           try {
             const parsedInfo = JSON.parse(originalUserInfo)
@@ -109,24 +109,24 @@ export default createStore({
             console.log('无法解析原始userInfo')
           }
         }
-        
+
         // 清除主要用户数据项
         localStorage.removeItem('userInfo')
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('currentUsername')
         localStorage.removeItem('last_active_user')
-        
+
         // 清除会话存储
         sessionStorage.removeItem('current_user')
         sessionStorage.removeItem('last_active_user')
-        
+
         // 验证清除结果
         const afterUserInfo = localStorage.getItem('userInfo')
         const afterToken = localStorage.getItem('accessToken')
-        
+
         console.log('用户数据清除结果: userInfo存在=', !!afterUserInfo, 'accessToken存在=', !!afterToken)
-        
+
         if (afterUserInfo || afterToken) {
           console.warn('用户数据未完全清除，尝试使用localStorage.clear()')
           localStorage.clear()
@@ -176,7 +176,7 @@ export default createStore({
     // 登出
     logout ({ commit }) {
       console.log('用户登出')
-      
+
       // 先尝试获取用户信息，用于日志记录
       try {
         const userInfoStr = localStorage.getItem('userInfo')
@@ -187,20 +187,20 @@ export default createStore({
       } catch (e) {
         console.error('读取用户信息失败:', e)
       }
-      
+
       // 清除Vuex中的认证状态
       commit('CLEAR_AUTH')
-      
+
       // 彻底清理所有用户相关的本地存储
       localStorage.removeItem('userInfo')
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('currentUsername')
       localStorage.removeItem('last_active_user')
-      
+
       // 清理会话存储
       sessionStorage.removeItem('current_user')
-      
+
       // 检查清理结果
       const cleanCheck = {
         userInfo: localStorage.getItem('userInfo'),
@@ -208,12 +208,12 @@ export default createStore({
         refreshToken: localStorage.getItem('refreshToken'),
         currentUsername: localStorage.getItem('currentUsername')
       }
-      
+
       console.log('登出后的存储状态:', cleanCheck)
-      
+
       // 触发全局事件通知其他组件
       window.dispatchEvent(new CustomEvent('userLogout'))
-      
+
       console.log('用户登出完成，所有状态已清除')
     },
     updateTokens ({ commit }, { accessToken, refreshToken }) {

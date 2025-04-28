@@ -191,11 +191,11 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ['/login', '/register', '/home', '/login/phone', '/login/reset-password', '/debug/token']
   const authRequired = !publicPages.includes(to.path)
-  
+
   // 检查用户信息和token
   const userInfoStr = localStorage.getItem('userInfo')
   const accessToken = localStorage.getItem('accessToken')
-  
+
   // 增加详细日志
   console.log(`[路由] 检查访问权限: ${to.path}`)
   console.log(`[路由] 用户信息存在: ${!!userInfoStr}, Token存在: ${!!accessToken}`)
@@ -203,7 +203,7 @@ router.beforeEach((to, from, next) => {
 
   // 未登录且需要认证，跳转到登录页
   if (authRequired && (!userInfoStr || !accessToken)) {
-    console.log(`[路由] 需要登录但未登录，重定向到登录页`)
+    console.log('[路由] 需要登录但未登录，重定向到登录页')
     next('/login')
     return
   }
@@ -228,7 +228,7 @@ router.beforeEach((to, from, next) => {
         return
       }
     } catch (error) {
-      console.error(`[路由] 解析用户信息失败:`, error)
+      console.error('[路由] 解析用户信息失败:', error)
       // 解析失败视为未登录
       if (authRequired) {
         next('/login')

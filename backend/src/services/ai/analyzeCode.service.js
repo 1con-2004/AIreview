@@ -189,11 +189,28 @@ ${code}
         }
       });
       
+      console.log('DeepSeek Reasoner API 响应:', JSON.stringify(response.data.choices[0], null, 2));
+      
       const reasoningResponse = response.data.choices[0]; 
       
       // 分离思考过程和最终分析
-      const reasoning = reasoningResponse.reasoning || '';
-      const analysis = reasoningResponse.message.content || '';
+      // 根据DeepSeek API文档，正确的字段是message.reasoning_content
+      let reasoning = '';
+      const analysis = reasoningResponse.message?.content || '';
+      
+      // 根据API文档，思维链内容应该在message.reasoning_content字段
+      if (reasoningResponse.message?.reasoning_content) {
+        reasoning = reasoningResponse.message.reasoning_content;
+        console.log('从message.reasoning_content获取思考过程');
+      } else if (reasoningResponse.reasoning) {
+        reasoning = reasoningResponse.reasoning;
+        console.log('从reasoning字段获取思考过程(旧版兼容)');
+      } else if (reasoningResponse.reasoning_steps) {
+        reasoning = reasoningResponse.reasoning_steps;
+        console.log('从reasoning_steps字段获取思考过程(旧版兼容)');
+      } else {
+        console.log('DeepSeek Reasoner API响应中没有找到思考过程，使用空字符串');
+      }
       
       return {
         reasoning,
