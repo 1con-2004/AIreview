@@ -6,7 +6,7 @@
       <div class="problem-description">
         <div class="problem-header">
           <div class="action-buttons">
-            <button class="back-button" @click="goBack">题目列表2</button>
+            <button class="back-button" @click="goBack">题目列表</button>
           </div>
           <div class="title-section">
             <div class="title-row">
@@ -443,46 +443,41 @@
                           <!-- 思考过程显示 -->
                           <div v-if="aiAnalysisResult.reasoning" class="result-block">
                             <div class="result-title">思考过程 (Reasoning)</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.reasoning }}</pre>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.reasoning)"></div>
+                          </div>
+                          <!-- 处理data嵌套格式 -->
+                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
+                            <div class="result-title">思考过程 (Reasoning)</div>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.data.reasoning)"></div>
                           </div>
 
                           <!-- 分析结果显示 -->
                           <div v-if="aiAnalysisResult.analysis" class="result-block" style="margin-top: 20px;">
                             <div class="result-title">分析结果 (Analysis)</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.analysis }}</pre>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.analysis)"></div>
                           </div>
-                          <!-- 后备data对象支持 -->
-                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
-                            <div class="result-title">思考过程 (Reasoning)</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.reasoning }}</pre>
-                          </div>
-
-                          <!-- 后备data对象支持 -->
+                          <!-- 处理data嵌套格式 -->
                           <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.analysis" class="result-block" style="margin-top: 20px;">
                             <div class="result-title">分析结果 (Analysis)</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult.data.analysis }}</pre>
-                          </div>
-
-                          <!-- 字符串格式 -->
-                          <div v-else-if="typeof aiAnalysisResult === 'string'" class="result-block">
-                            <div class="result-title">分析结果</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ aiAnalysisResult }}</pre>
-                          </div>
-                          <!-- 其他情况：显示原始JSON -->
-                          <div v-else class="result-block">
-                            <div class="result-title">原始数据</div>
-                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3; background: rgba(40, 44, 52, 0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(78, 205, 255, 0.15);">{{ JSON.stringify(aiAnalysisResult, null, 2) }}</pre>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.data.analysis)"></div>
                           </div>
                         </div>
                       </div>
 
                       <!-- 其他AI模型的标准展示 -->
-                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="typeof aiAnalysisResult === 'string'" v-html="highlightInlineCode(aiAnalysisResult)"></pre>
-                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.rawAnalysis" v-html="highlightInlineCode(aiAnalysisResult.rawAnalysis)"></pre>
-                      <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.performance && aiAnalysisResult.performance.explanation" v-html="highlightInlineCode(aiAnalysisResult.performance.explanation)"></pre>
-                      <div v-else style="color: #ff6b6b; text-align: center; padding: 20px;">
-                        <i class="el-icon-warning-outline" style="font-size: 24px; margin-right: 8px;"></i>
-                        <span>请先点击「AI分析」按钮，{{ getAiName() }}将会对您的代码进行智能分析</span>
+                      <div v-else>
+                        <!-- 字符串格式直接渲染 (GLM-4-Flash 和 DeepSeek-Chat) -->
+                        <div class="markdown-content" v-if="typeof aiAnalysisResult === 'string'" v-html="renderMarkdown(aiAnalysisResult)"></div>
+                        <!-- 处理data嵌套的字符串格式 -->
+                        <div class="markdown-content" v-else-if="aiAnalysisResult && typeof aiAnalysisResult.data === 'string'" v-html="renderMarkdown(aiAnalysisResult.data)"></div>
+                        <!-- 兼容旧格式 -->
+                        <div class="markdown-content" v-else-if="aiAnalysisResult && aiAnalysisResult.rawAnalysis" v-html="renderMarkdown(aiAnalysisResult.rawAnalysis)"></div>
+                        <div class="markdown-content" v-else-if="aiAnalysisResult && aiAnalysisResult.performance && aiAnalysisResult.performance.explanation" v-html="renderMarkdown(aiAnalysisResult.performance.explanation)"></div>
+                        <!-- 无数据提示 -->
+                        <div v-else style="color: #ff6b6b; text-align: center; padding: 20px;">
+                          <i class="el-icon-warning-outline" style="font-size: 24px; margin-right: 8px;"></i>
+                          <span>请先点击「AI分析」按钮，{{ getAiName() }}将会对您的代码进行智能分析</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -649,6 +644,9 @@ import { marked } from 'marked'
 
 // 在引入部分添加apiService和getApiUrl
 import apiService from '@/utils/api'
+import MarkdownIt from 'markdown-it'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.css' // 暗色主题样式
 
 export default defineComponent({
   name: 'ProblemDetail',
@@ -1799,13 +1797,13 @@ export default defineComponent({
             console.log('【调试】检测到顶层reasoning和analysis结构')
             aiAnalysisResult.value = response.data
           }
-          // 检查是否有嵌套的data结构
-          else if (response.data && response.data.data) {
-            console.log('【调试】检测到data结构, 类型:', typeof response.data.data)
+          // 检查是否有data.data结构
+          else if (response.data && response.data.success === true && response.data.data) {
+            console.log('【调试】检测到data.data结构, 类型:', typeof response.data.data)
             // 如果data是对象且包含reasoning和analysis
             if (typeof response.data.data === 'object' &&
-                (response.data.data.reasoning || response.data.data.analysis)) {
-              console.log('【调试】从data对象中提取数据')
+                response.data.data.reasoning && response.data.data.analysis) {
+              console.log('【调试】从data.data对象中提取reasoning/analysis')
               aiAnalysisResult.value = response.data.data
             }
             // 处理data是字符串的情况
@@ -1837,10 +1835,11 @@ export default defineComponent({
           }
 
           console.log('【调试】最终设置的aiAnalysisResult值类型:', typeof aiAnalysisResult.value)
-          console.log('【调试】最终设置的aiAnalysisResult键值:',
-            typeof aiAnalysisResult.value === 'object'
-              ? Object.keys(aiAnalysisResult.value)
-              : aiAnalysisResult.value)
+          if (typeof aiAnalysisResult.value === 'object') {
+            console.log('【调试】最终设置的aiAnalysisResult键值:', Object.keys(aiAnalysisResult.value))
+          } else {
+            console.log('【调试】最终设置的aiAnalysisResult (字符串):', aiAnalysisResult.value.substring(0, 50) + '...')
+          }
         } else {
           // 其他模型的标准处理
           aiAnalysisResult.value = processAiAnalysisResponse(response)
@@ -2144,6 +2143,71 @@ export default defineComponent({
       return false
     }
 
+    // 创建 markdown-it 实例并配置语法高亮
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true,
+      highlight: function (str, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+          } catch (__) {}
+        }
+        return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+      }
+    })
+
+    // 渲染Markdown
+    const renderMarkdown = (content) => {
+      if (!content) return ''
+
+      // 处理转义字符问题 - 将字符串中的转义序列转换为实际字符
+      let processedContent = content
+
+      // 先检查内容是否为字符串
+      if (typeof processedContent === 'string') {
+        // 去除首尾的双引号（针对deepseek-chat和智谱AI返回格式）
+        if (processedContent.startsWith('"') && processedContent.endsWith('"')) {
+          processedContent = processedContent.substring(1, processedContent.length - 1)
+        }
+
+        // 处理常见的转义序列
+        processedContent = processedContent.replace(/\\n/g, '\n')
+        processedContent = processedContent.replace(/\\t/g, '\t')
+        processedContent = processedContent.replace(/\\r/g, '\r')
+        processedContent = processedContent.replace(/\\"/g, '"')
+        processedContent = processedContent.replace(/\\'/g, "'")
+        processedContent = processedContent.replace(/\\\\/g, '\\')
+
+        // 替换Unicode转义序列，如\u0000
+        processedContent = processedContent.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+          return String.fromCharCode(parseInt(code, 16))
+        })
+
+        // 查看是否是JSON字符串，如果是则解析
+        if (processedContent.trim().startsWith('{') && processedContent.trim().endsWith('}')) {
+          try {
+            // 尝试解析JSON
+            const parsed = JSON.parse(processedContent)
+            if (parsed && typeof parsed === 'object') {
+              // 如果成功解析，使用其中的文本内容，通常是某个字段
+              if (parsed.text) {
+                processedContent = parsed.text
+              } else if (parsed.content) {
+                processedContent = parsed.content
+              }
+            }
+          } catch (e) {
+            // 解析失败，继续使用原始内容
+            console.error('JSON解析失败', e)
+          }
+        }
+      }
+
+      return md ? md.render(processedContent) : ''
+    }
+
     return {
       problem,
       activeTab,
@@ -2236,7 +2300,8 @@ export default defineComponent({
       selectedAiModel,
       isReasoningExpanded,
       getAiName,
-      hasActualAnalysisContent
+      hasActualAnalysisContent,
+      renderMarkdown
     }
   }
 })
@@ -2736,6 +2801,7 @@ export default defineComponent({
   word-break: break-all;
   word-wrap: break-word;
   height: 100%;
+  color: #e6edf3;
 }
 
 .code-block {
@@ -6131,4 +6197,123 @@ pre {
   border-left: 3px solid #4facfe;
   padding-left: 8px;
 }
+
+/* Markdown 内容样式 */
+.markdown-content {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e6edf3 !important;
+
+  a {
+    color: #58a6ff !important;
+    text-decoration: underline;
+    &:hover {
+      color: #79c0ff !important;
+    }
+  }
+
+  pre {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 6px;
+    background-color: rgba(45, 45, 45, 0.7) !important;
+    overflow: auto;
+  }
+
+  /* <code> 标签样式 */
+  code {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    background-color: rgba(45, 45, 45, 0.7) !important;
+    color: #f78c6c !important;
+    border-radius: 6px;
+    padding: 0.2em 0.4em;
+  }
+
+  pre > code {
+    padding: 0;
+  }
+
+  /* 段落和列表样式 */
+  p, li, div, span, td, th {
+    margin-bottom: 12px;
+    color: #e6edf3 !important;
+  }
+
+  /* 标题样式 */
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: #ff6b6b !important;
+  }
+
+  ul, ol, blockquote {
+    color: #e6edf3 !important;
+  }
+
+  /* 表格样式 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+
+    th, td {
+      border: 1px solid #30363d;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(45, 45, 45, 0.7);
+      font-weight: 600;
+    }
+
+    tr:nth-child(2n) {
+      background-color: rgba(35, 35, 35, 0.5);
+    }
+  }
+
+  /* 引用块样式 */
+  blockquote {
+    padding: 0 1em;
+    color: #e6edf3 !important;
+    border-left: 0.25em solid #30363d;
+    margin: 16px 0;
+
+    p {
+      margin-bottom: 0;
+    }
+  }
+
+  /* 强制所有文本元素使用白色 */
+  * {
+    color: #e6edf3 !important;
+  }
+
+  /* 只保留特定元素的特殊颜色 */
+  a {
+    color: #58a6ff !important;
+  }
+
+  .hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name, .hljs-tag {
+    color: #ff7b72 !important;
+  }
+
+  .hljs-string, .hljs-title, .hljs-section, .hljs-attribute, .hljs-literal, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-addition {
+    color: #a5d6ff !important;
+  }
+
+  .hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
+    color: #8b949e !important;
+  }
+
+  .hljs-number, .hljs-regexp, .hljs-literal, .hljs-variable, .hljs-symbol {
+    color: #c792ea !important;
+  }
+}
+</style>
+
+<style lang="scss">
+// ... existing code ...
 </style>
