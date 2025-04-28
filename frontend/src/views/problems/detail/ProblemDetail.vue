@@ -296,11 +296,7 @@
             </div>
             <div v-else-if="activeTab === 'aiAnalysis'" class="ai-analysis-tab">
               <div class="analysis-overview">
-                <div v-if="!aiAnalysisResult && !isAnalyzing" class="no-analysis">
-                  <el-empty description="请点击代码编辑器中的 AI 分析按钮获取分析结果" />
-                </div>
-
-                <div v-else-if="isAnalyzing" class="analysis-loading">
+                <div v-if="isAnalyzing" class="analysis-loading">
                   <div class="loading-container">
                     <div class="ai-brain-loading">
                       <div class="brain-container">
@@ -436,31 +432,27 @@
 
                       <!-- DeepSeek-R1的思考文本区域 -->
                       <div v-else-if="selectedAiModel === 'deepseek-reasoner'" class="deepseek-reasoner-container">
-                        <div v-if="!aiAnalysisResult || Object.keys(aiAnalysisResult).length === 0">
-                          <el-empty description="请点击代码编辑器中的 AI 分析按钮获取分析结果" />
-                        </div>
-                        <div v-else>
+                        <!-- 字符串格式直接渲染 -->
+                        <div class="markdown-content" v-if="typeof aiAnalysisResult === 'string'" v-html="renderMarkdown(aiAnalysisResult)"></div>
+                        <!-- 处理data嵌套的字符串格式 -->
+                        <div class="markdown-content" v-else-if="aiAnalysisResult && typeof aiAnalysisResult.data === 'string'" v-html="renderMarkdown(aiAnalysisResult.data)"></div>
+                        <!-- 处理reasoning和analysis格式 -->
+                        <div v-else-if="aiAnalysisResult && (aiAnalysisResult.reasoning || (aiAnalysisResult.data && aiAnalysisResult.data.reasoning))">
                           <!-- 思考过程显示 -->
-                          <div v-if="aiAnalysisResult.reasoning" class="result-block">
+                          <div class="result-block">
                             <div class="result-title">思考过程 (Reasoning)</div>
-                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.reasoning)"></div>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.reasoning || aiAnalysisResult.data.reasoning)"></div>
                           </div>
-                          <!-- 处理data嵌套格式 -->
-                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.reasoning" class="result-block">
-                            <div class="result-title">思考过程 (Reasoning)</div>
-                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.data.reasoning)"></div>
-                          </div>
-
                           <!-- 分析结果显示 -->
-                          <div v-if="aiAnalysisResult.analysis" class="result-block" style="margin-top: 20px;">
+                          <div class="result-block" style="margin-top: 20px;">
                             <div class="result-title">分析结果 (Analysis)</div>
-                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.analysis)"></div>
+                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.analysis || aiAnalysisResult.data.analysis)"></div>
                           </div>
-                          <!-- 处理data嵌套格式 -->
-                          <div v-else-if="aiAnalysisResult.data && aiAnalysisResult.data.analysis" class="result-block" style="margin-top: 20px;">
-                            <div class="result-title">分析结果 (Analysis)</div>
-                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.data.analysis)"></div>
-                          </div>
+                        </div>
+                        <!-- 无数据提示 -->
+                        <div v-else style="color: #ff6b6b; text-align: center; padding: 20px;">
+                          <i class="el-icon-warning-outline" style="font-size: 24px; margin-right: 8px;"></i>
+                          <span>请先点击「AI分析」按钮，{{ getAiName() }}将会对您的代码进行智能分析</span>
                         </div>
                       </div>
 
