@@ -302,6 +302,10 @@ export default {
           ElMessage.error('登录已过期，请重新登录')
         }
       }
+    },
+    goToProblem (problemNumber) {
+      // 跳转到题目详情页面
+      this.$router.push(`/problems/detail/${problemNumber}`)
     }
   }
 }
