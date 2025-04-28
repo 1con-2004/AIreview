@@ -2087,8 +2087,20 @@ export default defineComponent({
           return
         }
 
-        const data = await getProblemExamples(route.params.id)
-        problemExamples.value = data
+        const response = await getProblemExamples(route.params.id)
+        console.log('获取到题目样例原始响应:', response) // 添加调试日志
+        // 检查响应格式并正确处理
+        if (Array.isArray(response)) {
+          problemExamples.value = response
+          console.log('样例数据已更新, 数量:', response.length)
+        } else if (response && Array.isArray(response.data)) {
+          // 如果响应是一个对象且包含data数组属性
+          problemExamples.value = response.data
+          console.log('从response.data获取样例数据, 数量:', response.data.length)
+        } else {
+          console.error('获取的样例数据格式不正确:', response)
+          ElMessage.error('样例数据格式不正确')
+        }
       } catch (error) {
         console.error('获取题目样例失败:', error)
         ElMessage.error('获取题目样例失败')

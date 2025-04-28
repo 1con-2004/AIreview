@@ -164,7 +164,7 @@ const getProblemById = async (id, userId) => {
     // 获取题目测试用例
     try {
       const [testCases] = await db.query(
-        'SELECT * FROM problem_test_cases WHERE problem_id = ? AND is_example = 1 ORDER BY order_num',
+        'SELECT * FROM problem_test_cases WHERE problem_id = ? AND CAST(is_example AS UNSIGNED) = 1 ORDER BY order_num',
         [problem.id]
       );
       

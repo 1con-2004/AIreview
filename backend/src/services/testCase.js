@@ -37,7 +37,7 @@ async function getExampleTestCases(problemId) {
         // 判断传入的是ID还是题目编号
         if (isNaN(problemId) || problemId.toString().length === 4) {
             // 可能是题目编号
-            const sql = 'SELECT * FROM problem_test_cases WHERE problem_number = ? AND is_example = 1 ORDER BY order_num';
+            const sql = 'SELECT * FROM problem_test_cases WHERE problem_number = ? AND CAST(is_example AS UNSIGNED) = 1 ORDER BY order_num';
             const [testCases] = await db.query(sql, [problemId]);
             if (testCases && testCases.length > 0) {
                 return testCases;
@@ -45,7 +45,7 @@ async function getExampleTestCases(problemId) {
         }
 
         // 尝试通过problem_id查询
-        const sql = 'SELECT * FROM problem_test_cases WHERE problem_id = ? AND is_example = 1 ORDER BY order_num';
+        const sql = 'SELECT * FROM problem_test_cases WHERE problem_id = ? AND CAST(is_example AS UNSIGNED) = 1 ORDER BY order_num';
         const [testCases] = await db.query(sql, [problemId]);
         return testCases;
     } catch (error) {

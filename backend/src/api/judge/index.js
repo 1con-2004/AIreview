@@ -67,7 +67,7 @@ router.post('/problems/:id/submit', async (req, res) => {
     
     // 2. 获取题目的测试用例
     const [testCases] = await connection.execute(
-      'SELECT id, problem_id, problem_number, input, output, order_num, is_example FROM problem_test_cases WHERE problem_id = ? OR problem_number = ? ORDER BY order_num ASC',
+      'SELECT id, problem_id, problem_number, input, output, order_num, is_example FROM problem_test_cases WHERE (problem_id = ? OR problem_number = ?) ORDER BY order_num ASC',
       [actualProblemId, problems[0].problem_number]
     );
     

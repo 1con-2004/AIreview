@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API || '', // url = base url + request url
+  baseURL: '', // 将baseURL设置为空，因为我们已经在URL中加入了/api前缀
   timeout: 120000 // 请求超时时间
 })
 
@@ -66,8 +66,8 @@ export const getProblemExamples = async (problemId) => {
 
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
 
-    const response = await request.get(`testcases/examples/${problemId}`, { headers })
-    return response.data
+    const response = await request.get(`/api/testcases/examples/${problemId}`, { headers })
+    return response
   } catch (error) {
     console.error('获取题目样例失败:', error)
     throw error
@@ -77,7 +77,7 @@ export const getProblemExamples = async (problemId) => {
 // 获取题目的所有测试用例（管理员接口）
 export const getAllTestCases = async (problemId) => {
   try {
-    const response = await request.get(`testcases/admin/all/${problemId}`)
+    const response = await request.get(`/api/testcases/admin/all/${problemId}`)
     return response.data
   } catch (error) {
     console.error('获取所有测试用例失败:', error)
@@ -88,7 +88,7 @@ export const getAllTestCases = async (problemId) => {
 // 添加测试用例（管理员接口）
 export const addTestCase = async (data) => {
   try {
-    const response = await request.post('testcases/admin', data)
+    const response = await request.post('/api/testcases/admin', data)
     return response.data
   } catch (error) {
     console.error('添加测试用例失败:', error)
@@ -99,7 +99,7 @@ export const addTestCase = async (data) => {
 // 更新测试用例（管理员接口）
 export const updateTestCase = async (id, data) => {
   try {
-    const response = await request.put(`testcases/admin/${id}`, data)
+    const response = await request.put(`/api/testcases/admin/${id}`, data)
     return response.data
   } catch (error) {
     console.error('更新测试用例失败:', error)
@@ -110,7 +110,7 @@ export const updateTestCase = async (id, data) => {
 // 删除测试用例（管理员接口）
 export const deleteTestCase = async (id) => {
   try {
-    const response = await request.delete(`testcases/admin/${id}`)
+    const response = await request.delete(`/api/testcases/admin/${id}`)
     return response.data
   } catch (error) {
     console.error('删除测试用例失败:', error)
