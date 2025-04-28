@@ -430,79 +430,8 @@
                     </div>
                   </div>
 
-                  <!-- 错误分析部分 - 仅当存在结构化错误数据时显示 -->
-                  <div v-if="aiAnalysisResult && aiAnalysisResult.errors && aiAnalysisResult.errors.length" class="analysis-section error-section"
-                       style="background: linear-gradient(135deg, rgba(64, 36, 40, 0.8) 0%, rgba(90, 40, 48, 0.9) 100%); border: 1px solid rgba(255, 82, 82, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 82, 82, 0.1), inset 0 0 20px rgba(255, 82, 82, 0.05); position: relative; overflow: hidden;">
-                    <!-- 科技感装饰元素 -->
-                    <div style="position: absolute; top: -5px; right: -5px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(255, 82, 82, 0.15) 0%, rgba(255, 82, 82, 0) 70%); border-radius: 50%;"></div>
-
-                    <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; position: relative; z-index: 1;">
-                      <div style="display: flex; align-items: center;">
-                        <div style="background: linear-gradient(90deg, #ff5252 0%, #ff8585 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
-                        <div class="section-title" style="display: flex; align-items: center;">
-                          <i class="el-icon-warning-outline" style="color: #ff5252; margin-right: 8px; font-size: 20px;"></i>
-                          <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #ff5252 0%, #ff8585 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">错误分析</span>
-                        </div>
-                      </div>
-                      <div class="error-summary" style="background: rgba(255, 82, 82, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 14px; color: #ff8585; border: 1px solid rgba(255, 82, 82, 0.3);">
-                        发现 {{ aiAnalysisResult.errors.length }} 个问题
-                      </div>
-                    </div>
-                    <div class="error-list">
-                      <div v-for="(error, index) in aiAnalysisResult.errors"
-                        :key="index"
-                        class="error-card"
-                      >
-                        <div class="error-card-header">
-                          <div class="error-type-badge" :class="error.severity">
-                            {{ error.type }}
-                          </div>
-                          <div class="error-location-badge">
-                            <i class="el-icon-location-information"></i>
-                            {{ error.location }}
-                          </div>
-                        </div>
-                        <div class="error-card-content">
-                          <div class="error-message">{{ error.message }}</div>
-                          <div v-if="error.code" class="code-block">
-                            <pre><code :class="getLanguageClass(selectedLanguageForCode.value)">{{ error.code }}</code></pre>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <!-- 逻辑分析部分 - 仅当存在结构化改进数据时显示 -->
-                  <div v-if="aiAnalysisResult && aiAnalysisResult.improvements && aiAnalysisResult.improvements.length" class="analysis-section logic-section"
-                       style="background: linear-gradient(135deg, rgba(32, 48, 64, 0.8) 0%, rgba(40, 60, 90, 0.9) 100%); border: 1px solid rgba(100, 180, 255, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(100, 180, 255, 0.1), inset 0 0 20px rgba(100, 180, 255, 0.05); position: relative; overflow: hidden;">
-                    <!-- 科技感装饰元素 -->
-                    <div style="position: absolute; top: -5px; right: -5px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(100, 180, 255, 0.15) 0%, rgba(100, 180, 255, 0) 70%); border-radius: 50%;"></div>
-
-                    <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; position: relative; z-index: 1;">
-                      <div style="display: flex; align-items: center;">
-                        <div style="background: linear-gradient(90deg, #64b4ff 0%, #94c9ff 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
-                        <div class="section-title" style="display: flex; align-items: center;">
-                          <i class="el-icon-warning" style="color: #64b4ff; margin-right: 8px; font-size: 20px;"></i>
-                          <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #64b4ff 0%, #94c9ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">逻辑分析</span>
-                        </div>
-                      </div>
-                      <div class="logic-summary" style="background: rgba(100, 180, 255, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 14px; color: #94c9ff; border: 1px solid rgba(100, 180, 255, 0.3);">
-                        {{ aiAnalysisResult.improvements.length }} 条逻辑问题
-                      </div>
-                    </div>
-                    <div class="insights-list">
-                      <div v-for="(improvement, index) in aiAnalysisResult.improvements"
-                        :key="index"
-                        class="insight-item"
-                      >
-                        <i :class="improvement.icon" class="insight-icon"></i>
-                        <div class="insight-content">
-                          <div class="insight-title">{{ improvement.title }}</div>
-                          <div class="insight-description" v-html="highlightInlineCode(improvement.description)"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <!-- 移除逻辑分析部分 div -->
                 </div>
               </div>
             </div>
