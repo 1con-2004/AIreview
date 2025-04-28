@@ -396,7 +396,7 @@
                           >
                             <el-option label="DeepSeek-V3" value="deepseek-chat" />
                             <el-option label="DeepSeek-R1" value="deepseek-reasoner" />
-                            <el-option label="智谱AI" value="glm-4-flash" />
+                            <el-option label="智谱GLM-4-FLASH" value="glm-4-flash" />
                           </el-select>
                         </div>
                       </div>
@@ -442,8 +442,11 @@
                         <div v-else-if="aiAnalysisResult && (aiAnalysisResult.reasoning || (aiAnalysisResult.data && aiAnalysisResult.data.reasoning))">
                           <!-- 思考过程显示 -->
                           <div class="result-block">
-                            <div class="result-title">思考过程 (Reasoning)</div>
-                            <div class="markdown-content" v-html="renderMarkdown(aiAnalysisResult.reasoning || aiAnalysisResult.data.reasoning)"></div>
+                            <div class="result-title">
+                              <i :class="['arrow-icon', isReasoningExpanded ? 'fas fa-chevron-down' : 'fas fa-chevron-right']" @click="toggleReasoning"></i>
+                              <span>思考过程 (Reasoning)</span>
+                            </div>
+                            <div class="markdown-content" v-if="isReasoningExpanded" v-html="renderMarkdown(aiAnalysisResult.reasoning || aiAnalysisResult.data.reasoning)"></div>
                           </div>
                           <!-- 分析结果显示 -->
                           <div class="result-block" style="margin-top: 20px;">
@@ -1718,7 +1721,7 @@ export default defineComponent({
         case 'glm-4-flash':
           duration = 7000 // 7秒
           stages = [
-            { stage: '正在初始化智谱AI引擎...', progress: 20 },
+            { stage: '正在初始化智谱GLM-4-FLASH引擎...', progress: 20 },
             { stage: '正在分析代码结构...', progress: 40 },
             { stage: '正在评估代码质量...', progress: 60 },
             { stage: '正在生成优化建议...', progress: 80 },
@@ -2143,14 +2146,14 @@ export default defineComponent({
       }
     }
 
-    const selectedAiModel = ref('deepseek-chat') // 默认选择DeepSeek-V3
+    const selectedAiModel = ref('deepseek-reasoner') // 默认选择DeepSeek-R1
     const isReasoningExpanded = ref(true) // 控制思考过程面板的展开状态
     // 获取当前选择的AI模型名称
     const getAiName = () => {
       const aiModelMap = {
         'deepseek-chat': 'DeepSeek-V3',
         'deepseek-reasoner': 'DeepSeek-R1',
-        'glm-4-flash': '智谱AI'
+        'glm-4-flash': '智谱GLM-4-FLASH'
       }
       return aiModelMap[selectedAiModel.value] || 'AI'
     }
@@ -2222,7 +2225,7 @@ export default defineComponent({
 
       // 先检查内容是否为字符串
       if (typeof processedContent === 'string') {
-        // 去除首尾的双引号（针对deepseek-chat和智谱AI返回格式）
+        // 去除首尾的双引号（针对deepseek-chat和智谱GLM-4-FLASH返回格式）
         if (processedContent.startsWith('"') && processedContent.endsWith('"')) {
           processedContent = processedContent.substring(1, processedContent.length - 1)
         }
@@ -2261,6 +2264,10 @@ export default defineComponent({
       }
 
       return md ? md.render(processedContent) : ''
+    }
+
+    const toggleReasoning = () => {
+      isReasoningExpanded.value = !isReasoningExpanded.value
     }
 
     return {
@@ -2359,7 +2366,8 @@ export default defineComponent({
       renderMarkdown,
       progressWidth,
       progressBackground,
-      loadingStage
+      loadingStage,
+      toggleReasoning
     }
   }
 })
@@ -6416,6 +6424,19 @@ pre {
   100% {
     box-shadow: 0 0 0 0 rgba(78, 205, 255, 0);
   }
+}
+
+.result-title {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.arrow-icon {
+  margin-right: 8px;
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 </style>
 
