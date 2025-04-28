@@ -361,11 +361,13 @@
                     </div>
                     <div class="loading-text">
                       <div class="text">AI正在分析代码</div>
-                      <div class="dots">
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
+                      <!-- 添加进度条 -->
+                      <div class="progress-container">
+                        <div class="progress-bar" :style="{ width: progressWidth + '%', background: progressBackground }">
+                        </div>
+                        <span class="progress-text">{{ progressWidth }}%</span>
                       </div>
+                      <div class="loading-stage">{{ loadingStage }}</div>
                     </div>
                   </div>
                 </div>
@@ -1704,16 +1706,75 @@ export default defineComponent({
 
     const isAnalyzing = ref(false)
 
-    // 获取AI分析结果
-    const getAiAnalysis = async () => {
-      if (!code.value) {
-        ElMessage.warning('请先输入代码')
-        return
+    // 在 setup 中添加
+    const progressWidth = ref(0)
+    const progressBackground = ref('linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)')
+    const loadingStage = ref('')
+    // 在 methods 中添加
+    const startProgressAnimation = (model) => {
+      let duration
+      let stages
+      switch (model) {
+        case 'glm-4-flash':
+          duration = 7000 // 7秒
+          stages = [
+            { stage: '正在初始化智谱AI引擎...', progress: 20 },
+            { stage: '正在分析代码结构...', progress: 40 },
+            { stage: '正在评估代码质量...', progress: 60 },
+            { stage: '正在生成优化建议...', progress: 80 },
+            { stage: '正在完善分析报告...', progress: 95 }
+          ]
+          break
+        case 'deepseek-chat':
+          duration = 35000 // 35秒
+          stages = [
+            { stage: '正在初始化DeepSeek-V3引擎...', progress: 20 },
+            { stage: '正在深入分析代码...', progress: 40 },
+            { stage: '正在评估代码性能...', progress: 60 },
+            { stage: '正在优化分析结果...', progress: 80 },
+            { stage: '正在生成详细报告...', progress: 95 }
+          ]
+          break
+        case 'deepseek-reasoner':
+          duration = 50000 // 50秒
+          stages = [
+            { stage: '正在初始化DeepSeek-R1引擎...', progress: 15 },
+            { stage: '正在进行深度推理...', progress: 30 },
+            { stage: '正在分析代码逻辑...', progress: 45 },
+            { stage: '正在评估实现方案...', progress: 60 },
+            { stage: '正在进行性能分析...', progress: 75 },
+            { stage: '正在生成详细分析...', progress: 85 },
+            { stage: '正在完善推理报告...', progress: 95 }
+          ]
+          break
       }
 
-      isAnalyzing.value = true
-      aiAnalysisResult.value = null
+      progressWidth.value = 0
+      let currentStageIndex = 0
 
+      const updateProgress = () => {
+        if (currentStageIndex < stages.length) {
+          const { stage, progress } = stages[currentStageIndex]
+          loadingStage.value = stage
+          const progressInterval = setInterval(() => {
+            if (progressWidth.value < progress) {
+              progressWidth.value++
+            } else {
+              clearInterval(progressInterval)
+              currentStageIndex++
+              updateProgress()
+            }
+          }, duration / 100)
+        }
+      }
+
+      updateProgress()
+    }
+
+    // 在 getAiAnalysis 方法中调用
+    const getAiAnalysis = async () => {
+      isAnalyzing.value = true
+      startProgressAnimation(selectedAiModel.value)
       try {
         // 改进获取token的方式，确保能找到正确的token
         let accessToken = null
@@ -1859,6 +1920,8 @@ export default defineComponent({
         aiAnalysisResult.value = { error: true, message: error.message || '分析失败' }
       } finally {
         isAnalyzing.value = false
+        progressWidth.value = 0
+        loadingStage.value = ''
       }
     }
 
@@ -2293,7 +2356,10 @@ export default defineComponent({
       isReasoningExpanded,
       getAiName,
       hasActualAnalysisContent,
-      renderMarkdown
+      renderMarkdown,
+      progressWidth,
+      progressBackground,
+      loadingStage
     }
   }
 })
@@ -6302,6 +6368,53 @@ pre {
 
   .hljs-number, .hljs-regexp, .hljs-literal, .hljs-variable, .hljs-symbol {
     color: #c792ea !important;
+  }
+}
+
+.progress-container {
+  width: 300px;
+  height: 6px;
+  background: rgba(78, 205, 255, 0.1);
+  border-radius: 3px;
+  margin: 15px auto;
+  overflow: visible;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  box-shadow: 0 0 10px rgba(78, 205, 255, 0.5);
+}
+
+.progress-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -20px;
+  color: #4facfe;
+  font-size: 12px;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.loading-stage {
+  font-size: 14px;
+  color: #a6accd;
+  margin-top: 10px;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(78, 205, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(78, 205, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(78, 205, 255, 0);
   }
 }
 </style>
