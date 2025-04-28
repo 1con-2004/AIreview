@@ -1,113 +1,192 @@
-const deepseekService = require('../services/ai/deepseek.service');
-const { successResponse, errorResponse } = require('../utils/response');
+const analyzeCodeService = require('../services/ai/analyzeCode.service');
+const db = require('../db');
 
 /**
- * AI代码分析接口
- * @param {Object} req 请求对象
- * @param {Object} res 响应对象
- * @returns {Promise<void>}
+ * AI代码分析控制器
+ * 处理不同AI模型的代码分析请求
  */
-async function codeAnalysis(req, res) {
-  try {
-    const { model = 'deepseek-chat', code_content, temperature = 0.7 } = req.body;
+class AIAnalysisController {
+  /**
+   * 代码分析
+   * @param {Object} req 请求对象
+   * @param {Object} res 响应对象
+   * @returns {Promise<void>}
+   */
+  async analyzeCode(req, res) {
+    const requestId = req.requestId || `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析开始=========`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户ID: ${req.user?.id}, 用户名: ${req.user?.username}`);
     
-    // 参数验证
-    if (!['deepseek-chat', 'deepseek-reasoner'].includes(model)) {
-      return res.status(400).json({ code: 400, message: '无效的model参数' });
-    }
-    
-    if (!code_content) {
-      return res.status(400).json({ code: 400, message: 'code_content参数不能为空' });
-    }
-    
-    // 提供额外信息
-    console.log(`处理代码分析请求，使用模型: ${model}, 代码长度: ${code_content.length}字符`);
-    
-    // 调用服务
-    const result = await deepseekService.analyzeCode(code_content, model, temperature);
-    
-    // 处理响应，保持向后兼容性
-    const response = {
-      code: 200,
-      data: {
-        model: result.model,
-        content: result.content,
-        usage: result.usage
-      }
-    };
-    
-    // 如果是推理模型且有推理内容，则添加推理内容
-    if (result.model.includes('reasoner') && result.reasoning_content) {
-      response.data.reasoning_content = result.reasoning_content;
-    }
-    
-    // 添加延迟推理信息
-    if (result.usage && result.usage.completion_tokens_details && result.usage.completion_tokens_details.reasoning_tokens) {
-      if (!response.data.reasoning_content) {
-        response.data.reasoning_content = '该模型未提供单独的推理内容，但使用了推理过程。';
-      }
-      response.data.reasoning_tokens = result.usage.completion_tokens_details.reasoning_tokens;
-    }
-    
-    return res.status(200).json(response);
-  } catch (error) {
-    console.error('代码分析失败:', error);
-    return res.status(500).json({ code: 500, message: error.message });
-  }
-}
-
-/**
- * 余额查询接口
- * @param {Object} req 请求对象
- * @param {Object} res 响应对象
- * @returns {Promise<void>}
- */
-async function getBalance(req, res) {
-  try {
-    const balanceInfo = await deepseekService.queryBalance();
-    return res.status(200).json(successResponse(balanceInfo));
-  } catch (error) {
-    console.error('余额查询失败:', error);
-    return res.status(200).json(errorResponse(500, error.message));
-  }
-}
-
-/**
- * 查询可用模型接口
- * @param {Object} req 请求对象
- * @param {Object} res 响应对象
- * @returns {Promise<void>}
- */
-async function getModels(req, res) {
-  try {
-    const models = await deepseekService.getAvailableModels();
-    
-    // 添加模型描述信息
-    const modelsWithDetails = models.map(model => {
-      // 添加基础信息
-      const modelWithDetails = { ...model };
+    try {
+      const { code, language, problemId, model = 'glm-4-flash' } = req.body;
       
-      // 为不同模型添加说明
-      if (model.id === 'deepseek-chat') {
-        modelWithDetails.description = 'DeepSeek-V3 通用对话模型';
-        modelWithDetails.capabilities = ['代码分析', '文本生成', '多轮对话'];
-      } else if (model.id === 'deepseek-reasoner') {
-        modelWithDetails.description = 'DeepSeek-R1 强化推理模型';
-        modelWithDetails.capabilities = ['复杂推理', '代码分析', '详细思考过程'];
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到分析请求 - 语言: ${language}, 题目ID: ${problemId}, 模型: ${model}`);
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 代码长度: ${code?.length || 0} 字符`);
+      
+      if (!code || !language || !problemId) {
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 缺少必要参数`);
+        return res.status(400).json({
+          success: false,
+          message: '缺少必要参数'
+        });
       }
       
-      return modelWithDetails;
-    });
-    
-    return res.status(200).json(successResponse(modelsWithDetails));
-  } catch (error) {
-    console.error('模型查询失败:', error);
-    return res.status(200).json(errorResponse(500, error.message));
+      // 检查模型是否支持
+      const supportedModels = ['glm-4-flash', 'deepseek-chat', 'deepseek-reasoner'];
+      if (!supportedModels.includes(model)) {
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 不支持的模型: ${model}`);
+        return res.status(400).json({
+          success: false,
+          message: `不支持的模型: ${model}，支持的模型有: ${supportedModels.join(', ')}`
+        });
+      }
+
+      // 获取题目信息
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 正在获取题目信息: ${problemId}`);
+      const [problems] = await db.query(
+        'SELECT title, description FROM problems WHERE problem_number = ?',
+        [problemId]
+      );
+
+      if (!problems || problems.length === 0) {
+        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 题目不存在: ${problemId}`);
+        return res.status(404).json({
+          success: false,
+          message: '题目不存在'
+        });
+      }
+
+      const problem = problems[0];
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 成功获取题目: ${problem.title}`);
+      
+      // 构建分析参数
+      const params = {
+        code,
+        language,
+        problemTitle: problem.title,
+        problemDescription: problem.description
+      };
+      
+      // 调用服务进行代码分析
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 正在使用模型 ${model} 进行代码分析...`);
+      const result = await analyzeCodeService.analyzeCode(params, model);
+      
+      // 根据不同模型处理响应
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 获取分析结果成功`);
+      
+      return res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 代码分析失败:`, error);
+      
+      // 记录详细错误信息
+      let errorMessage = '代码分析失败';
+      
+      if (error.response) {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] API响应错误:`, {
+          status: error.response.status,
+          data: error.response.data
+        });
+        errorMessage += `：API错误(${error.response.status}) - ${error.response.data?.error || '未知API错误'}`;
+      } else if (error.request) {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 未收到响应:`, error.request);
+        errorMessage += '：请求已发送但未收到响应，请检查网络连接或服务提供商状态';
+      } else {
+        console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] 请求设置错误:`, error.message);
+        errorMessage += `：${error.message || '未知错误'}`;
+      }
+      
+      res.status(500).json({
+        success: false,
+        message: errorMessage,
+        error: {
+          type: error.name || 'Error',
+          detail: error.message || '未知错误'
+        }
+      });
+      
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析异常结束=========`);
+    }
+  }
+  
+  /**
+   * 获取模型余额
+   * @param {Object} req 请求对象 
+   * @param {Object} res 响应对象
+   * @returns {Promise<void>}
+   */
+  async getBalance(req, res) {
+    try {
+      // 这里可以实现查询不同模型的余额逻辑
+      res.json({
+        success: true,
+        data: {
+          glm4: { amount: 1000, unit: '积分' },
+          deepseek: { amount: 5000, unit: '积分' }
+        }
+      });
+    } catch (error) {
+      console.error('获取余额失败:', error);
+      res.status(500).json({
+        success: false,
+        message: '获取余额失败'
+      });
+    }
+  }
+  
+  /**
+   * 获取可用模型列表
+   * @param {Object} req 请求对象
+   * @param {Object} res 响应对象
+   * @returns {Promise<void>}
+   */
+  async getModels(req, res) {
+    try {
+      const models = [
+        { 
+          id: 'glm-4-flash', 
+          name: '智谱AI', 
+          description: '智谱GLM-4-flash模型，快速响应，支持中文交互',
+          status: 'available'
+        },
+        { 
+          id: 'deepseek-chat', 
+          name: 'DeepSeek-V3', 
+          description: 'DeepSeek最新对话模型，提供准确、详细的代码分析',
+          status: 'available'
+        },
+        { 
+          id: 'deepseek-reasoner', 
+          name: 'DeepSeek-R1', 
+          description: 'DeepSeek推理模型，提供详细思考过程和分析',
+          status: 'available'
+        }
+      ];
+      
+      res.json({
+        success: true,
+        data: models
+      });
+    } catch (error) {
+      console.error('获取模型列表失败:', error);
+      res.status(500).json({
+        success: false,
+        message: '获取模型列表失败'
+      });
+    }
+  }
+  
+  /**
+   * 通用代码分析
+   * @param {Object} req 请求对象
+   * @param {Object} res 响应对象
+   * @returns {Promise<void>}
+   */
+  async codeAnalysis(req, res) {
+    return this.analyzeCode(req, res);
   }
 }
 
-module.exports = {
-  codeAnalysis,
-  getBalance,
-  getModels
-}; 
+module.exports = new AIAnalysisController(); 

@@ -6,7 +6,7 @@ import store from '@/store'
 // 创建axios实例
 const service = axios.create({
   baseURL: '', // 修改为相对路径，确保能在Docker环境中正常工作
-  timeout: 15000
+  timeout: 60000
 })
 
 // 设置全局token函数，确保登录后的token同步到全局

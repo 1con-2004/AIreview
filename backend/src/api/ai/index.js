@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../../db');
 const { authenticateToken } = require('../../middleware/auth');
 const ZhipuAI = require('../../utils/zhipuAI');
+const analyzeCodeService = require('../../services/ai/analyzeCode.service');
 
 // 代码分析路由
 router.post('/analyze-code', authenticateToken, async (req, res) => {
@@ -11,9 +12,9 @@ router.post('/analyze-code', authenticateToken, async (req, res) => {
   console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 用户ID: ${req.user?.id}, 用户名: ${req.user?.username}`);
   
   try {
-    const { code, language, problemId } = req.body;
+    const { code, language, problemId, model = 'glm-4-flash' } = req.body;
     
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到分析请求 - 语言: ${language}, 题目ID: ${problemId}`);
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 接收到分析请求 - 语言: ${language}, 题目ID: ${problemId}, 模型: ${model}`);
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 代码长度: ${code?.length || 0} 字符`);
     
     if (!code || !language || !problemId) {
@@ -42,79 +43,35 @@ router.post('/analyze-code', authenticateToken, async (req, res) => {
     const problem = problems[0];
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 成功获取题目: ${problem.title}`);
 
-    // 修改提示信息,使用更宽松的格式要求
-    const messages = [
-      {
-        role: "system",
-        content: `你是一个亲切的编程导师，请用以下格式分析代码：
-
-代码分析：
-1. 错误代码片段
-- 有问题的代码：\`代码片段\`
-- 错误原因：用简单易懂的话解释问题
-
-2. 逻辑问题
-- 用朋友般的语气指出问题所在
-- 举例说明正确的思路
-
-请用以下风格：
-• 使用中文口语化表达，如"咱们"、"这里"等
-• 适当使用emoji增加亲切感 👍✨
-• 代码块使用 \`\`\`语言 的格式包裹
-• 每点分析后空一行方便阅读
-注意，你不需要写出改进后的代码`
-      },
-      {
-        role: "user",
-        content: `题目：${problem.title}
-题目描述：${problem.description}
-
-用户代码：
-\`\`\`${language}
-${code}
-\`\`\`
-
-请分析这段代码的问题并给出改进建议。`
-      }
-    ];
-
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 正在调用智谱AI进行代码分析...`);
-    const zhipuAI = new ZhipuAI();
-    const aiResponse = await zhipuAI.chat(messages);
-    
-    // 检查AI响应是否为空
-    if (!aiResponse) {
-      console.error(`[ERROR] [${new Date().toISOString()}] [${requestId}] AI响应为空`);
-      return res.status(500).json({
-        success: false,
-        message: 'AI分析返回结果为空'
-      });
-    }
-    
-    // 简化响应结构，直接返回分析文本作为data
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI响应解析成功, 内容长度: ${aiResponse?.length || 0}`);
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析前50个字符:`, aiResponse.substring(0, 50));
-    
-    // 检查AI响应是否被过度转义(以\"开头的JSON字符串)
-    let cleanResponse = aiResponse;
-    if (typeof aiResponse === 'string' && aiResponse.startsWith('"') && aiResponse.endsWith('"')) {
-      try {
-        // 尝试解析JSON字符串
-        cleanResponse = JSON.parse(aiResponse);
-        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 检测到过度转义，已进行处理`);
-      } catch (e) {
-        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] JSON解析失败，使用原始响应:`, e.message);
-      }
-    }
-    
-    // 构建简化的响应对象
-    const responseObj = {
-      success: true,
-      data: cleanResponse  // 使用处理后的响应
+    // 构建分析参数
+    const params = {
+      code,
+      language,
+      problemTitle: problem.title,
+      problemDescription: problem.description
     };
     
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应data类型:`, typeof responseObj.data);
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 最终响应data前50个字符:`, typeof responseObj.data === 'string' ? responseObj.data.substring(0, 50) : '非字符串类型');
+    // 使用analyzeCodeService进行代码分析，根据model参数选择不同的AI模型
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 使用模型 ${model} 进行代码分析`);
+    let result;
+    
+    // 调用服务进行代码分析
+    result = await analyzeCodeService.analyzeCode(params, model);
+    
+    // 构建响应
+    const responseObj = {
+      success: true,
+      data: result
+    };
+    
+    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 分析完成，响应数据类型:`, typeof result === 'object' ? 'object' : typeof result);
+    if (typeof result === 'string') {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 分析结果前50个字符:`, result.substring(0, 50));
+    } else if (result && result.analysis) {
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 分析结果前50个字符:`, result.analysis.substring(0, 50));
+      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 包含思考过程:`, !!result.reasoning);
+    }
+    
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] AI分析完成，准备返回结果`);
     
     return res.json(responseObj);
@@ -148,6 +105,43 @@ ${code}
     });
     
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] =========AI代码分析异常结束=========`);
+  }
+});
+
+// 获取可用模型列表
+router.get('/models', authenticateToken, async (req, res) => {
+  try {
+    const models = [
+      { 
+        id: 'glm-4-flash', 
+        name: '智谱AI', 
+        description: '智谱GLM-4-flash模型，快速响应，支持中文交互',
+        status: 'available'
+      },
+      { 
+        id: 'deepseek-chat', 
+        name: 'DeepSeek-V3', 
+        description: 'DeepSeek最新对话模型，提供准确、详细的代码分析',
+        status: 'available'
+      },
+      { 
+        id: 'deepseek-reasoner', 
+        name: 'DeepSeek-R1', 
+        description: 'DeepSeek推理模型，提供详细思考过程和分析',
+        status: 'available'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      data: models
+    });
+  } catch (error) {
+    console.error('获取模型列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取模型列表失败'
+    });
   }
 });
 

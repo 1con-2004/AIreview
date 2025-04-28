@@ -384,9 +384,23 @@
 
                     <div class="section-header" style="display: flex; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                       <div style="background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
-                      <div class="section-title" style="display: flex; align-items: center;">
+                      <div class="section-title" style="display: flex; align-items: center; flex-grow: 1;">
                         <i class="el-icon-info" style="color: #4facfe; margin-right: 8px; font-size: 20px;"></i>
                         <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI 代码分析</span>
+                        <!-- 添加AI模型选择下拉框 -->
+                        <div style="margin-left: auto;">
+                          <el-select
+                            v-model="selectedAiModel"
+                            size="small"
+                            placeholder="选择AI模型"
+                            style="width: 160px; margin-right: 10px;"
+                            popper-class="dark-select"
+                          >
+                            <el-option label="DeepSeek-V3" value="deepseek-chat" />
+                            <el-option label="DeepSeek-R1" value="deepseek-reasoner" />
+                            <el-option label="智谱AI" value="glm-4-flash" />
+                          </el-select>
+                        </div>
                       </div>
                     </div>
 
@@ -420,12 +434,40 @@
                         </div>
                       </div>
 
+                      <!-- DeepSeek-R1的思考文本区域 -->
+                      <div v-else-if="selectedAiModel === 'deepseek-reasoner' && aiAnalysisResult && aiAnalysisResult.reasoning">
+                        <!-- 思考过程折叠面板 -->
+                        <div class="reasoning-panel" style="margin-bottom: 20px; border: 1px solid rgba(78, 205, 255, 0.2); border-radius: 8px; overflow: hidden;">
+                          <div
+                            class="reasoning-header"
+                            @click="isReasoningExpanded = !isReasoningExpanded"
+                            style="display: flex; align-items: center; padding: 12px; background: rgba(78, 205, 255, 0.1); cursor: pointer;"
+                          >
+                            <i
+                              :class="isReasoningExpanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"
+                              style="margin-right: 8px; color: #4facfe;"
+                            ></i>
+                            <span style="font-weight: 500; color: #e6edf3;">DeepSeek思考过程</span>
+                          </div>
+                          <div
+                            v-show="isReasoningExpanded"
+                            class="reasoning-content"
+                            style="padding: 16px; background: rgba(40, 44, 52, 0.5); max-height: 400px; overflow-y: auto;"
+                          >
+                            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #a6accd;">{{ aiAnalysisResult.reasoning }}</pre>
+                          </div>
+                        </div>
+                        <!-- 分析结果 -->
+                        <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-html="highlightInlineCode(aiAnalysisResult.analysis)"></pre>
+                      </div>
+
+                      <!-- 其他AI模型的标准展示 -->
                       <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="typeof aiAnalysisResult === 'string'" v-html="highlightInlineCode(aiAnalysisResult)"></pre>
                       <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.rawAnalysis" v-html="highlightInlineCode(aiAnalysisResult.rawAnalysis)"></pre>
                       <pre style="margin: 0; white-space: pre-wrap; font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #e6edf3;" v-else-if="aiAnalysisResult && aiAnalysisResult.performance && aiAnalysisResult.performance.explanation" v-html="highlightInlineCode(aiAnalysisResult.performance.explanation)"></pre>
                       <div v-else style="color: #ff6b6b; text-align: center; padding: 20px;">
                         <i class="el-icon-warning-outline" style="font-size: 24px; margin-right: 8px;"></i>
-                        <span>请先点击「AI分析」按钮，DeepSeek将会对对您的代码进行智能分析</span>
+                        <span>请先点击「AI分析」按钮，{{ getAiName() }}将会对您的代码进行智能分析</span>
                       </div>
                     </div>
                   </div>
@@ -587,6 +629,8 @@ import 'prismjs/components/prism-python'
 import 'prismjs/components/prism-javascript'
 import InputTextarea from 'primevue/textarea'
 import { getProblemExamples } from '@/api/testCase'
+// 导入marked库处理Markdown
+import { marked } from 'marked'
 
 // 在引入部分添加apiService和getApiUrl
 import apiService from '@/utils/api'
@@ -883,43 +927,6 @@ export default defineComponent({
     ])
 
     const optimizationInsights = ref([])
-
-    // 模拟 AI 分析结果数据结构
-    const mockAiAnalysisResult = {
-      errors: [
-        {
-          type: '语法错误',
-          location: '第 15 行',
-          message: '缺少分号',
-          suggestion: '在行尾添加分号'
-        },
-        {
-          type: '逻辑错误',
-          location: '第 23-25 行',
-          message: '边界条件处理不当',
-          suggestion: '添加数组边界检查'
-        }
-      ],
-      improvements: [
-        {
-          priority: 'high',
-          title: '使用缓存优化',
-          description: '可以使用 Map 结构缓存计算结果，避免重复计算。',
-          codeExample: 'const cache = new Map();\nif (cache.has(key)) return cache.get(key);'
-        },
-        {
-          priority: 'medium',
-          title: '代码结构优化',
-          description: '将重复的逻辑提取为独立函数',
-          codeExample: 'function processData(data) {\n  // 处理逻辑\n}'
-        }
-      ],
-      performance: {
-        timeComplexity: 'O(n log n)',
-        spaceComplexity: 'O(n)',
-        explanation: '主要时间消耗在排序操作，空间消耗在临时数组存储。可以考虑使用原地排序算法优化空间复杂度。'
-      }
-    }
 
     // 从AI分析文本中提取错误信息
     const extractErrors = (analysis) => {
@@ -1705,34 +1712,36 @@ export default defineComponent({
         activeTab.value = 'aiAnalysis'
 
         console.log('尝试使用token进行AI分析:', accessToken ? '找到token' : '未找到token')
+        console.log('选择的AI模型:', selectedAiModel.value)
 
+        // 调用API进行代码分析，传递选择的模型参数
         const response = await analyzeCode({
           code: code.value,
           language: selectedLanguageForCode.value,
-          problemId: route.params.id
+          problemId: route.params.id,
+          model: selectedAiModel.value // 添加模型选择参数
         }, accessToken)
 
         console.log('AI分析原始响应:', response)
 
-        // 使用统一的函数处理AI分析结果
-        const analysis = processAiAnalysisResponse(response)
-        console.log('处理后的AI分析结果类型:', typeof analysis)
-        console.log('处理后的AI分析结果前50个字符:', analysis.substring(0, 50))
-
-        // 直接使用字符串结果
-        if (typeof analysis === 'string') {
-          aiAnalysisResult.value = analysis
-          console.log('设置AI分析结果为字符串')
-        } else {
-          // 如果不是字符串，尝试创建结构化数据
-          const structuredResult = {
-            errors: extractErrors(analysis),
-            improvements: extractImprovements(analysis),
-            performance: extractPerformance(analysis),
-            rawAnalysis: analysis // 保存原始分析文本
+        // 根据不同模型处理响应
+        if (selectedAiModel.value === 'deepseek-reasoner' && response.data && response.data.data) {
+          // DeepSeek-R1包含思考过程和分析结果
+          if (response.data.data.reasoning && response.data.data.analysis) {
+            aiAnalysisResult.value = {
+              reasoning: response.data.data.reasoning,
+              analysis: response.data.data.analysis
+            }
+            console.log('设置DeepSeek-R1思考和分析结果')
+          } else {
+            // 可能没有按预期格式返回，尝试处理字符串结果
+            aiAnalysisResult.value = processAiAnalysisResponse(response)
+            console.log('DeepSeek-R1返回的不是预期格式，进行标准处理')
           }
-          aiAnalysisResult.value = structuredResult
-          console.log('设置AI分析结果为结构化数据')
+        } else {
+          // 智谱AI和DeepSeek-V3使用标准处理
+          aiAnalysisResult.value = processAiAnalysisResponse(response)
+          console.log('使用标准处理函数处理其他模型的结果')
         }
 
         ElMessage.success('代码分析完成')
@@ -1756,78 +1765,61 @@ export default defineComponent({
       }
     }
 
-    // 在script部分添加代码高亮函数
+    // 在script部分完全替换代码高亮函数
     const highlightInlineCode = (text) => {
       if (!text) return ''
-      // 使用正则表达式匹配反引号中的代码
-      return text.replace(/`([^`]+)`/g, (match, code) => {
-        try {
-          // 标准化语言标识符
-          let langKey = selectedLanguageForCode.value.toLowerCase()
 
-          // 处理特殊情况
-          const langMap = {
-            'c++': 'cpp',
-            'c#': 'csharp',
-            js: 'javascript',
-            py: 'python'
-          }
-
-          if (langMap[langKey]) {
-            langKey = langMap[langKey]
-          }
-
-          // 确保Prism中有此语言的定义
-          if (!Prism.languages[langKey]) {
-            langKey = 'c' // 默认使用C语言高亮
-          }
-
-          // 检测是否是单词或函数，如`scanf`、`printf`等
-          let highlightedCode
-          if (code.trim().match(/^[a-zA-Z0-9_]+$/)) {
-            // 对于单个代码单词或函数，添加特殊处理
-            const keyword = code.trim()
-            // 使用语言相关的关键字颜色
-            if (langKey === 'c' || langKey === 'cpp') {
-              // C/C++常用函数
-              const cFunctions = ['printf', 'scanf', 'malloc', 'free', 'sizeof', 'strcpy', 'strlen', 'memcpy']
-              const cppFunctions = ['cout', 'cin', 'endl', 'vector', 'string', 'map', 'set']
-              const cKeywords = ['int', 'char', 'float', 'double', 'void', 'return', 'if', 'else', 'for', 'while', 'switch', 'case']
-
-              if (cFunctions.includes(keyword) || cppFunctions.includes(keyword)) {
-                highlightedCode = `<span class="token function">${keyword}</span>`
-              } else if (cKeywords.includes(keyword)) {
-                highlightedCode = `<span class="token keyword">${keyword}</span>`
-              } else {
-                highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey)
-              }
-            } else if (langKey === 'python') {
-              // Python常用函数和方法
-              const pyFunctions = ['print', 'input', 'len', 'range', 'int', 'str', 'list', 'dict', 'set', 'tuple']
-              const pyKeywords = ['def', 'class', 'if', 'else', 'elif', 'for', 'while', 'import', 'from', 'as', 'return']
-
-              if (pyFunctions.includes(keyword)) {
-                highlightedCode = `<span class="token function">${keyword}</span>`
-              } else if (pyKeywords.includes(keyword)) {
-                highlightedCode = `<span class="token keyword">${keyword}</span>`
-              } else {
-                highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey)
-              }
-            } else {
-              highlightedCode = Prism.highlight(keyword, Prism.languages[langKey], langKey)
+      // 配置marked
+      marked.setOptions({
+        highlight (code, lang) {
+          try {
+            let langKey = lang ? lang.toLowerCase() : (selectedLanguageForCode.value || 'c').toLowerCase()
+            const langMap = {
+              'c++': 'cpp',
+              'c#': 'csharp',
+              js: 'javascript',
+              py: 'python'
             }
-          } else {
-            // 对于复杂代码片段使用完整的语法高亮
-            highlightedCode = Prism.highlight(code, Prism.languages[langKey], langKey)
+            if (langMap[langKey]) {
+              langKey = langMap[langKey]
+            }
+            if (!Prism.languages[langKey]) {
+              langKey = 'c'
+            }
+            return Prism.highlight(code, Prism.languages[langKey], langKey)
+          } catch (err) {
+            console.error('代码高亮失败:', err)
+            return code
           }
+        },
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false
+      })
 
-          // 返回带有样式的HTML
-          return `<code class="inline-code" style="background: rgba(40, 44, 52, 0.5); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${highlightedCode}</code>`
+      // 处理内联代码
+      const processedText = text.replace(/`([^`]+)`/g, (match, code) => {
+        try {
+          if (code.trim().match(/^[a-zA-Z0-9_]+$/)) {
+            const keyword = code.trim()
+            return `<code class="inline-code" style="background: rgba(40, 44, 52, 0.5); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${keyword}</code>`
+          }
+          return match
         } catch (error) {
-          console.error('代码高亮失败:', error)
-          return `<code class="inline-code" style="background: rgba(40, 44, 52, 0.5); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${code}</code>`
+          console.error('内联代码处理失败:', error)
+          return match
         }
       })
+
+      // 渲染Markdown
+      try {
+        const html = marked(processedText)
+        return `<div class="markdown-content">${html}</div>`
+      } catch (error) {
+        console.error('Markdown渲染失败:', error)
+        return text
+      }
     }
 
     // 处理AI分析结果
@@ -1991,6 +1983,18 @@ export default defineComponent({
       }
     }
 
+    const selectedAiModel = ref('deepseek-chat') // 默认选择DeepSeek-V3
+    const isReasoningExpanded = ref(true) // 控制思考过程面板的展开状态
+    // 获取当前选择的AI模型名称
+    const getAiName = () => {
+      const aiModelMap = {
+        'deepseek-chat': 'DeepSeek-V3',
+        'deepseek-reasoner': 'DeepSeek-R1',
+        'glm-4-flash': '智谱AI'
+      }
+      return aiModelMap[selectedAiModel.value] || 'AI'
+    }
+
     return {
       problem,
       activeTab,
@@ -2079,7 +2083,10 @@ export default defineComponent({
       handleBackendResponse,
       getLanguageClass,
       updateLineNumbers,
-      syncScroll
+      syncScroll,
+      selectedAiModel,
+      isReasoningExpanded,
+      getAiName
     }
   }
 })
@@ -5767,5 +5774,186 @@ pre {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* 代码高亮主题样式 */
+:deep(.token.comment),
+:deep(.token.prolog),
+:deep(.token.doctype),
+:deep(.token.cdata) {
+  color: #6c7086 !important;
+}
+
+:deep(.token.punctuation) {
+  color: #a6accd !important;
+}
+
+:deep(.token.property),
+:deep(.token.keyword),
+:deep(.token.tag) {
+  color: #7c4dff !important;
+}
+
+:deep(.token.string) {
+  color: #4ecdc4 !important;
+}
+
+:deep(.token.operator),
+:deep(.token.entity),
+:deep(.token.url) {
+  color: #ff9f43 !important;
+}
+
+:deep(.token.function) {
+  color: #82aaff !important;
+}
+
+:deep(.token.number) {
+  color: #f78c6c;
+}
+
+:deep(.token.boolean),
+:deep(.token.constant) {
+  color: #ff5370;
+}
+
+:deep(.token.class-name) {
+  color: #ffcb6b;
+}
+
+:deep(.token.regex) {
+  color: #89ddff;
+}
+
+:deep(.token.important) {
+  color: #c792ea;
+}
+
+:deep(.token.variable) {
+  color: #c792ea;
+}
+
+/* Markdown内容样式 */
+:deep(.markdown-content) {
+  color: #e6edf3;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+:deep(.markdown-content h1),
+:deep(.markdown-content h2),
+:deep(.markdown-content h3),
+:deep(.markdown-content h4),
+:deep(.markdown-content h5),
+:deep(.markdown-content h6) {
+  color: #e6edf3;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+:deep(.markdown-content h1) {
+  font-size: 1.5em;
+  margin-top: 0;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.markdown-content h2) {
+  font-size: 1.3em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.markdown-content h3) {
+  font-size: 1.1em;
+}
+
+:deep(.markdown-content ul),
+:deep(.markdown-content ol) {
+  padding-left: 2em;
+  margin-bottom: 16px;
+}
+
+:deep(.markdown-content li) {
+  margin-bottom: 0.2em;
+}
+
+:deep(.markdown-content p) {
+  margin-bottom: 16px;
+}
+
+:deep(.markdown-content pre) {
+  background: #1e1e2e;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: auto;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+:deep(.markdown-content code) {
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(110, 118, 129, 0.15);
+  border-radius: 3px;
+}
+
+:deep(.markdown-content pre code) {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  word-break: normal;
+  white-space: pre;
+  overflow: auto;
+}
+
+:deep(.markdown-content blockquote) {
+  padding: 0 1em;
+  color: #8b949e;
+  border-left: 0.25em solid #30363d;
+  margin-bottom: 16px;
+}
+
+:deep(.markdown-content hr) {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #30363d;
+  border: 0;
+}
+
+:deep(.markdown-content table) {
+  width: 100%;
+  margin-bottom: 16px;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+:deep(.markdown-content table th),
+:deep(.markdown-content table td) {
+  padding: 6px 13px;
+  border: 1px solid #30363d;
+}
+
+:deep(.markdown-content table tr) {
+  background-color: #1e1e2e;
+  border-top: 1px solid #30363d;
+}
+
+:deep(.markdown-content table tr:nth-child(2n)) {
+  background-color: #22222f;
+}
+
+.output-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
 }
 </style>

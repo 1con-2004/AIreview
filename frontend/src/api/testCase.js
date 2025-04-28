@@ -3,7 +3,7 @@ import axios from 'axios'
 // 创建axios实例
 const request = axios.create({
   baseURL: process.env.VUE_APP_BASE_API || '', // url = base url + request url
-  timeout: 15000 // 请求超时时间
+  timeout: 60000 // 请求超时时间
 })
 
 // 请求拦截器
@@ -12,12 +12,11 @@ request.interceptors.request.use(
     // 在发送请求之前做些什么
     // 增强令牌获取逻辑，从多个位置尝试获取令牌
     let accessToken = null
-    
     // 先从localStorage直接获取accessToken
     const directToken = localStorage.getItem('accessToken')
     if (directToken) {
       accessToken = directToken
-    } 
+    }
     // 如果直接获取失败，尝试从userInfo获取
     else {
       const userInfoStr = localStorage.getItem('userInfo')
@@ -26,7 +25,6 @@ request.interceptors.request.use(
           const userInfo = JSON.parse(userInfoStr)
           if (userInfo.accessToken) {
             accessToken = userInfo.accessToken
-            
             // 同步到localStorage中的独立令牌项
             localStorage.setItem('accessToken', userInfo.accessToken)
           }
@@ -35,12 +33,10 @@ request.interceptors.request.use(
         }
       }
     }
-    
     // 如果找到令牌，添加到请求头
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`
     }
-    
     return config
   },
   error => {

@@ -27,7 +27,7 @@ const getBaseUrl = () => {
  */
 const apiService = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 15000
+  timeout: 60000
 })
 
 /**
