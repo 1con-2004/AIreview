@@ -131,15 +131,34 @@
 
     <!-- 分页 -->
     <div class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="totalUsers"
+      <el-select
+        v-model="pageSize"
         :page-sizes="[15, 30, 50, 100]"
-        layout="total, sizes, prev, pager, next"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+        @change="handleSizeChange"
+        style="width: 120px; margin-right: 20px;"
+      >
+        <el-option
+          v-for="size in [15, 30, 50, 100]"
+          :key="size"
+          :label="`${size}条/页`"
+          :value="size"
+        />
+      </el-select>
+      <button
+        class="page-btn"
+        :disabled="currentPage === 1"
+        @click="handleCurrentChange(currentPage - 1)"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="page-info">第 {{ currentPage }} 页，共 {{ Math.ceil(totalUsers / pageSize) }} 页</span>
+      <button
+        class="page-btn"
+        :disabled="currentPage === Math.ceil(totalUsers / pageSize)"
+        @click="handleCurrentChange(currentPage + 1)"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
     </div>
   </div>
 
@@ -786,9 +805,49 @@ onMounted(() => {
 
 .pagination {
   display: flex;
+  align-items: center;
   justify-content: center;
   margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
+
+.page-btn {
+  background: transparent;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin: 0 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #606266;
+}
+
+.page-btn:not(:disabled):hover {
+  color: #409eff;
+  border-color: #409eff;
+}
+
+.page-btn:disabled {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #606266;
+  margin: 0 15px;
+  font-size: 14px;
+}
+
+.pagination :deep(.el-select .el-input__wrapper) {
+  background-color: transparent;
+}
+
+/* 移除旧的分页样式 */
 
 /* 表格行hover效果 */
 .el-table :deep(tbody tr:hover) {
