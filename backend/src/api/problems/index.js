@@ -193,53 +193,79 @@ const getProblemById = async (id, userId) => {
 // 获取题目列表
 router.get('/list', async (req, res) => {
   try {
-    console.log('Getting problems list with params:', req.query);
-    const difficulty = req.query.difficulties || '';
-    
-    let query = `
-      SELECT 
-        id,
-        title,
-        difficulty,
-        tags,
-        problem_number,
-        total_submissions,
-        COALESCE(acceptance_rate, 0) as acceptance_rate
-      FROM problems
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.limit) || 10;
+    const query = req.query.query || '';
+    const difficulty = req.query.difficulty || '';
+    const tags = req.query.tags || '';
+
+    let baseQuery = `
+      FROM problems p
+      LEFT JOIN problem_category_relations pcr ON p.id = pcr.problem_id
+      LEFT JOIN problem_categories pc ON pcr.category_id = pc.id
+      WHERE 1=1
     `;
     
-    const conditions = [];
     const params = [];
-    
+
+    // 添加搜索条件
+    if (query) {
+      baseQuery += ` AND (p.title LIKE ? OR p.problem_number LIKE ?)`;
+      params.push(`%${query}%`, `%${query}%`);
+    }
+
+    // 添加难度筛选
     if (difficulty) {
-      conditions.push('difficulty = ?');
+      baseQuery += ` AND p.difficulty = ?`;
       params.push(difficulty);
     }
-    
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-    
-    // 按ID降序排序
-    query += ' ORDER BY id DESC';
-    
-    console.log('Executing SQL query:', query);
-    console.log('Query parameters:', params);
 
-    const [problems] = await db.query(query, params);
-    
+    // 添加标签筛选
+    if (tags) {
+      const tagList = tags.split(',').map(tag => tag.trim());
+      const tagConditions = tagList.map(() => 'pc.name = ?').join(' OR ');
+      baseQuery += ` AND (${tagConditions})`;
+      params.push(...tagList);
+    }
+
+    // 获取总数
+    const countQuery = `SELECT COUNT(DISTINCT p.id) as total ${baseQuery}`;
+    const [totalRows] = await db.query(countQuery, params);
+    const total = totalRows[0].total;
+
+    // 获取题目列表
+    const dataQuery = `
+      SELECT DISTINCT
+        p.id,
+        p.problem_number,
+        p.title,
+        p.difficulty,
+        GROUP_CONCAT(DISTINCT pc.name) as tags,
+        p.total_submissions,
+        COALESCE(p.acceptance_rate, 0) as acceptance_rate
+      ${baseQuery}
+      GROUP BY p.id
+      ORDER BY p.id DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const pageParams = [...params, pageSize, (page - 1) * pageSize];
+    const [problems] = await db.query(dataQuery, pageParams);
+
     // 处理数值类型
     const processedProblems = problems.map(problem => ({
       ...problem,
       total_submissions: parseInt(problem.total_submissions) || 0,
       acceptance_rate: parseFloat(problem.acceptance_rate) || 0
     }));
-    
+
     res.json({
       code: 200,
       data: {
         problems: processedProblems,
-        total: processedProblems.length
+        total: total,
+        page,
+        pageSize
       }
     });
   } catch (error) {
@@ -301,15 +327,26 @@ router.get('/stats', async (req, res) => {
 // 获取所有题目分类
 router.get('/categories', async (req, res) => {
   try {
-    console.log('Getting problem categories');
-    const [categories] = await db.query('SELECT * FROM problem_pool_categories');
+    console.log('获取题目分类数据');
+    
+    // 从problem_categories表获取分类数据
+    const [categories] = await db.query(
+      'SELECT id, name, description FROM problem_categories ORDER BY order_num'
+    );
+    
+    console.log('获取到的分类数据:', categories);
+    
+    // 提取分类名称作为标签
+    const tags = categories.map(category => category.name);
+    
+    console.log('处理后的标签列表:', tags);
     
     res.json({
       code: 200,
-      data: categories
+      data: tags
     });
   } catch (error) {
-    console.error('Error getting problem categories:', error);
+    console.error('获取题目分类失败:', error);
     res.status(500).json({
       code: 500,
       message: '获取题目分类失败'
@@ -339,50 +376,33 @@ router.get('/all-categories', async (req, res) => {
   }
 });
 
-// 获取所有标签
+// 获取所有题目标签
 router.get('/tags', async (req, res) => {
   try {
-    console.log('开始获取题目标签...');
+    console.log('获取题目标签数据');
     
-    // 1. 先尝试从problems表的tags字段获取
-    let tagArray = [];
+    // 从problem_categories表获取分类数据
+    const [categories] = await db.query(
+      'SELECT name FROM problem_categories WHERE level = 2 ORDER BY order_num'
+    );
     
-    try {
-      const [tags] = await db.query('SELECT tags FROM problems WHERE tags IS NOT NULL AND tags != ""');
-      console.log('从problems表查询到的标签数据:', tags);
-      
-      // 从tags字段提取标签
-      tagArray = tags.flatMap(tag => {
-        if (tag.tags && typeof tag.tags === 'string') {
-          return tag.tags.split(',').map(t => t.trim()).filter(t => t);
-        }
-        return [];
-      });
-    } catch (dbError) {
-      console.error('查询problems表标签字段失败:', dbError);
-      console.log('尝试检查数据库表结构...');
-      
-      // 检查表结构
-      const [columns] = await db.query('SHOW COLUMNS FROM problems');
-      console.log('problems表结构:', columns.map(col => col.Field));
-      
-      // 如果没有tags字段，使用默认标签
-      if (!columns.find(col => col.Field === 'tags')) {
-        console.log('problems表中没有tags字段，使用默认标签');
-        tagArray = ['哈希表', '数组', '链表', '字符串', '动态规划', '贪心算法'];
-      }
-    }
+    console.log('获取到的分类数据:', categories);
     
-    // 去重并排序
-    const uniqueTags = [...new Set(tagArray)].filter(Boolean).sort();
-    console.log('最终返回的标签:', uniqueTags);
+    // 提取分类名称作为标签
+    const tags = categories.map(category => category.name);
     
-    // 返回标签数组
-    res.json(uniqueTags);
+    console.log('处理后的标签列表:', tags);
+    
+    res.json({
+      code: 200,
+      data: tags
+    });
   } catch (error) {
-    console.error('获取标签失败:', error);
-    // 出错时返回默认标签
-    res.json(['哈希表', '数组', '链表', '字符串', '动态规划', '贪心算法']);
+    console.error('获取题目标签失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '获取题目标签失败'
+    });
   }
 });
 
@@ -1023,7 +1043,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
             problemId,
             tc.input,
             tc.output,
-            tc.is_example ? 1 : 0,
+            Number(tc.is_example) || 0,  // 确保转换为数字类型
             tc.order_num
           ]);
 
@@ -1456,7 +1476,7 @@ router.post('/create', authenticateToken, async (req, res) => {
           nextNumber,
           tc.input,
           tc.output,
-          tc.is_example ? 1 : 0,
+          Number(tc.is_example) || 0,  // 确保转换为数字类型
           tc.order_num
         ]);
 
@@ -1604,7 +1624,7 @@ router.put('/:id/test-cases', async (req, res) => {
           problemId,
           tc.input,
           tc.output,
-          tc.is_example ? 1 : 0,
+          Number(tc.is_example) || 0,  // 确保转换为数字类型
           tc.order_num
         ]);
 

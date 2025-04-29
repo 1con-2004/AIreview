@@ -606,7 +606,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, reactive } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from 'axios'
 import Button from 'primevue/button'
@@ -627,16 +627,8 @@ const pageSize = ref(10)
 const totalPages = ref(1)
 const searchQuery = ref('')
 const showFilterPanel = ref(false)
-const selectedDifficulties = ref([])
-const selectedCategories = ref([])
-const loading = ref(false)
 
-// 难度等级选项
-const difficultyLevels = [
-  { value: 'easy', label: '简单' },
-  { value: 'medium', label: '中等' },
-  { value: 'hard', label: '困难' }
-]
+const loading = ref(false)
 
 // 分类数据
 const categories = ref([])
@@ -762,15 +754,6 @@ const solutionForm = ref({
     python: ''
   }
 })
-
-// 支持的编程语言
-const languages = ref([
-  { id: 1, language_name: 'c' },
-  { id: 2, language_name: 'python' },
-  { id: 3, language_name: 'java' },
-  { id: 4, language_name: 'cpp' }
-])
-
 // 语言选项
 const languageOptions = [
   { label: 'C', value: 'c' },
@@ -779,12 +762,16 @@ const languageOptions = [
   { label: 'Python', value: 'python' }
 ]
 
-// 计算过滤后的标签
+// 计算所有可用的标签
+const allTags = ref([])
+
+// 根据搜索过滤标签
 const filteredTags = computed(() => {
-  if (!tagSearchQuery.value) return tags.value
-  const query = tagSearchQuery.value.toLowerCase()
-  return tags.value.filter(tag =>
-    tag.toLowerCase().includes(query)
+  if (!tagSearchQuery.value) {
+    return allTags.value
+  }
+  return allTags.value.filter(tag =>
+    tag.toLowerCase().includes(tagSearchQuery.value.toLowerCase())
   )
 })
 
@@ -1053,48 +1040,34 @@ const fetchProblems = async () => {
   try {
     loading.value = true
     const params = {
-      difficulties: selectedDifficulty.value ? selectedDifficulty.value : '',
-      categories: selectedCategories.value.join(',')
+      page: currentPage.value,
+      limit: pageSize.value,
+      query: searchQuery.value,
+      difficulty: selectedDifficulty.value,
+      tags: selectedTags.value.join(',')
     }
 
     const response = await axios.get('/api/problems/list', { params })
-    let filteredProblems = response.data.data.problems
+    if (response.data.code === 200) {
+      problems.value = response.data.data.problems || []
+      totalProblems.value = response.data.data.total || 0
+      totalPages.value = Math.ceil(totalProblems.value / pageSize.value)
 
-    // 本地搜索过滤
-    if (searchQuery.value.trim()) {
-      const query = searchQuery.value.trim().toLowerCase()
-
-      // 如果是数字且开启了精确搜索
-      if (/^\d+$/.test(query) && isExactSearch.value) {
-        filteredProblems = filteredProblems.filter(problem =>
-          problem.id.toString() === query
-        )
-      } else {
-        filteredProblems = filteredProblems.filter(problem => {
-          return (
-            problem.id.toString().includes(query) ||
-            problem.title.toLowerCase().includes(query)
-          )
-        })
-      }
-    }
-
-    // 标签筛选
-    if (selectedTags.value.length > 0) {
-      filteredProblems = filteredProblems.filter(problem => {
-        const problemTags = problem.tags ? problem.tags.split(',') : []
-        return selectedTags.value.every(tag => problemTags.includes(tag))
+      // 更新所有标签
+      const tags = new Set()
+      problems.value.forEach(problem => {
+        if (problem.tags) {
+          problem.tags.split(',').forEach(tag => {
+            tags.add(tag.trim())
+          })
+        }
       })
+      allTags.value = Array.from(tags)
+    } else {
+      problems.value = []
+      totalProblems.value = 0
+      totalPages.value = 1
     }
-
-    // 计算总页数
-    totalPages.value = Math.ceil(filteredProblems.length / pageSize.value)
-
-    // 分页处理
-    const start = (currentPage.value - 1) * pageSize.value
-    const end = start + pageSize.value
-    problems.value = filteredProblems.slice(start, end)
-
     loading.value = false
   } catch (error) {
     console.error('获取题目列表失败:', error)
@@ -1126,7 +1099,6 @@ const clearFilters = () => {
   selectedTags.value = []
   tagSearchQuery.value = ''
   currentPage.value = 1
-  showFilterPanel.value = false
   fetchProblems()
 }
 
