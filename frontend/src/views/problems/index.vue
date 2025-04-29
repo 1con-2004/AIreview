@@ -374,7 +374,6 @@ export default {
     await this.fetchPlans()
     await this.fetchCategories()
     this.fetchProblems()
-    this.fetchTags()
     this.updateItemsPerPage()
     window.addEventListener('resize', this.updateItemsPerPage)
   },
@@ -768,45 +767,6 @@ export default {
         // 错误时不更新题目状态，保持原状态
       }
     },
-    async fetchTags () {
-      try {
-        this.loading.tags = true
-        const token = store.getters.getAccessToken
-        const response = await request.get('/api/problems/tags', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-        console.log('获取到的标签数据:', response)
-
-        if (Array.isArray(response)) {
-          // 处理标签数据，去重并排序
-          const allTags = new Set()
-          response.forEach(tag => {
-            if (typeof tag === 'string' && tag.trim()) {
-              allTags.add(tag.trim())
-            }
-          })
-
-          this.tags = Array.from(allTags).sort()
-          console.log('处理后的标签列表:', this.tags)
-        } else {
-          throw new Error('获取标签失败')
-        }
-      } catch (error) {
-        console.error('获取标签失败:', error)
-        if (error.response?.status === 401) {
-          await store.dispatch('logout')
-          this.$router.push('/login')
-          this.$message.error('登录已过期，请重新登录')
-        } else {
-          this.$message.error('获取标签失败: ' + (error.message || '请检查网络连接或稍后重试'))
-          this.tags = []
-        }
-      } finally {
-        this.loading.tags = false
-      }
-    },
     filterProblems () {
       let filteredProblems = this.problems
 
@@ -987,6 +947,9 @@ export default {
       // 设置为使用emoji类型
       category.iconType = 'emoji'
       category.emoji = '📚' // 默认使用书籍emoji
+    },
+    async handlePageChange (page) {
+      // ... existing code ...
     }
   },
   beforeUnmount () {
