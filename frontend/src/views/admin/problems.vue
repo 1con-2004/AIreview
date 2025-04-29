@@ -80,10 +80,11 @@
           <i class="fas fa-plus"></i>
           新建题目
         </button>
-        <button class="btn-reorder" @click="reorderProblems">
+        <!-- 暂时性的移除排序按钮 -->
+        <!-- <button class="btn-reorder" @click="reorderProblems">
           <i class="fas fa-sort-numeric-down"></i>
           重新排序
-        </button>
+        </button> -->
         <button class="btn-filter" @click="showFilterPanel = !showFilterPanel">
           <i class="fas fa-filter"></i>
           筛选
@@ -922,7 +923,7 @@ const handleSubmit = async () => {
   }
 }
 
-const reorderProblems = async () => {
+/* const reorderProblems = async () => {
   try {
     const token = localStorage.getItem('token')
     await axios.post('/api/problems/reorder', {}, {
@@ -946,7 +947,7 @@ const reorderProblems = async () => {
       life: 3000
     })
   }
-}
+} */
 
 const toggleExactSearch = () => {
   isExactSearch.value = !isExactSearch.value
