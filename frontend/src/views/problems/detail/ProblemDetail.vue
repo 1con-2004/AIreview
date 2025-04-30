@@ -660,6 +660,12 @@ export default defineComponent({
   setup () {
     const router = useRouter()
     const route = useRoute()
+    
+    // 初始化analytics埋点工具
+    if (analytics && typeof analytics.init === 'function') {
+      analytics.init()
+    }
+    
     const problem = ref(null)
     const activeTab = ref('description')
     const selectedLanguage = ref('')
