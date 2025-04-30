@@ -644,6 +644,8 @@ import apiService from '@/utils/api'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css' // 暗色主题样式
+// 引入埋点工具
+import analytics from '@/utils/analytics'
 
 export default defineComponent({
   name: 'ProblemDetail',
@@ -896,6 +898,12 @@ export default defineComponent({
           Prism.highlightAll()
         })
       }
+      
+      // 记录标签切换埋点
+      analytics.trackClick('tab_switch', `tab_${newTab}`, {
+        problem_id: route.params.id,
+        tab_name: newTab
+      })
     })
 
     onMounted(() => {
@@ -909,6 +917,12 @@ export default defineComponent({
 
         // 直接进行高亮处理，不需要判断语言
         highlightedCode.value = highlightCode(code.value, selectedLanguageForCode.value || 'C')
+      })
+      
+      // 记录页面访问埋点
+      analytics.trackPageView('problem_detail', {
+        problem_id: route.params.id,
+        referrer: document.referrer
       })
     })
 
@@ -1258,6 +1272,10 @@ export default defineComponent({
       try {
         await navigator.clipboard.writeText(input)
         ElMessage.success('输入样例已复制到剪贴板')
+        // 记录复制输入样例埋点
+        analytics.trackClick('copy_example_input', '', {
+          problem_id: route.params.id
+        })
       } catch (error) {
         ElMessage.error('复制失败')
       }
@@ -1267,6 +1285,10 @@ export default defineComponent({
       try {
         await navigator.clipboard.writeText(output)
         ElMessage.success('输出样例已复制到剪贴板')
+        // 记录复制输出样例埋点
+        analytics.trackClick('copy_example_output', '', {
+          problem_id: route.params.id
+        })
       } catch (error) {
         ElMessage.error('复制失败')
       }
@@ -1383,12 +1405,24 @@ export default defineComponent({
     const nextPage = () => {
       if (currentPage.value < totalPages.value) {
         currentPage.value++
+        
+        // 记录分页操作埋点
+        analytics.trackPagination('submissions', currentPage.value, {
+          problem_id: route.params.id,
+          total_pages: totalPages.value
+        })
       }
     }
 
     const prevPage = () => {
       if (currentPage.value > 1) {
         currentPage.value--
+        
+        // 记录分页操作埋点
+        analytics.trackPagination('submissions', currentPage.value, {
+          problem_id: route.params.id,
+          total_pages: totalPages.value
+        })
       }
     }
 
@@ -1480,6 +1514,13 @@ export default defineComponent({
     const onLanguageChange = (lang) => {
       selectedLanguage.value = lang
       hasUserSelectedLanguage.value = true // 用户手动选择语言时设置标记
+      
+      // 记录语言选择埋点
+      analytics.trackFilter('language_select', lang, {
+        problem_id: route.params.id,
+        context: 'solution'
+      })
+      
       // 选择语言后进行代码高亮
       if (code.value) {
         highlightedCode.value = highlightCode(code.value, lang)
@@ -1504,6 +1545,13 @@ export default defineComponent({
       consoleOutput.value = ''
       compilerOutput.value = '' // 清空编译器输出
       isConsoleCollapsed.value = false // 确保控制台展开
+      
+      // 记录运行代码埋点
+      analytics.trackClick('run_code', '', {
+        problem_id: route.params.id,
+        language: selectedLanguageForCode.value,
+        code_length: code.value.length
+      })
 
       try {
         const userInfoStr = localStorage.getItem('userInfo')
@@ -1576,6 +1624,13 @@ export default defineComponent({
       }
 
       isSubmitting.value = true
+      
+      // 记录提交代码埋点
+      analytics.trackClick('submit_code', '', {
+        problem_id: route.params.id,
+        language: selectedLanguageForCode.value,
+        code_length: code.value.length
+      })
 
       try {
         const userInfoStr = localStorage.getItem('userInfo')
@@ -1778,6 +1833,15 @@ export default defineComponent({
     const getAiAnalysis = async () => {
       isAnalyzing.value = true
       startProgressAnimation(selectedAiModel.value)
+      
+      // 记录AI分析埋点
+      analytics.trackClick('ai_analyze', selectedAiModel.value, {
+        problem_id: route.params.id,
+        language: selectedLanguageForCode.value,
+        code_length: code.value.length,
+        ai_model: selectedAiModel.value
+      })
+      
       try {
         // 改进获取token的方式，确保能找到正确的token
         let accessToken = null
@@ -2024,8 +2088,15 @@ export default defineComponent({
     }
 
     // 监听筛选条件变化，重置分页
-    watch(filters, () => {
+    watch(filters, (newFilters) => {
       currentPage.value = 1
+      
+      // 记录筛选操作埋点
+      analytics.trackFilter('submission_filter', JSON.stringify(newFilters), {
+        problem_id: route.params.id,
+        status: newFilters.status,
+        language: newFilters.language
+      })
     }, { deep: true })
 
     // 代码高亮函数

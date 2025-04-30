@@ -120,6 +120,14 @@ const routes = [
     meta: {
       title: '埋点数据调试'
     }
+  },
+  {
+    path: '/debug/analytics-test',
+    name: 'analytics-test',
+    component: () => import('@/views/debug/analytics-test.vue'),
+    meta: {
+      title: '埋点功能测试'
+    }
   }
 ]
 
