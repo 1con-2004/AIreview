@@ -7,7 +7,8 @@
       <div class="learning-plans">
         <div class="section-header">
           <h2>学习计划</h2>
-          <router-link to="/learning-plans" class="view-more">查看更多</router-link>
+          <router-link to="/learning-plans" class="view-more" 
+            @click="analytics.trackClick('header_link', 'view_more_plans')">查看更多</router-link>
         </div>
         <div class="plan-cards">
           <router-link
@@ -15,6 +16,7 @@
             :key="index"
             :to="`/learning-plans/${plan.id}`"
             class="plan-card"
+            @click="analytics.trackClick('plan', plan.id, {plan_title: plan.title, index})"
           >
             <div class="plan-icon">
               <img :src="plan.icon" :alt="plan.title">
@@ -101,6 +103,7 @@
               :key="problem.id"
               :to="'/problems/detail/' + problem.problem_number"
               class="problem-card"
+              @click="analytics.trackClick('problem', problem.id, {problem_title: problem.title, problem_number: problem.problem_number, difficulty: problem.difficulty})"
             >
               <div class="problem-number">{{ problem.problem_number }}</div>
               <div class="problem-info">
@@ -146,6 +149,7 @@
               v-model="categorySearchQuery"
               placeholder="搜索分类..."
               class="category-search-input"
+              @input="analytics.trackFilter('category_search', categorySearchQuery)"
             />
           </div>
 
@@ -204,41 +208,14 @@
             </div>
           </div>
 
-          <!-- 如果标签还需要保留显示，可以添加一个标签区域 -->
-          <div class="legacy-tags" v-if="false">
-            <h4>标签</h4>
-            <div class="tag-list">
-              <button
-                v-for="tag in paginatedTags"
-                :key="tag"
-                :class="['category-tag', { active: selectedTags.includes(tag) }]"
-                @click="selectTag(tag)"
-              >
-                {{ tag }}
-              </button>
-            </div>
-            <!-- 标签分页 -->
-            <div class="tag-pagination">
-              <button
-                class="page-button"
-                @click="prevTagPage"
-                :disabled="tagCurrentPage === 1"
-              >
-                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <span class="page-info">{{ tagCurrentPage }} / {{ totalTagPages }}</span>
-              <button
-                class="page-button"
-                @click="nextTagPage"
-                :disabled="tagCurrentPage >= totalTagPages"
-              >
-                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
+          <!-- 添加埋点测试按钮 -->
+          <div class="analytics-test" style="margin-top: 20px;">
+            <button 
+              style="width: 100%; padding: 10px; background: #4ecdc4; border: none; border-radius: 8px; color: white; cursor: pointer;" 
+              @click="testAnalytics()"
+            >
+              测试埋点功能
+            </button>
           </div>
         </div>
       </div>
@@ -251,6 +228,7 @@ import NavBar from '@/components/NavBar.vue'
 import { ElSelect, ElOption } from 'element-plus'
 import request from '@/utils/request'
 import store from '@/store'
+import analytics from '@/utils/analytics' // 引入埋点工具
 
 export default {
   name: 'ProblemsPage',
@@ -355,6 +333,14 @@ export default {
     }
   },
   async created () {
+    // 初始化埋点系统
+    analytics.init();
+    
+    // 记录页面访问
+    analytics.trackPageView('problems_page', {
+      referrer: document.referrer
+    });
+    
     // 初始化时首先检查用户登录状态是否一致
     try {
       const userInfoStr = localStorage.getItem('userInfo')
@@ -364,6 +350,11 @@ export default {
 
         // 直接将用户名存入sessionStorage，不调用可能导致用户切换的全局函数
         sessionStorage.setItem('current_user', userInfo.username)
+        
+        // 记录用户信息
+        analytics.trackEvent('user', 'identify', {
+          username: userInfo.username
+        });
       }
     } catch (err) {
       console.error('Problems页面检查用户状态出错:', err)
@@ -396,9 +387,19 @@ export default {
             creator_name: plan.creator_name || ''
           }))
           console.log('处理后的学习计划:', this.plans)
+          
+          // 记录学习计划加载
+          analytics.trackEvent('data_load', 'learning_plans', {
+            count: this.plans.length
+          });
         } else {
           console.log('学习计划数据格式不正确:', response)
           this.plans = []
+          
+          // 记录加载失败
+          analytics.trackEvent('error', 'learning_plans_format_error', {
+            response: JSON.stringify(response).substring(0, 100) // 只记录部分数据
+          });
         }
       } catch (error) {
         console.error('获取学习计划失败:', error)
@@ -408,6 +409,12 @@ export default {
           this.$message.error('获取学习计划失败: ' + (error.message || '请检查网络连接或稍后重试'))
         }
         this.plans = []
+        
+        // 记录错误
+        analytics.trackEvent('error', 'fetch_plans_failed', {
+          message: error.message,
+          status: error.response?.status
+        });
       }
     },
     getCorrectIconPath (iconPath) {
@@ -828,8 +835,12 @@ export default {
     selectTag (tag) {
       if (this.selectedTags.includes(tag)) {
         this.selectedTags = this.selectedTags.filter(t => t !== tag)
+        // 记录取消选择标签
+        analytics.trackFilter('tag', 'unselect', { tag });
       } else {
         this.selectedTags.push(tag)
+        // 记录选择标签
+        analytics.trackFilter('tag', 'select', { tag });
       }
       this.currentPage = 1
     },
@@ -841,15 +852,22 @@ export default {
       this.currentPage = 1
       this.expandedCategories = {}
       this.activeCategory = null
+      
+      // 记录重置筛选
+      analytics.trackFilter('all', 'reset');
     },
     nextPage () {
       if (this.currentPage < this.totalPages) {
         this.currentPage++
+        // 记录分页事件
+        analytics.trackPagination('problems', this.currentPage);
       }
     },
     prevPage () {
       if (this.currentPage > 1) {
         this.currentPage--
+        // 记录分页事件
+        analytics.trackPagination('problems', this.currentPage);
       }
     },
     updateItemsPerPage () {
@@ -877,15 +895,21 @@ export default {
     toggleExactSearch () {
       this.isExactSearch = !this.isExactSearch
       this.currentPage = 1
+      // 记录精确搜索切换
+      analytics.trackFilter('exact_search', this.isExactSearch ? 'on' : 'off');
     },
     nextPlanPage () {
       if (this.currentPlanPage < this.totalPlanPages) {
         this.currentPlanPage++
+        // 记录计划分页
+        analytics.trackPagination('plans', this.currentPlanPage);
       }
     },
     prevPlanPage () {
       if (this.currentPlanPage > 1) {
         this.currentPlanPage--
+        // 记录计划分页
+        analytics.trackPagination('plans', this.currentPlanPage);
       }
     },
     toggleCategory (categoryId) {
@@ -893,6 +917,16 @@ export default {
       const newExpandedCategories = { ...this.expandedCategories }
       newExpandedCategories[categoryId] = !newExpandedCategories[categoryId]
       this.expandedCategories = newExpandedCategories
+
+      // 记录分类展开/折叠
+      analytics.trackClick(
+        'category', 
+        categoryId, 
+        { 
+          action: newExpandedCategories[categoryId] ? 'expand' : 'collapse',
+          category_name: this.categories.find(c => c.id === categoryId)?.name || '未知分类'
+        }
+      );
 
       // 如果展开了分类，则设置为活跃分类
       if (this.expandedCategories[categoryId]) {
@@ -903,12 +937,26 @@ export default {
     },
     selectSubCategory (categoryId) {
       const index = this.selectedCategories.indexOf(categoryId)
+      const subcategory = this.categories
+        .flatMap(c => c.children)
+        .find(c => c.id === categoryId);
+      
       if (index > -1) {
         // 如果已选中，则移除
         this.selectedCategories.splice(index, 1)
+        // 记录取消选择子分类
+        analytics.trackFilter('subcategory', 'unselect', { 
+          category_id: categoryId,
+          category_name: subcategory?.name || '未知分类'
+        });
       } else {
         // 否则添加
         this.selectedCategories.push(categoryId)
+        // 记录选择子分类
+        analytics.trackFilter('subcategory', 'select', { 
+          category_id: categoryId,
+          category_name: subcategory?.name || '未知分类'
+        });
       }
       // 重置到第一页
       this.currentPage = 1
@@ -950,10 +998,34 @@ export default {
     },
     async handlePageChange (page) {
       // ... existing code ...
+    },
+    testAnalytics () {
+      // 添加特殊埋点测试方法到全局，便于测试
+      window.testAnalytics = () => {
+        console.log('埋点测试 - 开始');
+        analytics.trackEvent('test', 'manual_trigger', { timestamp: new Date().getTime() });
+        
+        // 输出所有存储的埋点数据
+        const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+        console.table(events);
+        
+        console.log('埋点测试 - 完成，共收集', events.length, '条埋点数据');
+        return {
+          eventCount: events.length,
+          events: events
+        };
+      };
+      
+      console.log('埋点系统已加载，可使用 window.testAnalytics() 测试埋点');
     }
   },
   beforeUnmount () {
     window.removeEventListener('resize', this.updateItemsPerPage)
+    
+    // 记录离开页面事件
+    analytics.trackPageView('problems_page_exit', {
+      duration_seconds: Math.floor((new Date().getTime() - analytics.pageLoadTime) / 1000)
+    });
   },
   watch: {
     // 监听搜索条件变化
@@ -962,14 +1034,20 @@ export default {
         this.isExactSearch = false
       }
       this.currentPage = 1
+      
+      // 记录搜索条件变更
+      analytics.trackFilter('search_query', newVal);
     },
     // 监听难度选择变化
-    selectedDifficulty () {
+    selectedDifficulty (newVal) {
       this.currentPage = 1
+      
+      // 记录难度选择变更
+      analytics.trackFilter('difficulty', newVal);
     },
     // 监听标签选择变化
     selectedTags: {
-      handler () {
+      handler (newVal) {
         this.currentPage = 1
       },
       deep: true
@@ -999,9 +1077,35 @@ export default {
         this.categorySearchQuery = this.tagSearchQuery
       }
     },
-    selectedStatus () {
+    selectedStatus (newVal) {
       this.currentPage = 1
+      
+      // 记录状态选择变更
+      analytics.trackFilter('status', newVal);
     }
+  },
+  // 添加页面挂载方法
+  mounted() {
+    // 记录页面加载时间
+    analytics.pageLoadTime = new Date().getTime();
+    
+    // 添加特殊埋点测试方法到全局，便于测试
+    window.testAnalytics = () => {
+      console.log('埋点测试 - 开始');
+      analytics.trackEvent('test', 'manual_trigger', { timestamp: new Date().getTime() });
+      
+      // 输出所有存储的埋点数据
+      const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+      console.table(events);
+      
+      console.log('埋点测试 - 完成，共收集', events.length, '条埋点数据');
+      return {
+        eventCount: events.length,
+        events: events
+      };
+    };
+    
+    console.log('埋点系统已加载，可使用 window.testAnalytics() 测试埋点');
   }
 }
 </script>

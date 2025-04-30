@@ -112,6 +112,14 @@ const routes = [
     meta: {
       title: 'Token调试工具'
     }
+  },
+  {
+    path: '/debug/analytics',
+    name: 'analytics-debug',
+    component: () => import('@/views/debug/analytics.vue'),
+    meta: {
+      title: '埋点数据调试'
+    }
   }
 ]
 
