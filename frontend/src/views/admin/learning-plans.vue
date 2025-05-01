@@ -105,7 +105,13 @@
           ></el-input>
         </el-form-item>
         <el-form-item label="难度" prop="difficulty_level">
-          <el-select v-model="form.difficulty_level" placeholder="选择难度">
+          <el-select
+            v-model="form.difficulty_level"
+            placeholder="选择难度"
+            popper-class="learning-plan-difficulty-select"
+            :popper-append-to-body="true"
+            :teleported="true"
+          >
             <el-option label="简单" value="简单"></el-option>
             <el-option label="中等" value="中等"></el-option>
             <el-option label="困难" value="困难"></el-option>
@@ -242,7 +248,8 @@ const form = ref({
   duration: 30,
   problems: [],
   pendingIcon: null,
-  icon: null
+  icon: null,
+  difficulty_level: ''
 })
 const searchQuery = ref('')
 const currentPage = ref(1)
@@ -263,6 +270,9 @@ const formRules = {
   duration: [
     { required: true, message: '请设置计划时长', trigger: 'blur' },
     { type: 'number', min: 1, max: 365, message: '时长应在1-365天之间', trigger: 'blur' }
+  ],
+  difficulty_level: [
+    { required: true, message: '请选择难度级别', trigger: 'change' }
   ]
 }
 
@@ -389,7 +399,8 @@ const openCreateDialog = () => {
     duration: 30,
     problems: [],
     pendingIcon: null,
-    icon: null
+    icon: null,
+    difficulty_level: ''
   }
   showDialog.value = true
 }
@@ -404,37 +415,32 @@ const editPlan = async (plan) => {
     tagsInput: plan.tags || '',
     points: plan.points || '',
     duration: plan.duration || 30,
-    problems: []
+    problems: [],
+    difficulty_level: plan.difficulty_level || '',
+    icon: plan.icon || null
   }
 
-  // 使用新的接口获取学习计划及其题目
   await fetchPlanDetails(plan.id)
   showDialog.value = true
 }
 
-// 新增获取学习计划详情的方法
+// 修改获取学习计划详情的方法
 const fetchPlanDetails = async (planId) => {
   try {
     const response = await axios.get(`/api/learning-plans/${planId}`)
     if (response.data.success) {
-      console.log('获取的学习计划详情:', response.data.data) // 打印返回的数据
-      const { title, description, tag, points, duration, problems, icon } = response.data.data
-
-      // 处理图标路径
-      const defaultIcon = 'http://localhost:8080/icons/default.png' // 默认图标路径
-      form.value.icon = icon
-        ? (icon.startsWith('http') ? icon : `http://localhost:8080${icon}`)
-        : defaultIcon
+      const { title, description, tag, points, duration, problems, icon, difficulty_level } = response.data.data
 
       form.value = {
-        id: planId,
+        ...form.value,
         title,
         description,
         tagsInput: tag || '',
         points: points || '',
         duration: duration || 30,
         problems: problems || [],
-        icon: form.value.icon // 确保这里赋值
+        difficulty_level: difficulty_level || '',
+        icon: form.value.icon
       }
     }
   } catch (error) {
@@ -495,8 +501,9 @@ const submitForm = async () => {
         const payload = {
           ...form.value,
           tagsInput: processTags().join(','),
-          points: form.value.points.split(/[,\n]/).map(p => p.trim()).filter(p => p).join(','), // 直接使用字符串
-          estimated_days: form.value.duration
+          points: form.value.points.split(/[,\n]/).map(p => p.trim()).filter(p => p).join(','),
+          estimated_days: form.value.duration,
+          difficulty_level: form.value.difficulty_level
         }
 
         const response = await axios[method](url, payload)
@@ -748,10 +755,10 @@ const handleIconUploadSuccess = (response) => {
       if (iconData instanceof Blob || (typeof iconData === 'string' && iconData.startsWith('blob:'))) {
         form.value.icon = iconData
       } else {
-        // 如果是服务器返回的URL，确保使用完整路径
+        // 使用相对路径，让Nginx处理代理
         form.value.icon = iconData.startsWith('http')
           ? iconData
-          : `http://localhost:8080${iconData}`
+          : iconData // 直接使用相对路径
       }
 
       toast.add({
@@ -829,6 +836,49 @@ const beforeIconUpload = (file) => {
   return true
 }
 </script>
+
+<style>
+/* 全局样式，确保下拉框样式正确 */
+.learning-plan-difficulty-select {
+  background-color: #fff !important;
+  border: 1px solid #dcdfe6 !important;
+  z-index: 3000 !important; /* 提高z-index确保显示在最上层 */
+}
+
+.learning-plan-difficulty-select .el-select-dropdown__item {
+  color: #606266 !important;
+  padding: 0 20px !important;
+}
+
+.learning-plan-difficulty-select .el-select-dropdown__item.hover,
+.learning-plan-difficulty-select .el-select-dropdown__item:hover {
+  background-color: #f5f7fa !important;
+}
+
+.learning-plan-difficulty-select .el-select-dropdown__item.selected {
+  color: #409eff !important;
+  font-weight: bold !important;
+}
+
+/* 确保弹出层在最顶层 */
+.el-select__popper {
+  z-index: 3000 !important;
+}
+
+/* 添加下拉框的基础样式 */
+.el-select-dropdown {
+  border: 1px solid #dcdfe6 !important;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1) !important;
+}
+
+/* 确保下拉选项可见 */
+.el-select-dropdown__list {
+  padding: 6px 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  max-height: 274px !important;
+}
+</style>
 
 <style scoped>
 .learning-plans-management {
@@ -1088,5 +1138,25 @@ const beforeIconUpload = (file) => {
 
 .points-description {
   margin-bottom: 0px;
+}
+
+/* 确保下拉框样式正确 */
+:deep(.el-select) {
+  width: 100%;
+}
+
+:deep(.el-select .el-input__wrapper) {
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+}
+
+:deep(.el-select .el-input__inner) {
+  color: #606266 !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+
+:deep(.el-select:hover .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #409eff inset !important;
 }
 </style>

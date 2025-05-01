@@ -4,7 +4,6 @@
     <nav-bar></nav-bar>
     <div class="debug-content">
       <h1>埋点数据调试页面</h1>
-      
       <div class="control-panel">
         <div class="status-card">
           <div class="status-title">埋点系统状态</div>
@@ -20,7 +19,6 @@
             </button>
           </div>
         </div>
-        
         <div class="action-card">
           <div class="action-title">埋点操作</div>
           <div class="action-buttons">
@@ -29,7 +27,6 @@
             <button @click="showViewer = true" class="view-btn">查看埋点数据</button>
           </div>
         </div>
-        
         <div class="stats-card">
           <div class="stats-title">数据统计</div>
           <div class="stats-values">
@@ -52,7 +49,6 @@
           </div>
         </div>
       </div>
-      
       <div class="test-panel">
         <h2>测试埋点</h2>
         <div class="test-form">
@@ -66,7 +62,6 @@
               <option value="custom">自定义事件</option>
             </select>
           </div>
-          
           <!-- 页面访问事件 -->
           <template v-if="testEvent.type === 'page_view'">
             <div class="form-group">
@@ -78,7 +73,6 @@
               <textarea v-model="testEvent.pageParams" placeholder='例如: {"referrer": "https://example.com"}'></textarea>
             </div>
           </template>
-          
           <!-- 点击事件 -->
           <template v-else-if="testEvent.type === 'click'">
             <div class="form-group">
@@ -94,7 +88,6 @@
               <textarea v-model="testEvent.extraData" placeholder='例如: {"location": "header", "action": "submit"}'></textarea>
             </div>
           </template>
-          
           <!-- 筛选事件 -->
           <template v-else-if="testEvent.type === 'filter'">
             <div class="form-group">
@@ -110,7 +103,6 @@
               <textarea v-model="testEvent.extraData" placeholder='例如: {"previous": "困难", "component": "search"}'></textarea>
             </div>
           </template>
-          
           <!-- 分页事件 -->
           <template v-else-if="testEvent.type === 'pagination'">
             <div class="form-group">
@@ -126,7 +118,6 @@
               <textarea v-model="testEvent.extraData" placeholder='例如: {"previous_page": 1, "total_pages": 5}'></textarea>
             </div>
           </template>
-          
           <!-- 自定义事件 -->
           <template v-else>
             <div class="form-group">
@@ -142,19 +133,16 @@
               <textarea v-model="testEvent.data" placeholder='例如: {"method": "github", "success": true}'></textarea>
             </div>
           </template>
-          
           <div class="form-actions">
             <button @click="sendTestEvent" class="test-btn">发送测试事件</button>
             <button @click="resetTestForm" class="reset-btn">重置表单</button>
           </div>
         </div>
-        
         <div v-if="lastSentEvent" class="last-event">
           <h3>最近发送的事件</h3>
           <pre>{{ JSON.stringify(lastSentEvent, null, 2) }}</pre>
         </div>
       </div>
-      
       <div class="navigation-panel">
         <h2>跳转到测试页面</h2>
         <div class="navigation-links">
@@ -164,7 +152,6 @@
         </div>
       </div>
     </div>
-    
     <!-- 埋点数据查看器 -->
     <analytics-viewer v-if="showViewer" @close="showViewer = false" />
   </div>
@@ -181,7 +168,7 @@ export default {
     NavBar,
     AnalyticsViewer
   },
-  data() {
+  data () {
     return {
       analytics, // 引用全局埋点工具
       events: [],
@@ -204,13 +191,13 @@ export default {
       lastSentEvent: null
     }
   },
-  mounted() {
+  mounted () {
     // 记录调试页面访问
     analytics.trackPageView('analytics_debug_page')
     this.loadEvents()
   },
   methods: {
-    loadEvents() {
+    loadEvents () {
       try {
         const eventsStr = localStorage.getItem('analytics_events')
         this.events = eventsStr ? JSON.parse(eventsStr) : []
@@ -219,39 +206,37 @@ export default {
         this.events = []
       }
     },
-    clearEvents() {
+    clearEvents () {
       if (confirm('确定要清除所有埋点数据吗？')) {
         localStorage.removeItem('analytics_events')
         this.events = []
         this.loadEvents()
       }
     },
-    toggleAnalytics() {
+    toggleAnalytics () {
       analytics.enabled = !analytics.enabled
       // 记录切换状态
       if (analytics.enabled) {
         analytics.trackEvent('system', 'analytics_enabled')
       }
     },
-    toggleDebugMode() {
+    toggleDebugMode () {
       analytics.debugMode = !analytics.debugMode
       // 记录调试模式切换
       if (analytics.enabled) {
         analytics.trackEvent('system', 'debug_mode_changed', { enabled: analytics.debugMode })
       }
     },
-    exportEvents() {
+    exportEvents () {
       try {
         const eventsStr = JSON.stringify(this.events, null, 2)
         const blob = new Blob([eventsStr], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
-        
         const a = document.createElement('a')
         a.href = url
         a.download = `analytics_events_${new Date().toISOString().slice(0, 10)}.json`
         document.body.appendChild(a)
         a.click()
-        
         setTimeout(() => {
           document.body.removeChild(a)
           URL.revokeObjectURL(url)
@@ -261,7 +246,7 @@ export default {
         alert('导出数据失败: ' + error.message)
       }
     },
-    sendTestEvent() {
+    sendTestEvent () {
       try {
         if (this.testEvent.type === 'page_view') {
           // 发送页面访问事件
@@ -312,7 +297,6 @@ export default {
             ...data
           }
         }
-        
         // 重新加载事件数据
         setTimeout(() => this.loadEvents(), 100)
       } catch (error) {
@@ -320,7 +304,7 @@ export default {
         alert('发送测试事件失败: ' + error.message)
       }
     },
-    resetTestForm() {
+    resetTestForm () {
       this.testEvent = {
         type: 'page_view',
         pageName: '',
@@ -338,7 +322,7 @@ export default {
       }
       this.lastSentEvent = null
     },
-    countByType(type) {
+    countByType (type) {
       return this.events.filter(event => event.type === type).length
     }
   }
@@ -617,13 +601,11 @@ input:focus, select:focus, textarea:focus {
   .control-panel {
     grid-template-columns: 1fr;
   }
-  
   .test-form {
     grid-template-columns: 1fr;
   }
-  
   .stats-values {
     grid-template-columns: 1fr;
   }
 }
-</style> 
+</style>

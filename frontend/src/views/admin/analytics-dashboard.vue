@@ -96,7 +96,7 @@
             :value="type.value"
           />
         </el-select>
-        <el-button type="primary" @click="fetchData">刷新数据</el-button>
+        <el-button type="primary" @click="fetchData" style="margin-left: 20px;">刷新数据</el-button>
         <el-button type="success" @click="exportEvents">导出数据</el-button>
       </div>
     </div>
