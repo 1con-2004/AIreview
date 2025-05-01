@@ -16,6 +16,12 @@ import 'element-plus/dist/index.css'
 import apiService, { getApiUrl, getResourceUrl } from './utils/api'
 import request from './utils/request'
 
+// 导入埋点工具
+import analytics from './utils/analytics'
+
+// 全局注册埋点工具
+window.analytics = analytics
+
 // PrimeVue 相关
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
@@ -70,11 +76,16 @@ app.component('Button', Button)
 app.config.globalProperties.$axios = apiService
 app.config.globalProperties.$getApiUrl = getApiUrl
 app.config.globalProperties.$getResourceUrl = getResourceUrl
+app.config.globalProperties.$analytics = analytics // 全局注册analytics埋点工具
 
 // 全局挂载API工具
 app.provide('apiService', apiService)
 app.provide('getApiUrl', getApiUrl)
 app.provide('getResourceUrl', getResourceUrl)
+app.provide('analytics', analytics) // 提供analytics依赖注入
+
+// 初始化埋点系统
+analytics.init()
 
 // 定义全局用户信息修复函数
 window.$fixUserInfo = function () {

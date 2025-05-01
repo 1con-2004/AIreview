@@ -619,28 +619,32 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, computed, watch, nextTick, reactive } from 'vue'
+import { defineComponent, ref, computed, watch, nextTick, onMounted, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
-import { ElMessage, Dialog } from 'element-plus'
-import { Document, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
-// 新增高亮库引入
+import apiService from '@/utils/api'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import Prism from 'prismjs'
 import 'prismjs/themes/prism-tomorrow.css'
-// 添加C语言语法支持
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-python'
 import 'prismjs/components/prism-c'
-// 添加其他语言支持
 import 'prismjs/components/prism-cpp'
 import 'prismjs/components/prism-java'
-import 'prismjs/components/prism-python'
-import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-json'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.css'
+import 'prismjs/plugins/line-numbers/prism-line-numbers'
+import { Document, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import Dialog from 'primevue/dialog'
+import axios from 'axios'
+import { useStore } from 'vuex'
 import InputTextarea from 'primevue/textarea'
 import { getProblemExamples } from '@/api/testCase'
 // 导入marked库处理Markdown
 import { marked } from 'marked'
 
-// 在引入部分添加apiService和getApiUrl
-import apiService from '@/utils/api'
+// 导入其他需要的库
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css' // 暗色主题样式
@@ -661,10 +665,7 @@ export default defineComponent({
     const router = useRouter()
     const route = useRoute()
     
-    // 初始化analytics埋点工具
-    if (analytics && typeof analytics.init === 'function') {
-      analytics.init()
-    }
+    // 移除这里的analytics初始化代码，使用全局初始化的analytics对象
     
     const problem = ref(null)
     const activeTab = ref('description')
@@ -797,8 +798,15 @@ export default defineComponent({
             // 尝试直接用数字ID获取
             try {
               const directResponse = await apiService.get(`judge/submissions?problem_id=${Number(route.params.id)}`, { headers })
-              if (directResponse && directResponse.length > 0) {
-                submissions.value = directResponse
+              // 如果返回了内容但长度为0，说明没有提交记录
+              if (directResponse && Array.isArray(directResponse)) {
+                if (directResponse.length > 0) {
+                  submissions.value = directResponse
+                } else {
+                  // 没有提交记录，设置为空数组
+                  submissions.value = []
+                  console.log('该题目没有提交记录')
+                }
 
                 // 添加: 获取提交记录后应用代码高亮
                 nextTick(() => {
@@ -808,12 +816,14 @@ export default defineComponent({
               }
             } catch (directError) {
               console.error('直接通过ID获取提交记录失败:', directError)
+              // 设置为空数组，避免undefined
+              submissions.value = []
             }
           }
         }
 
         if (response && response.code === 200) {
-          submissions.value = response.data
+          submissions.value = response.data || []
 
           // 添加: 获取提交记录后应用代码高亮
           nextTick(() => {

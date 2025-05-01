@@ -620,7 +620,7 @@ router.get('/admin/list', authenticateToken, async (req, res) => {
     
     // 添加分页
     query += ' ORDER BY u.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(parseInt(pageSize), offset);
+    queryParams.push(parseInt(pageSize), parseInt(offset));
     
     console.log('列表查询SQL:', query);
     console.log('列表查询参数:', queryParams);

@@ -177,6 +177,12 @@ const adminRoutes = {
       component: () => import('@/views/admin/statistics.vue')
     },
     {
+      path: 'analytics-dashboard',
+      name: 'AdminAnalyticsDashboard',
+      component: () => import('@/views/admin/analytics-dashboard.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: 'settings',
       name: 'AdminSettings',
       component: () => import('@/views/admin/settings.vue')

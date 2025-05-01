@@ -233,6 +233,11 @@ router.get('/submissions', async (req, res) => {
     );
     const total = countResult[0].total;
 
+    // 如果没有记录，直接返回空数组，而不是抛出错误
+    if (total === 0) {
+      return res.json([]);
+    }
+
     // 获取分页数据
     const [submissions] = await connection.execute(
       `SELECT id, user_id, problem_id, problem_number, language, status, runtime, memory, created_at, completed_at
@@ -240,7 +245,7 @@ router.get('/submissions', async (req, res) => {
        ${whereClause}
        ORDER BY created_at DESC
        LIMIT ?, ?`,
-      [...params, offset, parseInt(limit)]
+      [...params, parseInt(offset), parseInt(limit)]
     );
 
     res.json(submissions);

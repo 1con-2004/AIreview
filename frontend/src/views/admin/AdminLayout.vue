@@ -92,6 +92,7 @@ const menuItems = ref([
   { name: '课堂管理', path: '/admin/classrooms', icon: 'fas fa-chalkboard-teacher' },
   { name: '学习计划', path: '/admin/learning-plans', icon: 'fas fa-road', hideForRoles: ['teacher'] }, // 老师不能访问
   { name: '数据统计', path: '/admin/statistics', icon: 'fas fa-chart-bar' },
+  { name: '埋点分析', path: '/admin/analytics-dashboard', icon: 'fas fa-chart-line', hideForRoles: ['teacher'] }, // 老师不能访问
   { name: '系统设置', path: '/admin/settings', icon: 'fas fa-cog' }
 ])
 

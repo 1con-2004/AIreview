@@ -8,7 +8,7 @@
         <div class="section-header">
           <h2>学习计划</h2>
           <router-link to="/learning-plans" class="view-more" 
-            @click="analytics.trackClick('header_link', 'view_more_plans')">查看更多</router-link>
+            @click="trackViewMorePlans">查看更多</router-link>
         </div>
         <div class="plan-cards">
           <router-link
@@ -16,7 +16,7 @@
             :key="index"
             :to="`/learning-plans/${plan.id}`"
             class="plan-card"
-            @click="analytics.trackClick('plan', plan.id, {plan_title: plan.title, index})"
+            @click="trackPlanClick(plan.id, plan.title, index)"
           >
             <div class="plan-icon">
               <img :src="plan.icon" :alt="plan.title">
@@ -103,7 +103,7 @@
               :key="problem.id"
               :to="'/problems/detail/' + problem.problem_number"
               class="problem-card"
-              @click="analytics.trackClick('problem', problem.id, {problem_title: problem.title, problem_number: problem.problem_number, difficulty: problem.difficulty})"
+              @click="trackProblemClick(problem.id, problem.title, problem.problem_number, problem.difficulty)"
             >
               <div class="problem-number">{{ problem.problem_number }}</div>
               <div class="problem-info">
@@ -149,7 +149,7 @@
               v-model="categorySearchQuery"
               placeholder="搜索分类..."
               class="category-search-input"
-              @input="analytics.trackFilter('category_search', categorySearchQuery)"
+              @input="trackCategorySearch"
             />
           </div>
 
@@ -239,6 +239,7 @@ export default {
   },
   data () {
     return {
+      analytics, // 将analytics添加到data中，使其可以通过this.analytics访问
       problems: [],
       tags: [],
       selectedTags: [],
@@ -334,12 +335,18 @@ export default {
   },
   async created () {
     // 初始化埋点系统
-    analytics.init();
-    
-    // 记录页面访问
-    analytics.trackPageView('problems_page', {
-      referrer: document.referrer
-    });
+    try {
+      if (this.analytics) {
+        this.analytics.init();
+        
+        // 记录页面访问
+        this.analytics.trackPageView('problems_page', {
+          referrer: document.referrer
+        });
+      }
+    } catch (error) {
+      console.error('埋点初始化失败:', error);
+    }
     
     // 初始化时首先检查用户登录状态是否一致
     try {
@@ -352,9 +359,15 @@ export default {
         sessionStorage.setItem('current_user', userInfo.username)
         
         // 记录用户信息
-        analytics.trackEvent('user', 'identify', {
-          username: userInfo.username
-        });
+        try {
+          if (this.analytics) {
+            this.analytics.trackEvent('user', 'identify', {
+              username: userInfo.username
+            });
+          }
+        } catch (error) {
+          console.error('埋点用户事件记录失败:', error);
+        }
       }
     } catch (err) {
       console.error('Problems页面检查用户状态出错:', err)
@@ -369,6 +382,125 @@ export default {
     window.addEventListener('resize', this.updateItemsPerPage)
   },
   methods: {
+    // 埋点事件包装方法
+    trackViewMorePlans() {
+      try {
+        if (this.analytics) {
+          this.analytics.trackClick('header_link', 'view_more_plans');
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+    },
+    
+    trackPlanClick(planId, planTitle, index) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackClick('plan', planId, {
+            plan_title: planTitle, 
+            index
+          });
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+    },
+    
+    trackProblemClick(problemId, problemTitle, problemNumber, difficulty) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackClick('problem', problemId, {
+            problem_title: problemTitle, 
+            problem_number: problemNumber, 
+            difficulty: difficulty
+          });
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+    },
+    
+    trackCategorySearch() {
+      try {
+        if (this.analytics) {
+          this.analytics.trackFilter('category_search', this.categorySearchQuery);
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+    },
+
+    // 现有toggleCategory方法的修改版本
+    toggleCategory(categoryId) {
+      // 使用Vue的响应式对象更新方式
+      const newExpandedCategories = { ...this.expandedCategories }
+      newExpandedCategories[categoryId] = !newExpandedCategories[categoryId]
+      this.expandedCategories = newExpandedCategories
+
+      // 记录分类展开/折叠，使用try-catch保护
+      try {
+        if (this.analytics) {
+          this.analytics.trackClick(
+            'category', 
+            categoryId, 
+            { 
+              action: newExpandedCategories[categoryId] ? 'expand' : 'collapse',
+              category_name: this.categories.find(c => c.id === categoryId)?.name || '未知分类'
+            }
+          );
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+
+      // 如果展开了分类，则设置为活跃分类
+      if (this.expandedCategories[categoryId]) {
+        this.activeCategory = categoryId
+      } else if (this.activeCategory === categoryId) {
+        this.activeCategory = null
+      }
+    },
+
+    // 现有selectSubCategory方法的修改版本
+    selectSubCategory(categoryId) {
+      const index = this.selectedCategories.indexOf(categoryId)
+      const subcategory = this.categories
+        .flatMap(c => c.children)
+        .find(c => c.id === categoryId);
+      
+      if (index > -1) {
+        // 如果已选中，则移除
+        this.selectedCategories.splice(index, 1)
+        // 记录取消选择子分类，使用try-catch保护
+        try {
+          if (this.analytics) {
+            this.analytics.trackFilter('subcategory', 'unselect', { 
+              category_id: categoryId,
+              category_name: subcategory?.name || '未知分类'
+            });
+          }
+        } catch (error) {
+          console.error('埋点事件记录失败:', error);
+        }
+      } else {
+        // 否则添加
+        this.selectedCategories.push(categoryId)
+        // 记录选择子分类，使用try-catch保护
+        try {
+          if (this.analytics) {
+            this.analytics.trackFilter('subcategory', 'select', { 
+              category_id: categoryId,
+              category_name: subcategory?.name || '未知分类'
+            });
+          }
+        } catch (error) {
+          console.error('埋点事件记录失败:', error);
+        }
+      }
+      // 重置到第一页
+      this.currentPage = 1
+    },
+
     async fetchPlans () {
       try {
         console.log('开始获取学习计划...')
@@ -388,18 +520,30 @@ export default {
           }))
           console.log('处理后的学习计划:', this.plans)
           
-          // 记录学习计划加载
-          analytics.trackEvent('data_load', 'learning_plans', {
-            count: this.plans.length
-          });
+          // 记录学习计划加载，使用try-catch保护
+          try {
+            if (this.analytics) {
+              this.analytics.trackEvent('data_load', 'learning_plans', {
+                count: this.plans.length
+              });
+            }
+          } catch (error) {
+            console.error('埋点事件记录失败:', error);
+          }
         } else {
           console.log('学习计划数据格式不正确:', response)
           this.plans = []
           
-          // 记录加载失败
-          analytics.trackEvent('error', 'learning_plans_format_error', {
-            response: JSON.stringify(response).substring(0, 100) // 只记录部分数据
-          });
+          // 记录加载失败，使用try-catch保护
+          try {
+            if (this.analytics) {
+              this.analytics.trackEvent('error', 'learning_plans_format_error', {
+                response: JSON.stringify(response).substring(0, 100) // 只记录部分数据
+              });
+            }
+          } catch (error) {
+            console.error('埋点事件记录失败:', error);
+          }
         }
       } catch (error) {
         console.error('获取学习计划失败:', error)
@@ -410,11 +554,17 @@ export default {
         }
         this.plans = []
         
-        // 记录错误
-        analytics.trackEvent('error', 'fetch_plans_failed', {
-          message: error.message,
-          status: error.response?.status
-        });
+        // 记录错误，使用try-catch保护
+        try {
+          if (this.analytics) {
+            this.analytics.trackEvent('error', 'fetch_plans_failed', {
+              message: error.message,
+              status: error.response?.status
+            });
+          }
+        } catch (error) {
+          console.error('埋点事件记录失败:', error);
+        }
       }
     },
     getCorrectIconPath (iconPath) {
@@ -836,11 +986,11 @@ export default {
       if (this.selectedTags.includes(tag)) {
         this.selectedTags = this.selectedTags.filter(t => t !== tag)
         // 记录取消选择标签
-        analytics.trackFilter('tag', 'unselect', { tag });
+        this.trackFilter('tag', 'unselect', { tag });
       } else {
         this.selectedTags.push(tag)
         // 记录选择标签
-        analytics.trackFilter('tag', 'select', { tag });
+        this.trackFilter('tag', 'select', { tag });
       }
       this.currentPage = 1
     },
@@ -854,20 +1004,20 @@ export default {
       this.activeCategory = null
       
       // 记录重置筛选
-      analytics.trackFilter('all', 'reset');
+      this.trackFilter('all', 'reset');
     },
     nextPage () {
       if (this.currentPage < this.totalPages) {
         this.currentPage++
         // 记录分页事件
-        analytics.trackPagination('problems', this.currentPage);
+        this.trackPagination('problems', this.currentPage);
       }
     },
     prevPage () {
       if (this.currentPage > 1) {
         this.currentPage--
         // 记录分页事件
-        analytics.trackPagination('problems', this.currentPage);
+        this.trackPagination('problems', this.currentPage);
       }
     },
     updateItemsPerPage () {
@@ -896,70 +1046,21 @@ export default {
       this.isExactSearch = !this.isExactSearch
       this.currentPage = 1
       // 记录精确搜索切换
-      analytics.trackFilter('exact_search', this.isExactSearch ? 'on' : 'off');
+      this.trackFilter('exact_search', this.isExactSearch ? 'on' : 'off');
     },
     nextPlanPage () {
       if (this.currentPlanPage < this.totalPlanPages) {
         this.currentPlanPage++
         // 记录计划分页
-        analytics.trackPagination('plans', this.currentPlanPage);
+        this.trackPagination('plans', this.currentPlanPage);
       }
     },
     prevPlanPage () {
       if (this.currentPlanPage > 1) {
         this.currentPlanPage--
         // 记录计划分页
-        analytics.trackPagination('plans', this.currentPlanPage);
+        this.trackPagination('plans', this.currentPlanPage);
       }
-    },
-    toggleCategory (categoryId) {
-      // 使用Vue的响应式对象更新方式
-      const newExpandedCategories = { ...this.expandedCategories }
-      newExpandedCategories[categoryId] = !newExpandedCategories[categoryId]
-      this.expandedCategories = newExpandedCategories
-
-      // 记录分类展开/折叠
-      analytics.trackClick(
-        'category', 
-        categoryId, 
-        { 
-          action: newExpandedCategories[categoryId] ? 'expand' : 'collapse',
-          category_name: this.categories.find(c => c.id === categoryId)?.name || '未知分类'
-        }
-      );
-
-      // 如果展开了分类，则设置为活跃分类
-      if (this.expandedCategories[categoryId]) {
-        this.activeCategory = categoryId
-      } else if (this.activeCategory === categoryId) {
-        this.activeCategory = null
-      }
-    },
-    selectSubCategory (categoryId) {
-      const index = this.selectedCategories.indexOf(categoryId)
-      const subcategory = this.categories
-        .flatMap(c => c.children)
-        .find(c => c.id === categoryId);
-      
-      if (index > -1) {
-        // 如果已选中，则移除
-        this.selectedCategories.splice(index, 1)
-        // 记录取消选择子分类
-        analytics.trackFilter('subcategory', 'unselect', { 
-          category_id: categoryId,
-          category_name: subcategory?.name || '未知分类'
-        });
-      } else {
-        // 否则添加
-        this.selectedCategories.push(categoryId)
-        // 记录选择子分类
-        analytics.trackFilter('subcategory', 'select', { 
-          category_id: categoryId,
-          category_name: subcategory?.name || '未知分类'
-        });
-      }
-      // 重置到第一页
-      this.currentPage = 1
     },
     getCategoryIcon (category) {
       // 图标映射表
@@ -1002,30 +1103,83 @@ export default {
     testAnalytics () {
       // 添加特殊埋点测试方法到全局，便于测试
       window.testAnalytics = () => {
-        console.log('埋点测试 - 开始');
-        analytics.trackEvent('test', 'manual_trigger', { timestamp: new Date().getTime() });
-        
-        // 输出所有存储的埋点数据
-        const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
-        console.table(events);
-        
-        console.log('埋点测试 - 完成，共收集', events.length, '条埋点数据');
-        return {
-          eventCount: events.length,
-          events: events
-        };
+        try {
+          console.log('埋点测试 - 开始');
+          if (this.analytics) {
+            this.analytics.trackEvent('test', 'manual_trigger', { timestamp: new Date().getTime() });
+            
+            // 输出所有存储的埋点数据
+            const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+            console.table(events);
+            
+            console.log('埋点测试 - 完成，共收集', events.length, '条埋点数据');
+            return {
+              eventCount: events.length,
+              events: events
+            };
+          } else {
+            console.log('埋点系统未初始化');
+            return { eventCount: 0, events: [] };
+          }
+        } catch (error) {
+          console.error('埋点测试失败:', error);
+          return { eventCount: 0, events: [], error: error.message };
+        }
       };
       
       console.log('埋点系统已加载，可使用 window.testAnalytics() 测试埋点');
+    },
+    // 额外添加的包装方法
+    trackFilter(filterName, filterValue, extraData = {}) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackFilter(filterName, filterValue, extraData);
+        }
+      } catch (error) {
+        console.error('埋点过滤事件记录失败:', error);
+      }
+    },
+    trackPagination(pageType, pageNumber, extraData = {}) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackPagination(pageType, pageNumber, extraData);
+        }
+      } catch (error) {
+        console.error('埋点分页事件记录失败:', error);
+      }
+    },
+    trackEvent(category, action, data = {}) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackEvent(category, action, data);
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error);
+      }
+    },
+    trackPageView(pageName, pageParams = {}) {
+      try {
+        if (this.analytics) {
+          this.analytics.trackPageView(pageName, pageParams);
+        }
+      } catch (error) {
+        console.error('埋点页面访问记录失败:', error);
+      }
     }
   },
   beforeUnmount () {
     window.removeEventListener('resize', this.updateItemsPerPage)
     
     // 记录离开页面事件
-    analytics.trackPageView('problems_page_exit', {
-      duration_seconds: Math.floor((new Date().getTime() - analytics.pageLoadTime) / 1000)
-    });
+    try {
+      if (this.analytics) {
+        this.analytics.trackPageView('problems_page_exit', {
+          duration_seconds: Math.floor((new Date().getTime() - (this.analytics.pageLoadTime || Date.now())) / 1000)
+        });
+      }
+    } catch (error) {
+      console.error('埋点离开页面事件记录失败:', error);
+    }
   },
   watch: {
     // 监听搜索条件变化
@@ -1036,14 +1190,14 @@ export default {
       this.currentPage = 1
       
       // 记录搜索条件变更
-      analytics.trackFilter('search_query', newVal);
+      this.trackFilter('search_query', newVal);
     },
     // 监听难度选择变化
     selectedDifficulty (newVal) {
       this.currentPage = 1
       
       // 记录难度选择变更
-      analytics.trackFilter('difficulty', newVal);
+      this.trackFilter('difficulty', newVal);
     },
     // 监听标签选择变化
     selectedTags: {
@@ -1081,31 +1235,22 @@ export default {
       this.currentPage = 1
       
       // 记录状态选择变更
-      analytics.trackFilter('status', newVal);
+      this.trackFilter('status', newVal);
     }
   },
   // 添加页面挂载方法
   mounted() {
     // 记录页面加载时间
-    analytics.pageLoadTime = new Date().getTime();
+    try {
+      if (this.analytics) {
+        this.analytics.pageLoadTime = new Date().getTime();
+      }
+    } catch (error) {
+      console.error('设置埋点页面加载时间失败:', error);
+    }
     
     // 添加特殊埋点测试方法到全局，便于测试
-    window.testAnalytics = () => {
-      console.log('埋点测试 - 开始');
-      analytics.trackEvent('test', 'manual_trigger', { timestamp: new Date().getTime() });
-      
-      // 输出所有存储的埋点数据
-      const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
-      console.table(events);
-      
-      console.log('埋点测试 - 完成，共收集', events.length, '条埋点数据');
-      return {
-        eventCount: events.length,
-        events: events
-      };
-    };
-    
-    console.log('埋点系统已加载，可使用 window.testAnalytics() 测试埋点');
+    this.testAnalytics();
   }
 }
 </script>

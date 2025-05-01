@@ -305,6 +305,8 @@ app.use('/api/testcases', testCaseRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/statistics', statisticsRoutes);
 app.use('/api/learning-path', learningPathRoutes);
+// 添加analytics分析路由
+app.use('/api/analytics', require('./api/analytics'));
 
 // 添加调试日志，记录所有注册的路由
 console.log('注册的路由列表:');

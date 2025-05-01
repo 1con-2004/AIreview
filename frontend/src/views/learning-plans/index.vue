@@ -189,6 +189,19 @@ export default {
     }
 
     const goToPlanDetail = (planId) => {
+      // 引入analytics对象
+      try {
+        // 尝试获取全局注入的analytics对象
+        const analytics = window.analytics || window.$analytics
+        // 如果analytics存在，记录点击事件
+        if (analytics) {
+          analytics.trackClick('learning_plan_card', planId, {
+            planId: planId
+          })
+        }
+      } catch (error) {
+        console.error('埋点事件记录失败:', error)
+      }
       router.push('/learning-plans/' + planId)
     }
 
