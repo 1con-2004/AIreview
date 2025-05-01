@@ -429,6 +429,7 @@ const fetchPlanDetails = async (planId) => {
   try {
     const response = await axios.get(`/api/learning-plans/${planId}`)
     if (response.data.success) {
+      // eslint-disable-next-line camelcase
       const { title, description, tag, points, duration, problems, icon, difficulty_level } = response.data.data
 
       form.value = {
@@ -439,6 +440,7 @@ const fetchPlanDetails = async (planId) => {
         points: points || '',
         duration: duration || 30,
         problems: problems || [],
+        // eslint-disable-next-line camelcase
         difficulty_level: difficulty_level || '',
         icon: form.value.icon
       }

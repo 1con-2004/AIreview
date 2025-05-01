@@ -5,6 +5,11 @@ const { authenticateToken } = require('../../middleware/auth');
 const ZhipuAI = require('../../utils/zhipuAI');
 const analyzeCodeService = require('../../services/ai/analyzeCode.service');
 
+// 添加代码分析路由
+const codeAnalysisRoutes = require('../../routes/api/ai/codeAnalysis.routes');
+router.use('/code-analysis', codeAnalysisRoutes);
+console.log('代码分析API路由已注册');
+
 // 代码分析路由
 router.post('/analyze-code', authenticateToken, async (req, res) => {
   const requestId = req.requestId || `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
