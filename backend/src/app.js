@@ -5,6 +5,10 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const app = express();
+
+// 信任代理，这样req.ip才能获取到真实的客户端IP
+app.set('trust proxy', true);
+
 const apiRouter = require('./api');
 const loginRouter = require('./api/login');
 const registerRouter = require('./api/register');

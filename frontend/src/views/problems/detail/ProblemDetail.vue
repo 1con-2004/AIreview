@@ -384,7 +384,7 @@
                       <div style="background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); width: 4px; height: 24px; margin-right: 12px; border-radius: 2px;"></div>
                       <div class="section-title" style="display: flex; align-items: center; flex-grow: 1;">
                         <i class="el-icon-info" style="color: #4facfe; margin-right: 8px; font-size: 20px;"></i>
-                        <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI 代码分析</span>
+                        <span style="font-weight: 600; font-size: 18px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">AI 代码分析</span>
                         <!-- 添加AI模型选择下拉框 -->
                         <div style="margin-left: auto;">
                           <el-select
@@ -424,7 +424,7 @@
                             </defs>
                           </svg>
                         </div>
-                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">等待AI分析</h3>
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">等待AI分析</h3>
                         <p style="font-size: 16px; color: #a6accd; max-width: 400px; margin-bottom: 24px; line-height: 1.5;">请点击右侧编辑器上方的<span style="color: #4facfe; font-weight: 500;">「AI分析」</span>按钮，对您的代码进行智能分析。</p>
                         <div style="display: flex; align-items: center; justify-content: center; background: rgba(78, 205, 255, 0.1); border-radius: 8px; padding: 12px 16px; border: 1px dashed rgba(78, 205, 255, 0.3);">
                           <i class="el-icon-info-filled" style="color: #4facfe; margin-right: 8px; font-size: 16px;"></i>

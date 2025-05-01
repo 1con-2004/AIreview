@@ -28,7 +28,8 @@ const pool = mysql.createPool({
     keepAliveInitialDelay: 0,
     charset: 'utf8mb4', // 使用utf8mb4字符集支持完整的中文和表情符号
     collation: 'utf8mb4_unicode_ci', // 使用Unicode排序规则
-    multipleStatements: true // 允许多条语句查询
+    multipleStatements: true, // 允许多条语句查询
+    timezone: '+08:00' // 设置时区为北京时间
 });
 
 // 测试连接
@@ -37,19 +38,21 @@ pool.getConnection()
         console.log('数据库连接成功');
         console.log(`当前连接到的数据库主机: ${process.env.DB_HOST}`);
         
-        // 设置session字符集
+        // 设置session字符集和时区
         await connection.query("SET NAMES utf8mb4");
         await connection.query("SET CHARACTER SET utf8mb4");
         await connection.query("SET character_set_connection=utf8mb4");
         await connection.query("SET character_set_results=utf8mb4");
-        console.log('会话字符集已设置为utf8mb4');
+        await connection.query("SET time_zone='+8:00'");
+        console.log('会话字符集已设置为utf8mb4，时区已设置为北京时间');
         
-        // 测试中文字符
+        // 测试中文字符和时区
         try {
-            const [result] = await connection.query("SELECT '测试中文' AS test");
+            const [result] = await connection.query("SELECT '测试中文' AS test, NOW() as current_time");
             console.log('中文测试结果:', result[0].test);
+            console.log('当前数据库时间:', result[0].current_time);
         } catch (err) {
-            console.error('中文测试失败:', err);
+            console.error('测试失败:', err);
         }
         
         connection.release();

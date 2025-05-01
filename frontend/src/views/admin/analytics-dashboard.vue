@@ -1,104 +1,135 @@
 <template>
   <div class="analytics-dashboard">
     <h2>埋点数据分析</h2>
-    
-    <!-- 筛选器 -->
-    <div class="filter-section">
-      <el-date-picker
-        v-model="dateRange"
-        type="daterange"
-        range-separator="至"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
-        value-format="x"
-        :default-time="['00:00:00', '23:59:59']"
-        @change="handleDateChange"
-      />
-      <el-select 
-        v-model="selectedEventType" 
-        placeholder="选择事件类型" 
-        @change="handleEventTypeChange"
-        popper-class="analytics-event-select"
-      >
-        <el-option
-          v-for="type in eventTypes"
-          :key="type.value"
-          :label="type.label"
-          :value="type.value"
-        />
-      </el-select>
-      <el-button type="primary" @click="fetchData">刷新数据</el-button>
-    </div>
-
-    <!-- 基础统计 -->
-    <div class="stats-section">
+    <!-- 数据概览卡片 -->
+    <div class="overview-cards">
       <el-row :gutter="20">
-        <el-col :span="6">
-          <el-card shadow="hover">
-            <div class="stat-item">
-              <div class="stat-title">总事件数</div>
-              <div class="stat-value">{{ stats.totalEvents }}</div>
+        <el-col :span="8">
+          <el-card shadow="hover" class="overview-card">
+            <template #header>
+              <div class="card-header">
+                <span>今日数据</span>
+                <el-tag size="small" type="success">实时</el-tag>
+              </div>
+            </template>
+            <div class="overview-stats">
+              <div class="stat-item">
+                <span class="label">访问量</span>
+                <span class="value">{{ todayStats.pageViews }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">点击量</span>
+                <span class="value">{{ todayStats.clickEvents }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">活跃用户</span>
+                <span class="value">{{ todayStats.activeUsers }}</span>
+              </div>
             </div>
           </el-card>
         </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover">
-            <div class="stat-item">
-              <div class="stat-title">页面访问量</div>
-              <div class="stat-value">{{ stats.pageViews }}</div>
+        <el-col :span="8">
+          <el-card shadow="hover" class="overview-card">
+            <template #header>
+              <div class="card-header">
+                <span>本周数据</span>
+                <el-tag size="small" type="warning">7天</el-tag>
+              </div>
+            </template>
+            <div class="overview-stats">
+              <div class="stat-item">
+                <span class="label">访问量</span>
+                <span class="value">{{ weekStats.pageViews }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">点击量</span>
+                <span class="value">{{ weekStats.clickEvents }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">活跃用户</span>
+                <span class="value">{{ weekStats.activeUsers }}</span>
+              </div>
             </div>
           </el-card>
         </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover">
-            <div class="stat-item">
-              <div class="stat-title">点击事件数</div>
-              <div class="stat-value">{{ stats.clickEvents }}</div>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover">
-            <div class="stat-item">
-              <div class="stat-title">活跃用户数</div>
-              <div class="stat-value">{{ stats.activeUsers }}</div>
+        <el-col :span="8">
+          <el-card shadow="hover" class="overview-card">
+            <template #header>
+              <div class="card-header">
+                <span>本月数据</span>
+                <el-tag size="small" type="info">30天</el-tag>
+              </div>
+            </template>
+            <div class="overview-stats">
+              <div class="stat-item">
+                <span class="label">访问量</span>
+                <span class="value">{{ monthStats.pageViews }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">点击量</span>
+                <span class="value">{{ monthStats.clickEvents }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">活跃用户</span>
+                <span class="value">{{ monthStats.activeUsers }}</span>
+              </div>
             </div>
           </el-card>
         </el-col>
       </el-row>
     </div>
 
+    <!-- 筛选器 -->
+    <div class="filter-section">
+      <div class="filter-right">
+        <el-select
+          v-model="selectedEventType"
+          placeholder="选择事件类型"
+          @change="handleEventTypeChange"
+          style="width: 200px;"
+          popper-class="analytics-event-select"
+        >
+          <el-option
+            v-for="type in eventTypes"
+            :key="type.value"
+            :label="type.label"
+            :value="type.value"
+          />
+        </el-select>
+        <el-button type="primary" @click="fetchData">刷新数据</el-button>
+        <el-button type="success" @click="exportEvents">导出数据</el-button>
+      </div>
+    </div>
+
     <!-- 事件列表 -->
     <div class="events-section">
       <div class="section-header">
         <h3>埋点事件列表</h3>
-        <el-button type="primary" size="small" @click="exportEvents">导出数据</el-button>
       </div>
-      <el-table 
-        :data="events" 
-        border 
-        style="width: 100%" 
+      <el-table
+        :data="events"
+        border
+        style="width: 100%"
         v-loading="loading"
         :header-cell-style="{ background: '#f5f7fa' }"
       >
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="event_type" label="事件类型" width="100" />
-        <el-table-column prop="user_id" label="用户ID" width="100" />
-        <el-table-column prop="page_name" label="页面" min-width="120" />
-        <el-table-column prop="element_name" label="元素名称" min-width="120" />
-        <el-table-column prop="element_id" label="元素ID" min-width="120" />
-        <el-table-column label="时间" width="160">
+        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column prop="event_type" label="事件类型" min-width="120" />
+        <el-table-column prop="user_id" label="用户ID" width="80" />
+        <el-table-column prop="page_name" label="页面" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="element_name" label="元素" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="element_id" label="元素ID" min-width="120" show-overflow-tooltip />
+        <el-table-column label="时间" width="150">
           <template #default="scope">
             {{ formatTimestamp(scope.row.timestamp) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="80" fixed="right">
+        <el-table-column label="操作" width="70" fixed="right">
           <template #default="scope">
             <el-button link type="primary" @click="showDetails(scope.row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
-      
       <!-- 分页器 -->
       <div class="pagination">
         <el-select
@@ -190,7 +221,6 @@ import request from '@/utils/request'
 import { ElMessage } from 'element-plus'
 
 // 状态变量
-const dateRange = ref([])
 const selectedEventType = ref('')
 const events = ref([])
 const loading = ref(false)
@@ -199,8 +229,21 @@ const pageSize = ref(10)
 const total = ref(0)
 const detailsVisible = ref(false)
 const selectedEvent = ref(null)
-const stats = ref({
-  totalEvents: 0,
+
+// 数据概览
+const todayStats = ref({
+  pageViews: 0,
+  clickEvents: 0,
+  activeUsers: 0
+})
+
+const weekStats = ref({
+  pageViews: 0,
+  clickEvents: 0,
+  activeUsers: 0
+})
+
+const monthStats = ref({
   pageViews: 0,
   clickEvents: 0,
   activeUsers: 0
@@ -213,16 +256,68 @@ const eventTypes = [
   { label: '点击事件', value: 'click' }
 ]
 
+// 获取今日数据
+const fetchTodayStats = async () => {
+  try {
+    const res = await request.get('/api/analytics/stats', {
+      params: {
+        period: 'today'
+      }
+    })
+    if (res.success) {
+      todayStats.value = res.data
+    }
+  } catch (error) {
+    console.error('获取今日数据失败:', error)
+  }
+}
+
+// 获取本周数据
+const fetchWeekStats = async () => {
+  try {
+    const res = await request.get('/api/analytics/stats', {
+      params: {
+        period: 'week'
+      }
+    })
+    if (res.success) {
+      weekStats.value = res.data
+    }
+  } catch (error) {
+    console.error('获取本周数据失败:', error)
+  }
+}
+
+// 获取本月数据
+const fetchMonthStats = async () => {
+  try {
+    const res = await request.get('/api/analytics/stats', {
+      params: {
+        period: 'month'
+      }
+    })
+    if (res.success) {
+      monthStats.value = res.data
+    }
+  } catch (error) {
+    console.error('获取本月数据失败:', error)
+  }
+}
+
+// 获取所有统计数据
+const fetchAllStats = async () => {
+  await Promise.all([
+    fetchTodayStats(),
+    fetchWeekStats(),
+    fetchMonthStats()
+  ])
+}
+
 // 格式化时间戳
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return '-'
   const date = new Date(Number(timestamp))
   return date.toLocaleString()
-}
-
-// 处理日期变化
-const handleDateChange = () => {
-  fetchData()
 }
 
 // 处理事件类型变化
@@ -242,43 +337,16 @@ const handleSizeChange = (val) => {
   fetchEvents()
 }
 
-// 获取统计数据
-const fetchStats = async () => {
-  try {
-    const params = {
-      startDate: dateRange.value?.[0],
-      endDate: dateRange.value?.[1],
-      eventType: selectedEventType.value
-    }
-    
-    // 添加日志以便调试
-    console.log('Fetching stats with params:', params)
-    
-    const res = await request.get('/api/analytics/stats', { params })
-    if (res.success) {
-      stats.value = res.data
-    }
-  } catch (error) {
-    console.error('获取统计数据失败:', error)
-    ElMessage.error('获取统计数据失败')
-  }
-}
-
 // 获取事件列表
 const fetchEvents = async () => {
   loading.value = true
   try {
     const params = {
-      startDate: dateRange.value?.[0],
-      endDate: dateRange.value?.[1],
       eventType: selectedEventType.value,
       page: currentPage.value,
       pageSize: pageSize.value
     }
-    
-    // 添加日志以便调试
-    console.log('Fetching events with params:', params)
-    
+    console.log('事件列表请求参数:', params) // 用于测试
     const res = await request.get('/api/analytics/events', { params })
     if (res.success) {
       events.value = res.data.events
@@ -294,7 +362,7 @@ const fetchEvents = async () => {
 
 // 获取所有数据
 const fetchData = () => {
-  fetchStats()
+  fetchAllStats()
   fetchEvents()
 }
 
@@ -308,16 +376,12 @@ const showDetails = (event) => {
 const exportEvents = async () => {
   try {
     const params = {
-      startDate: dateRange.value?.[0],
-      endDate: dateRange.value?.[1],
       eventType: selectedEventType.value
     }
-    
-    const res = await request.get('/api/analytics/export', { 
+    const res = await request.get('/api/analytics/export', {
       params,
       responseType: 'blob'
     })
-    
     const url = window.URL.createObjectURL(new Blob([res]))
     const link = document.createElement('a')
     link.href = url
@@ -334,14 +398,7 @@ const exportEvents = async () => {
 
 // 组件挂载时初始化
 onMounted(() => {
-  // 设置默认时间范围为最近7天
-  const end = new Date()
-  end.setHours(23, 59, 59, 999)  // 设置为当天结束时间
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)  // 设置为当天开始时间
-  start.setTime(start.getTime() - 7 * 24 * 60 * 60 * 1000)
-  dateRange.value = [start.getTime(), end.getTime()]
-  
+  fetchAllStats()
   fetchData()
 })
 </script>
@@ -351,30 +408,53 @@ onMounted(() => {
   padding: 20px;
 }
 
-.filter-section {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
+.overview-cards {
+  margin-bottom: 30px;
 }
 
-.stats-section {
-  margin-bottom: 20px;
+.overview-card {
+  height: 100%;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overview-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .stat-item {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.stat-title {
+.stat-item .label {
+  color: #606266;
   font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
 }
 
-.stat-value {
-  font-size: 24px;
-  font-weight: bold;
+.stat-item .value {
   color: #409EFF;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.filter-section {
+  margin: 20px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.filter-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 .events-section {
@@ -382,13 +462,15 @@ onMounted(() => {
   padding: 20px;
   border-radius: 4px;
   margin-bottom: 20px;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .section-header h3 {
@@ -483,31 +565,43 @@ onMounted(() => {
   word-break: break-all;
 }
 
-/* 覆盖下拉框的样式 */
-:deep(.el-select-dropdown) {
-  background-color: #fff !important;
+/* 确保下拉框样式正确 */
+:deep(.el-select) {
+  background-color: #fff;
 }
 
-:deep(.el-select-dropdown__item) {
-  color: #606266 !important;
+:deep(.el-select .el-input__wrapper) {
+  background-color: #fff;
 }
 
-:deep(.el-select-dropdown__item.hover),
-:deep(.el-select-dropdown__item:hover) {
+:deep(.el-select .el-input__inner) {
+  color: #606266;
+}
+
+:deep(.el-table th) {
   background-color: #f5f7fa !important;
+  color: #606266;
+  font-weight: bold;
 }
 
-:deep(.el-select-dropdown__item.selected) {
-  color: #409eff !important;
-  background-color: #f5f7fa !important;
+/* 表格样式优化 */
+:deep(.el-table) {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
-/* 确保弹出层在最顶层 */
-:deep(.el-select__popper) {
-  z-index: 2000 !important;
+:deep(.el-table__header) {
+  font-weight: 600;
 }
 
-/* 添加全局样式 */
+:deep(.el-table .cell) {
+  white-space: nowrap;
+  padding: 8px;
+}
+
+:deep(.el-table--border .el-table__cell) {
+  padding: 8px;
+}
 </style>
 
 <style>
@@ -529,5 +623,10 @@ onMounted(() => {
 .analytics-event-select .el-select-dropdown__item.selected {
   color: #409eff !important;
   background-color: #f5f7fa !important;
+}
+
+/* 确保弹出层在最顶层 */
+.el-select__popper {
+  z-index: 2000 !important;
 }
 </style>

@@ -31,26 +31,21 @@ const analytics = {
   maxBatchSize: 20,
   // 上报计时器
   reportTimer: null,
-  
   // 初始化函数
   init () {
     if (this.initialized) return
     console.log('埋点系统初始化完成')
     this.initialized = true
     this.pageLoadTime = Date.now()
-    
     // 尝试获取并缓存用户信息
     this._getUserInfo()
-    
     // 初始化事件
     this.trackEvent('system', 'init', {
       timestamp: Date.now(),
       userAgent: navigator.userAgent
     })
-    
     // 启动定时上报
     this._startReportTimer()
-    
     // 添加页面离开事件
     window.addEventListener('beforeunload', () => {
       // 页面离开时立即上报所有待发送事件
@@ -67,7 +62,6 @@ const analytics = {
     if (this.reportTimer) {
       clearInterval(this.reportTimer)
     }
-    
     // 设置新的计时器
     this.reportTimer = setInterval(() => {
       this._reportPendingEvents()
@@ -87,7 +81,6 @@ const analytics = {
     }
     this._addToPendingEvents(eventData)
   },
-  
   // 跟踪点击事件
   trackClick (elementName, elementId = '', extraData = {}) {
     if (!this.enabled) return
@@ -101,7 +94,6 @@ const analytics = {
     }
     this._addToPendingEvents(eventData)
   },
-  
   // 跟踪筛选事件
   trackFilter (filterName, filterValue, extraData = {}) {
     if (!this.enabled) return
@@ -115,7 +107,6 @@ const analytics = {
     }
     this._addToPendingEvents(eventData)
   },
-  
   // 跟踪分页事件
   trackPagination (pageType, pageNumber, extraData = {}) {
     if (!this.enabled) return
@@ -129,7 +120,6 @@ const analytics = {
     }
     this._addToPendingEvents(eventData)
   },
-  
   // 通用事件跟踪
   trackEvent (category, action, data = {}) {
     if (!this.enabled) return
@@ -143,48 +133,38 @@ const analytics = {
     }
     this._addToPendingEvents(eventData)
   },
-  
   // 添加到待上报事件队列
   _addToPendingEvents (data) {
     // 确保用户信息是最新的
     if (!this.userSession.userId) {
       this._getUserInfo()
     }
-    
     // 添加用户标识
     data.userId = this.userSession.userId
     data.username = this.userSession.username
-    
     // 添加到待上报队列
     this.pendingEvents.push(data)
-    
     // 在调试模式下，打印埋点数据
     if (this.debugMode) {
       console.log('%c埋点数据(待上报)', 'color: #4ecdc4; font-weight: bold', data)
     }
-    
     // 如果待上报事件达到最大批量大小，立即上报
     if (this.pendingEvents.length >= this.maxBatchSize) {
       this._reportPendingEvents()
     }
-    
     // 同时保存到本地存储用于调试
     this._saveToLocalStorage(data)
   },
-  
   // 上报待发送的事件
   _reportPendingEvents (isPageExit = false) {
     // 如果没有待上报事件，直接返回
     if (this.pendingEvents.length === 0) return
-    
     // 复制需要上报的事件数据，并清空待上报队列
     const eventsToReport = [...this.pendingEvents]
     this.pendingEvents = []
-    
     if (this.debugMode) {
       console.log('%c批量上报埋点数据', 'color: #4ecdc4; font-weight: bold', eventsToReport)
     }
-    
     // 如果是页面退出，使用同步请求
     if (isPageExit && navigator.sendBeacon) {
       navigator.sendBeacon('/api/analytics/batch-events', JSON.stringify({
@@ -205,7 +185,6 @@ const analytics = {
       })
     }
   },
-  
   // 获取用户信息
   _getUserInfo () {
     try {
@@ -220,7 +199,6 @@ const analytics = {
           console.log('从userInfo.id获取到用户信息:', this.userSession)
           return
         }
-        
         // 有些情况下用户信息可能保存在其他字段
         if (userInfo && userInfo.userId) {
           this.userSession.userId = userInfo.userId
@@ -228,7 +206,6 @@ const analytics = {
           console.log('从userInfo.userId获取到用户信息:', this.userSession)
           return
         }
-        
         // 如果有username但没有id，使用username作为userId
         if (userInfo && userInfo.username) {
           this.userSession.userId = userInfo.username
@@ -237,7 +214,6 @@ const analytics = {
           return
         }
       }
-      
       // 如果localStorage中没有，尝试从token中解析
       const storedToken = localStorage.getItem('accessToken')
       if (storedToken) {
@@ -252,7 +228,6 @@ const analytics = {
               console.log('从token获取到用户信息:', this.userSession)
               return
             }
-            
             // 如果token中没有id但有sub字段，使用sub作为userId
             if (tokenData.sub) {
               this.userSession.userId = tokenData.sub
@@ -265,7 +240,6 @@ const analytics = {
           console.error('解析token失败', e)
         }
       }
-      
       // 尝试从sessionStorage获取
       const sessionUserInfo = sessionStorage.getItem('session_user_info')
       if (sessionUserInfo) {
@@ -281,14 +255,12 @@ const analytics = {
           console.error('解析sessionStorage中的用户信息失败', e)
         }
       }
-      
       // 如果都没有，设为匿名用户，但保存一个唯一标识在localStorage中
       let anonymousId = localStorage.getItem('anonymous_user_id')
       if (!anonymousId) {
         anonymousId = 'anonymous_' + Math.random().toString(36).substring(2, 15)
         localStorage.setItem('anonymous_user_id', anonymousId)
       }
-      
       this.userSession.userId = anonymousId
       this.userSession.username = 'anonymous'
       console.log('使用匿名用户ID:', this.userSession)
@@ -298,7 +270,6 @@ const analytics = {
       this.userSession.username = 'anonymous'
     }
   },
-  
   // 将数据保存到本地存储，用于调试
   _saveToLocalStorage (data) {
     try {

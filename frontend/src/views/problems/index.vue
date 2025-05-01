@@ -208,15 +208,7 @@
             </div>
           </div>
 
-          <!-- 添加埋点测试按钮 -->
-          <div class="analytics-test" style="margin-top: 20px;">
-            <button 
-              style="width: 100%; padding: 10px; background: #4ecdc4; border: none; border-radius: 8px; color: white; cursor: pointer;" 
-              @click="testAnalytics()"
-            >
-              测试埋点功能
-            </button>
-          </div>
+          
         </div>
       </div>
     </div>

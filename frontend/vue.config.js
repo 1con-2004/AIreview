@@ -52,12 +52,20 @@ module.exports = defineConfig({
         target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
         changeOrigin: true,
         secure: false,
-        logLevel: 'debug'
+        logLevel: 'debug',
+        onProxyReq: (proxyReq, req, res) => {
+          proxyReq.setHeader('X-Real-IP', req.socket.remoteAddress)
+          proxyReq.setHeader('X-Forwarded-For', req.socket.remoteAddress)
+        }
       },
       '/uploads': {
         target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        onProxyReq: (proxyReq, req, res) => {
+          proxyReq.setHeader('X-Real-IP', req.socket.remoteAddress)
+          proxyReq.setHeader('X-Forwarded-For', req.socket.remoteAddress)
+        }
       }
     },
     static: {

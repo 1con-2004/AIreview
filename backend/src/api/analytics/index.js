@@ -4,13 +4,56 @@ const router = express.Router();
 const analyticsService = require('../../services/analytics/analyticsService');
 const { authenticateToken } = require('../../middleware/auth');
 
+// 获取真实客户端IP的函数
+const getClientIP = (req) => {
+  // 调试日志
+  console.log('请求头信息:', {
+    'x-real-ip': req.headers['x-real-ip'],
+    'x-forwarded-for': req.headers['x-forwarded-for'],
+    'x-original-forwarded-for': req.headers['x-original-forwarded-for'],
+    'x-client-ip': req.headers['x-client-ip'],
+    'remote-address': req.socket.remoteAddress,
+    'req.ip': req.ip
+  });
+
+  // 获取真实IP的优先级：
+  // 1. X-Forwarded-For的第一个IP（代理链）
+  // 2. X-Real-IP（Nginx设置的真实IP）
+  // 3. req.ip（Express的IP）
+  // 4. socket的远程地址
+
+  // 1. 检查X-Forwarded-For
+  const forwardedFor = req.headers['x-forwarded-for'];
+  if (forwardedFor) {
+    const ips = forwardedFor.split(',');
+    const clientIP = ips[0].trim();
+    if (!clientIP.includes('172.18.0')) {
+      return clientIP;
+    }
+  }
+
+  // 2. 检查X-Real-IP
+  const realIP = req.headers['x-real-ip'];
+  if (realIP && !realIP.includes('172.18.0')) {
+    return realIP;
+  }
+
+  // 3. 使用req.ip
+  if (req.ip && !req.ip.includes('172.18.0')) {
+    return req.ip;
+  }
+
+  // 4. 使用socket的远程地址
+  return req.socket.remoteAddress;
+};
+
 // 接收埋点事件数据（单个事件）
 router.post('/event', async (req, res) => {
   try {
     const eventData = req.body;
     
-    // 添加IP和时间戳
-    eventData.ip = req.ip;
+    // 添加真实IP和时间戳
+    eventData.ip = getClientIP(req);
     eventData.receivedAt = new Date();
     
     // 尝试从请求头获取用户信息（如果前端没有提供userId）
@@ -75,7 +118,7 @@ router.post('/batch-events', async (req, res) => {
     // 为每个事件添加IP和接收时间
     const enhancedEvents = events.map(eventData => {
       // 添加IP和时间戳
-      eventData.ip = req.ip;
+      eventData.ip = getClientIP(req);
       eventData.receivedAt = new Date();
       
       // 尝试从请求头获取用户信息（如果事件中没有有效的userId）
