@@ -79,6 +79,7 @@ import NavBar from '@/components/NavBar.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import learningPlansApi from '@/api/learningPlans'
+import store from '@/store'
 
 export default {
   name: 'LearningPlanDetail',
@@ -203,15 +204,20 @@ export default {
     async fetchUserProgress () {
       try {
         console.log('开始获取用户进度...')
+        // 首先尝试从Vuex store获取token
+        const storeToken = store.getters.getAccessToken
+        // 然后尝试从localStorage获取
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const token = userInfo.token
+        const localToken = userInfo.token || userInfo.accessToken
+        // 使用store中的token优先，如果没有则使用localStorage中的token
+        const token = storeToken || localToken
         if (!token) {
           console.log('用户未登录，跳过获取进度')
           return
         }
 
         try {
-          // 先从学习计划进度API获取数据
+          // 从学习计划进度API获取数据
           const response = await learningPlansApi.getUserProgress(this.planId)
 
           console.log('获取到的用户进度数据:', response)

@@ -1,3 +1,24 @@
+// PrimeVue 相关
+import PrimeVue from 'primevue/config'
+import ToastService from 'primevue/toastservice'
+import Toast from 'primevue/toast'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
+import Textarea from 'primevue/textarea'
+import InputNumber from 'primevue/inputnumber'
+import Editor from 'primevue/editor'
+import Chips from 'primevue/chips'
+import Button from 'primevue/button'
+
+// PrimeVue 样式
+import 'primevue/resources/themes/saga-blue/theme.css'
+import 'primevue/resources/primevue.css'
+import 'primeicons/primeicons.css'
+import 'primeflex/primeflex.css'
+
+// Font Awesome
+import '@fortawesome/fontawesome-free/css/all.min.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
@@ -21,28 +42,6 @@ import analytics from './utils/analytics'
 
 // 全局注册埋点工具
 window.analytics = analytics
-
-// PrimeVue 相关
-import PrimeVue from 'primevue/config'
-import ToastService from 'primevue/toastservice'
-import Toast from 'primevue/toast'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Textarea from 'primevue/textarea'
-import InputNumber from 'primevue/inputnumber'
-import Editor from 'primevue/editor'
-import Chips from 'primevue/chips'
-import Button from 'primevue/button'
-
-// PrimeVue 样式
-import 'primevue/resources/themes/saga-blue/theme.css'
-import 'primevue/resources/primevue.css'
-import 'primeicons/primeicons.css'
-import 'primeflex/primeflex.css'
-
-// Font Awesome
-import '@fortawesome/fontawesome-free/css/all.min.css'
 
 const app = createApp(App)
 

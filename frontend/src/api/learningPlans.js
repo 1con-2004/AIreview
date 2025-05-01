@@ -1,4 +1,5 @@
 import axios from 'axios'
+import store from '@/store'
 
 // 创建用于学习计划的API服务
 const learningPlansApi = {
@@ -38,9 +39,15 @@ const learningPlansApi = {
   // 获取用户在学习计划中的进度
   getUserProgress: async (planId) => {
     try {
+      // 首先尝试从Vuex store获取token
+      const storeToken = store.getters.getAccessToken
+      // 然后尝试从localStorage获取
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-      const token = userInfo.token
+      const localToken = userInfo.token || userInfo.accessToken
+      // 使用store中的token优先，如果没有则使用localStorage中的token
+      const token = storeToken || localToken
       if (!token) {
+        console.log('获取进度失败：用户未登录')
         return null
       }
 
@@ -49,24 +56,6 @@ const learningPlansApi = {
       return response.data
     } catch (error) {
       console.error(`获取学习计划(ID: ${planId})进度失败:`, error)
-      throw error
-    }
-  },
-
-  // 开始学习计划
-  startLearningPlan: async (planId) => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-      const token = userInfo.token
-      if (!token) {
-        throw new Error('用户未登录')
-      }
-
-      const headers = { Authorization: `Bearer ${token}` }
-      const response = await axios.post(`/api/learning-plans/${planId}/start`, {}, { headers })
-      return response.data
-    } catch (error) {
-      console.error(`开始学习计划(ID: ${planId})失败:`, error)
       throw error
     }
   }
