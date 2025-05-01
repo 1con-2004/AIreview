@@ -1674,6 +1674,8 @@ export default defineComponent({
           }
         )
 
+        console.log('代码提交响应:', response) // 添加详细日志输出
+        
         if (response.success) {
           ElMessage.success('提交成功')
           // 更新提交记录
@@ -1685,6 +1687,55 @@ export default defineComponent({
           nextTick(() => {
             Prism.highlightAll()
           })
+          
+          // 修改：提交代码成功后，自动调用四维度AI分析
+          console.log('准备调用四维度分析，响应数据:', response.data)
+          
+          // 获取submission_id的方式可能需要根据实际返回数据结构调整
+          let submissionId = null
+          
+          // 检查各种可能的数据结构
+          if (response.data && response.data.id) {
+            submissionId = response.data.id
+          } else if (response.data && response.data.submission_id) {
+            submissionId = response.data.submission_id
+          } else if (response.data && response.data.submissionId) {
+            submissionId = response.data.submissionId
+          } else if (typeof response.data === 'object' && response.data !== null) {
+            // 遍历所有可能包含id的字段
+            for (const key in response.data) {
+              if (key.toLowerCase().includes('id') && typeof response.data[key] === 'string' || typeof response.data[key] === 'number') {
+                submissionId = response.data[key]
+                console.log(`从字段 ${key} 中找到可能的提交ID:`, submissionId)
+                break
+              }
+            }
+          }
+          
+          // 确保提交ID不为空且是有效的
+          if (submissionId && (typeof submissionId === 'string' || typeof submissionId === 'number') && String(submissionId).trim() !== '') {
+            console.log('找到提交ID，调用四维度分析:', submissionId)
+            callCodeStyleAnalysis(submissionId)
+          } else {
+            console.error('未找到有效的提交ID，无法进行四维度分析', response.data)
+            // 作为备选方案，尝试获取最新的提交记录
+            console.log('尝试获取最新提交记录...')
+            setTimeout(async () => {
+              try {
+                await fetchSubmissions()
+                if (submissions.value && submissions.value.length > 0) {
+                  // 获取最新的提交记录
+                  const latestSubmission = submissions.value[0]
+                  if (latestSubmission && latestSubmission.id) {
+                    console.log('使用最新提交记录的ID进行四维度分析:', latestSubmission.id)
+                    callCodeStyleAnalysis(latestSubmission.id)
+                  }
+                }
+              } catch (error) {
+                console.error('尝试获取最新提交记录失败:', error)
+              }
+            }, 1000) // 延迟1秒获取最新提交
+          }
         } else {
           ElMessage.error(response.message || '提交失败')
         }
@@ -2369,6 +2420,157 @@ export default defineComponent({
       isReasoningExpanded.value = !isReasoningExpanded.value
     }
 
+    // 添加四维度代码分析函数
+    // 调用代码风格四维度分析
+    const callCodeStyleAnalysis = async (submissionId) => {
+      try {
+        console.log('====== 开始代码风格四维度分析 ======')
+        console.log('提交ID:', submissionId)
+        
+        // 获取用户Token
+        const userInfoStr = localStorage.getItem('userInfo')
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+        const accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+        
+        if (!accessToken) {
+          console.error('未找到用户token，无法进行代码风格分析')
+          return
+        }
+        
+        // 获取用户ID
+        let analysisUserId = userInfo?.id || localStorage.getItem('userId')
+        console.log('用户ID:', analysisUserId)
+        
+        if (!analysisUserId) {
+          console.error('未找到用户ID，尝试从localStorage中查找其他可能的ID字段')
+          // 尝试查找其他可能的ID字段
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && key.toLowerCase().includes('user') && key.toLowerCase().includes('id')) {
+              const possibleId = localStorage.getItem(key)
+              console.log(`从localStorage中找到可能的用户ID: ${key} = ${possibleId}`)
+              if (possibleId) {
+                console.log('使用此ID继续分析')
+                analysisUserId = possibleId
+                break
+              }
+            }
+          }
+          
+          if (!analysisUserId) {
+            console.error('仍然未找到用户ID，无法继续分析')
+            return
+          }
+        }
+        
+        // 获取当前题目编号
+        let problemNumber = route.params.id
+        // 如果需要格式化题目编号为4位数字字符串
+        if (problemNumber && !problemNumber.match(/^\d{4}$/)) {
+          problemNumber = String(problemNumber).padStart(4, '0')
+        }
+        console.log('题目编号:', problemNumber)
+        
+        // 分析维度数组
+        const analysisTypes = ['naming', 'logic', 'complexity', 'readability']
+        console.log('准备分析的维度:', analysisTypes.join(', '))
+        
+        // 异步调用所有分析维度
+        for (const analysisType of analysisTypes) {
+          try {
+            // 构建请求数据
+            const analysisData = {
+              code: code.value,
+              language: selectedLanguageForCode.value,
+              analysisType,
+              submissionId,
+              problemNumber,
+              userId: analysisUserId
+            }
+            
+            console.log(`开始进行【${analysisType}】维度分析，提交ID: ${submissionId}`)
+            console.log('请求数据:', analysisData)
+            
+            let apiResponse = null;
+            let apiSuccess = false;
+            
+            // 尝试多个可能的API路径
+            const apiPaths = [
+              'ai/code-analysis/analyze',     // 主要API路径
+              `ai/code-analysis/${analysisType}`, // 可能的替代路径1
+              'api/ai/code-analysis/analyze'  // 可能的替代路径2（带api前缀）
+            ];
+            
+            for (const apiPath of apiPaths) {
+              try {
+                console.log(`尝试使用API路径: ${apiPath}`)
+                // 发送分析请求
+                const response = await apiService.post(
+                  apiPath,
+                  analysisData,
+                  {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                  }
+                )
+                
+                console.log(`【${analysisType}】维度分析API响应:`, response)
+                
+                if (response && (response.success || response.code === 200)) {
+                  console.log(`【${analysisType}】维度分析完成，得分: ${response.data?.score || '未知'}`)
+                  apiResponse = response;
+                  apiSuccess = true;
+                  break; // 成功就跳出循环
+                } else {
+                  console.error(`使用API路径 ${apiPath} 分析失败:`, response?.message || '未知错误')
+                  // 记录响应以便尝试下一个路径
+                  apiResponse = response;
+                }
+              } catch (pathError) {
+                console.error(`API路径 ${apiPath} 调用出错:`, pathError.message || pathError)
+                // 继续尝试下一个路径
+              }
+            }
+            
+            // 检查最终结果
+            if (!apiSuccess && apiResponse) {
+              console.error(`所有API路径都失败，【${analysisType}】维度分析未完成`)
+              
+              // 最后的尝试：适配可能的不同API响应格式
+              console.log('尝试直接使用fetch发送请求...')
+              try {
+                const directResponse = await fetch(`/api/ai/code-analysis/analyze`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                  },
+                  body: JSON.stringify(analysisData)
+                })
+                
+                const directData = await directResponse.json()
+                console.log(`直接fetch请求响应:`, directData)
+                
+                if (directData && (directData.success || directData.code === 200)) {
+                  console.log(`通过直接fetch请求成功完成【${analysisType}】维度分析`)
+                }
+              } catch (directError) {
+                console.error('直接fetch请求失败:', directError)
+              }
+            }
+          } catch (dimensionError) {
+            console.error(`【${analysisType}】维度分析过程出错:`, dimensionError)
+            // 继续下一个维度的分析，不中断整个流程
+            continue
+          }
+        }
+        
+        console.log('====== 四维度代码风格分析全部完成! ======')
+      } catch (error) {
+        console.error('四维度代码风格分析整体出错:', error)
+        console.error('错误详情:', error.response || error.message || error)
+      }
+    }
+
     return {
       problem,
       activeTab,
@@ -2466,7 +2668,8 @@ export default defineComponent({
       progressWidth,
       progressBackground,
       loadingStage,
-      toggleReasoning
+      toggleReasoning,
+      callCodeStyleAnalysis
     }
   }
 })
