@@ -1,6 +1,15 @@
 # AI智能题目评审系统
 
-这是一个基于AI的智能题目评审系统，主要面向高校学生，提供类似LeetCode的刷题平台功能，并集成了AI代码审查和个性化学习路径推荐功能。
+这是一个基于AI的智能题目评审系统，主要面向高校学生，提供类似LeetCode的刷题平台功能，并集成了AI代码审查和个性化学习路径推荐功能。系统旨在帮助学生提高编程能力，同时通过AI辅助提供更智能化的学习体验。
+
+## 项目特点
+
+- **智能代码评审**: 集成智谱AI和DeepSeek AI，提供专业代码审查
+- **个性化学习路径**: 基于用户学习情况智能推荐学习路径
+- **多语言支持**: 支持多种编程语言的在线编程与评测
+- **实时反馈**: 提供即时的代码执行结果与改进建议
+- **社区互动**: 用户可分享代码、讨论解题思路
+- **课堂管理**: 支持教师创建课堂、布置作业和管理学生
 
 ## 项目结构
 
@@ -36,22 +45,23 @@ AIreview/
 ## 技术栈
 
 ### 前端
-- Vue 3
-- Vue Router
-- Vuex
+- Vue 3 + Vue Router + Vuex
 - PrimeVue UI组件库
-- Axios
+- Axios + WebSocket
+- js-cookie, dayjs等工具库
 
 ### 后端
 - Node.js + Express
 - MySQL 8.0
 - JWT认证
-- 智谱AI API集成
+- 智谱AI + DeepSeek AI API集成
+- multer文件处理
 
 ### 部署
 - Docker + Docker Compose
-- Nginx
-- Node.js环境
+- Nginx反向代理
+- 桥接网络配置
+- 卷挂载管理
 
 ## 快速开始
 
@@ -71,10 +81,10 @@ AIreview/
 
    Mac/Linux:
    ```bash
-   如果你是第一次运行
+   # 首次运行授予执行权限
    chmod +x start-containers.sh
 
-   之后只需要
+   # 启动容器
    ./start-containers.sh
    ```
 
@@ -86,7 +96,6 @@ AIreview/
 ### 开发模式(针对MacOS系统)
 
 1. **如果只修改了前端代码**
-   第一步
    ```bash
    # 进入前端
    cd frontend
@@ -96,26 +105,24 @@ AIreview/
 
    # 创建新的dist目录并设置权限
    mkdir -p dist
-   sudo chown -R apple:staff dist  # 把 apple 换成你的用户名
+   sudo chown -R $USER:staff dist
    chmod -R 755 dist
 
    # 构建项目
    yarn build
-   ```
-   第二步
-   ```bash
-   # 退出到项目根目录
-   cd ..
 
-   # 重启Nginx代理
+   # 重启Nginx容器
+   cd ..
    docker restart aireview-nginx
    ```
 
 2. **如果只修改了后端**
    ```bash
-   # 在项目根目录下
-   sudo chown -R apple:staff backend
+   # 在项目根目录下设置权限
+   sudo chown -R $USER:staff backend
    chmod -R 755 backend
+   
+   # 重启后端容器
    docker restart aireview-backend
    ```
 
@@ -125,36 +132,25 @@ AIreview/
    cd frontend
    sudo rm -rf dist
    mkdir -p dist
-   sudo chown -R apple:staff dist
+   sudo chown -R $USER:staff dist
    chmod -R 755 dist
    yarn build
    cd ..
 
-   # 处理后端(如果遇到权限问题)
-   sudo chown -R apple:staff backend
+   # 处理后端权限
+   sudo chown -R $USER:staff backend
    chmod -R 755 backend
 
    # 重启两个容器
    docker restart aireview-nginx aireview-backend
    ```
 
-3. **关于数据同步问题**
-   这些更改会同步到Docker容器中，因为在`docker-compose.yml`中配置了卷挂载：
-   前端: `./frontend/dist:/usr/share/nginx/html `- 意味着本地的dist目录会映射到nginx容器中
-   后端: `./backend:/app:rw` - 意味着本地的backend目录会映射到后端容器中
-   所以只要你们用相同的docker-compose配置启动容器，其他人就能看到你的最新修改
-   补充说明：
-   前端build后的文件会自动同步到nginx容器，因为dist目录是挂载的
-   后端代码修改后会直接反映在容器中，因为整个backend目录都是挂载的
-   如果修改了后端配置文件或需要安装新的npm包，需要重启后端容器
-   如果修改了nginx配置，需要重启nginx容器
-
 ## 容器服务
 
 项目使用多容器架构：
 - `aireview-nginx`: Web服务器（端口80）
-- `aireview-backend`: Node.js后端（端口3000）
-- `aireview-db`: MySQL数据库（端口3307）
+- `aireview-backend`: Node.js后端（端口3000, 内部）
+- `aireview-db`: MySQL数据库（端口3307 -> 3306）
 
 ## 常用维护命令
 
@@ -197,13 +193,13 @@ chmod +x log-manager.sh
 - 3: 调试模式
 - 4: 详细模式
 
-## 常见问题
+## 常见问题排查
 
 1. **端口占用**
    - 修改 `docker-compose.yml` 中的端口映射
    - 例如：将 "80:80" 改为 "8080:80"
 
-2. **Docker权限**
+2. **Docker权限问题**
    ```bash
    # Mac/Linux
    sudo ./fix-docker-permissions.sh
@@ -216,7 +212,7 @@ chmod +x log-manager.sh
    - 密码：root
    - 数据库：AIreview
 
-4. **文件权限**
+4. **文件权限问题**
    ```bash
    # Mac/Linux
    chmod -R 777 uploads
@@ -225,18 +221,40 @@ chmod +x log-manager.sh
    icacls uploads /grant Everyone:(OI)(CI)F
    ```
 
-5. **快速修复ESlint错误**
+5. **前端构建错误**
    ```bash
-   例如前端登录部分的index.vue文件 有错误 执行
-   cd frontend && npx eslint --fix src/views/login/index.vue
+   cd frontend
+   rm -rf node_modules
+   yarn install
+   yarn build
    ```
+
+6. **后端启动失败**
+   ```bash
+   # 检查日志
+   docker logs aireview-backend
    
+   # 重建后端容器
+   docker-compose up -d --build backend
+   ```
+
+7. **ESLint错误修复**
+   ```bash
+   cd frontend && npx eslint --fix src/path/to/file.vue
+   ```
 
 ## 默认账号
 
 - 管理员账号：admin
 - 密码：admin123
-- 其他账号: [详见](./docs/accounts.md)
+
+## 项目文档
+
+更多详细信息请查看项目文档目录：
+- 架构设计：`docs/architecture.md`
+- API文档：`project_information/api_information/`
+- 部署指南：`docker-deployment-guide.md`
+- 技术规范：`project_information/`
 
 ## 技术支持
 
