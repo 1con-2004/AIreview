@@ -56,7 +56,7 @@ export default {
   components: {
     NavBar
   },
-  data() {
+  data () {
     return {
       charts: {},
       loading: {
@@ -69,12 +69,12 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     this.initCharts()
     this.fetchCodeStats()
   },
   methods: {
-    initCharts() {
+    initCharts () {
       // 初始化每日提交数量趋势图
       this.charts.dailySubmission = echarts.init(document.getElementById('dailySubmissionChart'))
       this.charts.dailySubmission.setOption({
@@ -215,25 +215,25 @@ export default {
             {
               value: 1200,
               itemStyle: {
-                color: '#FF6F00'  // C语言 - 亮橙色
+                color: '#FF6F00' // C语言 - 亮橙色
               }
             },
             {
               value: 2800,
               itemStyle: {
-                color: '#9C27B0'  // C++ - 亮紫色
+                color: '#9C27B0' // C++ - 亮紫色
               }
             },
             {
               value: 1800,
               itemStyle: {
-                color: '#03A9F4'  // Java - 亮蓝色
+                color: '#03A9F4' // Java - 亮蓝色
               }
             },
             {
               value: 2200,
               itemStyle: {
-                color: '#FFFF00'  // Python - 柠檬黄
+                color: '#FFFF00' // Python - 柠檬黄
               }
             }
           ],
@@ -291,38 +291,38 @@ export default {
             show: false
           },
           data: [
-            { 
-              value: 35, 
-              name: 'C++', 
-              itemStyle: { 
-                color: '#9C27B0',  // 亮紫色
+            {
+              value: 35,
+              name: 'C++',
+              itemStyle: {
+                color: '#9C27B0', // 亮紫色
                 borderColor: '#222',
                 borderWidth: 2
               }
             },
-            { 
-              value: 30, 
-              name: 'Python', 
-              itemStyle: { 
-                color: '#FFFF00',  // 柠檬黄
+            {
+              value: 30,
+              name: 'Python',
+              itemStyle: {
+                color: '#FFFF00', // 柠檬黄
                 borderColor: '#222',
                 borderWidth: 2
               }
             },
-            { 
-              value: 20, 
-              name: 'Java', 
-              itemStyle: { 
-                color: '#03A9F4',  // 亮蓝色
+            {
+              value: 20,
+              name: 'Java',
+              itemStyle: {
+                color: '#03A9F4', // 亮蓝色
                 borderColor: '#222',
                 borderWidth: 2
               }
             },
-            { 
-              value: 15, 
-              name: 'C', 
-              itemStyle: { 
-                color: '#FF6F00',  // 亮橙色
+            {
+              value: 15,
+              name: 'C',
+              itemStyle: {
+                color: '#FF6F00', // 亮橙色
                 borderColor: '#222',
                 borderWidth: 2
               }
@@ -331,25 +331,25 @@ export default {
         }]
       })
     },
-    async fetchCodeStats() {
+    async fetchCodeStats () {
       try {
         this.loading.codeLines = true
         this.loading.languagePreference = true
 
         // 并行请求两个接口
         const [codeLinesRes, languagePreferenceRes] = await Promise.all([
-          axios.get('/api/analytics/code-stats/lines-by-language'),
-          axios.get('/api/analytics/code-stats/language-usage')
+          axios.get('/api/stats/code-lines-stats'),
+          axios.get('/api/stats/language-preference')
         ])
 
         // 检查响应状态
-        if (codeLinesRes.data.code === 200) {
+        if (codeLinesRes.data.success) {
           this.statsData.codeLines = codeLinesRes.data.data
         } else {
           throw new Error(codeLinesRes.data.message || '获取代码行数统计失败')
         }
 
-        if (languagePreferenceRes.data.code === 200) {
+        if (languagePreferenceRes.data.success) {
           this.statsData.languagePreference = languagePreferenceRes.data.data
         } else {
           throw new Error(languagePreferenceRes.data.message || '获取语言偏好统计失败')
@@ -366,33 +366,55 @@ export default {
         this.loading.languagePreference = false
       }
     },
-    updateCodeLinesChart() {
+    updateCodeLinesChart () {
       if (!this.statsData.codeLines) return
 
       // 确保数据格式正确
       const codeLines = this.statsData.codeLines
 
+      // 合并相似语言的数据
+      const normalizedData = {
+        c: 0,
+        cpp: 0,
+        java: 0,
+        python: 0
+      }
+ 
+      // 遍历所有语言，将各语言的代码行数合并到标准化的四种语言中
+      Object.entries(codeLines.languages || {}).forEach(([lang, data]) => {
+        const lowerLang = lang.toLowerCase()
+        if (lowerLang === 'c' || lowerLang === 'c_cpp') {
+          normalizedData.c += data.lines
+        } else if (lowerLang === 'cpp' || lowerLang === 'c++') {
+          normalizedData.cpp += data.lines
+        } else if (lowerLang === 'java') {
+          normalizedData.java += data.lines
+        } else if (lowerLang === 'python') {
+          normalizedData.python += data.lines
+        }
+      })
+
       const data = [
         {
-          value: codeLines.c || 0,
+          value: normalizedData.c || 0,
           itemStyle: {
             color: '#FF6F00' // C语言 - 亮橙色
           }
         },
         {
-          value: codeLines.cpp || 0,
+          value: normalizedData.cpp || 0,
           itemStyle: {
             color: '#9C27B0' // C++ - 亮紫色
           }
         },
         {
-          value: codeLines.java || 0,
+          value: normalizedData.java || 0,
           itemStyle: {
             color: '#03A9F4' // Java - 亮蓝色
           }
         },
         {
-          value: codeLines.python || 0,
+          value: normalizedData.python || 0,
           itemStyle: {
             color: '#FFFF00' // Python - 柠檬黄
           }
@@ -405,15 +427,37 @@ export default {
         }]
       })
     },
-    updateLanguagePreferenceChart() {
+    updateLanguagePreferenceChart () {
       if (!this.statsData.languagePreference) return
 
       // 确保数据格式正确
       const languagePreference = this.statsData.languagePreference
+ 
+      // 合并相似语言的数据
+      const normalizedData = {
+        c: 0,
+        cpp: 0,
+        java: 0,
+        python: 0
+      }
+ 
+      // 遍历所有语言，将各语言的提交次数合并到标准化的四种语言中
+      languagePreference.forEach(item => {
+        const lowerLang = item.language.toLowerCase()
+        if (lowerLang === 'c' || lowerLang === 'c_cpp') {
+          normalizedData.c += parseInt(item.submission_count)
+        } else if (lowerLang === 'cpp' || lowerLang === 'c++') {
+          normalizedData.cpp += parseInt(item.submission_count)
+        } else if (lowerLang === 'java') {
+          normalizedData.java += parseInt(item.submission_count)
+        } else if (lowerLang === 'python') {
+          normalizedData.python += parseInt(item.submission_count)
+        }
+      })
 
       const data = [
         {
-          value: languagePreference.cpp || 0,
+          value: normalizedData.cpp || 0,
           name: 'C++',
           itemStyle: {
             color: '#9C27B0', // 亮紫色
@@ -422,7 +466,7 @@ export default {
           }
         },
         {
-          value: languagePreference.python || 0,
+          value: normalizedData.python || 0,
           name: 'Python',
           itemStyle: {
             color: '#FFFF00', // 柠檬黄
@@ -431,7 +475,7 @@ export default {
           }
         },
         {
-          value: languagePreference.java || 0,
+          value: normalizedData.java || 0,
           name: 'Java',
           itemStyle: {
             color: '#03A9F4', // 亮蓝色
@@ -440,7 +484,7 @@ export default {
           }
         },
         {
-          value: languagePreference.c || 0,
+          value: normalizedData.c || 0,
           name: 'C',
           itemStyle: {
             color: '#FF6F00', // 亮橙色
@@ -456,7 +500,7 @@ export default {
         }]
       })
     },
-    generateMockGithubData() {
+    generateMockGithubData () {
       const data = []
       const startDate = new Date('2024-01-01')
       for (let i = 0; i < 365; i++) {
@@ -548,4 +592,4 @@ h3 {
   color: #fff;
   font-size: 18px;
 }
-</style> 
+</style>
