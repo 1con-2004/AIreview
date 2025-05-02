@@ -48,6 +48,8 @@
 <script>
 import NavBar from '@/components/NavBar.vue'
 import * as echarts from 'echarts'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'Statistics',
@@ -56,11 +58,20 @@ export default {
   },
   data() {
     return {
-      charts: {}
+      charts: {},
+      loading: {
+        codeLines: false,
+        languagePreference: false
+      },
+      statsData: {
+        codeLines: null,
+        languagePreference: null
+      }
     }
   },
   mounted() {
     this.initCharts()
+    this.fetchCodeStats()
   },
   methods: {
     initCharts() {
@@ -317,6 +328,131 @@ export default {
               }
             }
           ]
+        }]
+      })
+    },
+    async fetchCodeStats() {
+      try {
+        this.loading.codeLines = true
+        this.loading.languagePreference = true
+
+        // 并行请求两个接口
+        const [codeLinesRes, languagePreferenceRes] = await Promise.all([
+          axios.get('/api/analytics/code-stats/lines-by-language'),
+          axios.get('/api/analytics/code-stats/language-usage')
+        ])
+
+        // 检查响应状态
+        if (codeLinesRes.data.code === 200) {
+          this.statsData.codeLines = codeLinesRes.data.data
+        } else {
+          throw new Error(codeLinesRes.data.message || '获取代码行数统计失败')
+        }
+
+        if (languagePreferenceRes.data.code === 200) {
+          this.statsData.languagePreference = languagePreferenceRes.data.data
+        } else {
+          throw new Error(languagePreferenceRes.data.message || '获取语言偏好统计失败')
+        }
+
+        // 更新图表
+        this.updateCodeLinesChart()
+        this.updateLanguagePreferenceChart()
+      } catch (error) {
+        console.error('获取代码统计数据失败:', error)
+        ElMessage.error(error.message || '获取统计数据失败，请稍后再试')
+      } finally {
+        this.loading.codeLines = false
+        this.loading.languagePreference = false
+      }
+    },
+    updateCodeLinesChart() {
+      if (!this.statsData.codeLines) return
+
+      // 确保数据格式正确
+      const codeLines = this.statsData.codeLines
+
+      const data = [
+        {
+          value: codeLines.c || 0,
+          itemStyle: {
+            color: '#FF6F00' // C语言 - 亮橙色
+          }
+        },
+        {
+          value: codeLines.cpp || 0,
+          itemStyle: {
+            color: '#9C27B0' // C++ - 亮紫色
+          }
+        },
+        {
+          value: codeLines.java || 0,
+          itemStyle: {
+            color: '#03A9F4' // Java - 亮蓝色
+          }
+        },
+        {
+          value: codeLines.python || 0,
+          itemStyle: {
+            color: '#FFFF00' // Python - 柠檬黄
+          }
+        }
+      ]
+
+      this.charts.codeLines.setOption({
+        series: [{
+          data: data
+        }]
+      })
+    },
+    updateLanguagePreferenceChart() {
+      if (!this.statsData.languagePreference) return
+
+      // 确保数据格式正确
+      const languagePreference = this.statsData.languagePreference
+
+      const data = [
+        {
+          value: languagePreference.cpp || 0,
+          name: 'C++',
+          itemStyle: {
+            color: '#9C27B0', // 亮紫色
+            borderColor: '#222',
+            borderWidth: 2
+          }
+        },
+        {
+          value: languagePreference.python || 0,
+          name: 'Python',
+          itemStyle: {
+            color: '#FFFF00', // 柠檬黄
+            borderColor: '#222',
+            borderWidth: 2
+          }
+        },
+        {
+          value: languagePreference.java || 0,
+          name: 'Java',
+          itemStyle: {
+            color: '#03A9F4', // 亮蓝色
+            borderColor: '#222',
+            borderWidth: 2
+          }
+        },
+        {
+          value: languagePreference.c || 0,
+          name: 'C',
+          itemStyle: {
+            color: '#FF6F00', // 亮橙色
+            borderColor: '#222',
+            borderWidth: 2
+          }
+        }
+      ]
+
+      this.charts.languagePie.setOption({
+        series: [{
+          data: data
         }]
       })
     },
