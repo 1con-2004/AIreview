@@ -158,4 +158,116 @@ router.post('/record-visit', authenticateToken, async (req, res) => {
   }
 });
 
+// 获取用户提交代码行数统计
+router.get('/code-lines-stats', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('获取用户代码行数统计, userId:', userId);
+
+    // 查询用户提交的代码及其语言
+    const [submissions] = await db.query(`
+      SELECT code, language
+      FROM submissions
+      WHERE user_id = ?
+    `, [userId]);
+
+    if (!submissions || submissions.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          total_lines: 0,
+          languages: {}
+        }
+      });
+    }
+
+    // 统计总行数和每种语言的行数
+    let totalLines = 0;
+    const languageStats = {};
+
+    submissions.forEach(submission => {
+      // 如果code为空，跳过该提交
+      if (!submission.code) return;
+      
+      // 计算代码行数
+      const lines = submission.code.split('\n').length;
+      totalLines += lines;
+      
+      // 统计各语言的代码行数
+      const language = submission.language || 'unknown';
+      if (!languageStats[language]) {
+        languageStats[language] = {
+          lines: 0,
+          submissions: 0
+        };
+      }
+      languageStats[language].lines += lines;
+      languageStats[language].submissions += 1;
+    });
+
+    console.log('代码行数统计:', { total_lines: totalLines, languages: languageStats });
+
+    res.json({
+      success: true,
+      data: {
+        total_lines: totalLines,
+        languages: languageStats
+      }
+    });
+  } catch (error) {
+    console.error('获取代码行数统计失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取代码行数统计失败'
+    });
+  }
+});
+
+// 获取用户语言趋势偏好
+router.get('/language-preference', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('获取用户语言趋势偏好, userId:', userId);
+
+    // 查询用户每种语言的提交次数，按提交次数降序排序
+    const [languageStats] = await db.query(`
+      SELECT 
+        language, 
+        COUNT(*) as submission_count,
+        SUM(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) as accepted_count
+      FROM submissions
+      WHERE user_id = ? AND language IS NOT NULL AND language != ''
+      GROUP BY language
+      ORDER BY submission_count DESC
+    `, [userId]);
+
+    // 统计每种语言的通过率
+    const languagePreference = languageStats.map(item => {
+      const acceptance_rate = item.submission_count > 0 
+        ? (item.accepted_count / item.submission_count * 100).toFixed(2) 
+        : 0;
+      
+      return {
+        language: item.language,
+        submission_count: item.submission_count,
+        accepted_count: item.accepted_count,
+        acceptance_rate: parseFloat(acceptance_rate)
+      };
+    });
+
+    console.log('语言趋势偏好:', languagePreference);
+
+    res.json({
+      success: true,
+      data: languagePreference
+    });
+  } catch (error) {
+    console.error('获取语言趋势偏好失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取语言趋势偏好失败'
+    });
+  }
+});
+
 module.exports = router; 

@@ -46,15 +46,6 @@ pool.getConnection()
         await connection.query("SET time_zone='+8:00'");
         console.log('会话字符集已设置为utf8mb4，时区已设置为北京时间');
         
-        // 测试中文字符和时区
-        try {
-            const [result] = await connection.query("SELECT '测试中文' AS test, NOW() as current_time");
-            console.log('中文测试结果:', result[0].test);
-            console.log('当前数据库时间:', result[0].current_time);
-        } catch (err) {
-            console.error('测试失败:', err);
-        }
-        
         connection.release();
     })
     .catch(err => {
