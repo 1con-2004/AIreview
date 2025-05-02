@@ -35,6 +35,12 @@ const routes = [
     component: () => import('@/views/problems/detail/ProblemDetail.vue')
   },
   {
+    path: '/ai-center',
+    name: 'AICenter',
+    component: () => import('@/views/ai-center/index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/community',
     name: 'Community',
     component: Community
