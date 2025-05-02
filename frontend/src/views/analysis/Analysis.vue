@@ -1,5 +1,5 @@
 <template>
-  <div class="personal-center">
+  <div class="analysis">
     <nav-bar></nav-bar>
 
     <!-- 学生信息验证失败的提示 -->
@@ -1027,7 +1027,7 @@ const getPointColor = (index) => {
 </script>
 
 <style scoped>
-.personal-center {
+.analysis {
   min-height: 100vh;
   background-color: #0d1117;
   color: white;

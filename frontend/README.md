@@ -22,7 +22,7 @@ frontend/
 │   │   ├── common/      # 通用组件
 │   │   ├── layout/      # 布局组件
 │   │   ├── learning-path/ # 学习路径组件
-│   │   ├── personal/    # 个人中心组件
+│   │   ├── analysis/    # 分析组件
 │   │   └── problem/     # 题目相关组件
 │   ├── controllers/  # 控制器
 │   ├── router/      # 路由配置
@@ -35,7 +35,7 @@ frontend/
 │   │   ├── home/         # 首页
 │   │   ├── learning-plans/ # 学习计划页面
 │   │   ├── login/        # 登录页面
-│   │   ├── personal/     # 个人中心
+│   │   ├── analysis/     # 分析
 │   │   ├── problems/     # 题目页面
 │   │   └── user/         # 用户相关页面
 │   ├── App.vue      # 根组件
@@ -54,7 +54,7 @@ frontend/
 
 ### 1. 用户界面
 - 登录与注册
-- 个人中心
+- 分析
 - 题目列表与详情
 - 代码编辑器
 - 管理员控制台

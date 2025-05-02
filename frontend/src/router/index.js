@@ -76,9 +76,9 @@ const routes = [
     component: () => import('../views/login/register.vue')
   },
   {
-    path: '/personal-center',
-    name: 'PersonalCenter',
-    component: () => import('@/views/personal/PersonalCenter.vue'),
+    path: '/analysis',
+    name: 'Analysis',
+    component: () => import('@/views/analysis/Analysis.vue'),
     meta: { requiresAuth: true }
   },
   {

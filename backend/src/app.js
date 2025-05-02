@@ -294,7 +294,7 @@ app.use('/api/problems', problemRouter);
 app.use('/api/communities', communityRouter);
 app.use('/api/judge', judgeRouter);
 
-// 用户个人中心API路由，需要先于通用用户路由注册
+// 用户分析API路由，需要先于通用用户路由注册
 app.use('/api/user/profile', require('./api/user/profile'));
 
 // 通用用户路由

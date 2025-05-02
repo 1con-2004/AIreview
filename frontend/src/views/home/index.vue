@@ -15,7 +15,7 @@
         <p class="hero-subtitle">QuizPlanet问知星球🌏：重新定义<strong style="font-size: 1.2em; color: orange;">人工智能时代</strong>编程</p>
         <div class="hero-buttons">
           <router-link to="/problems" class="hero-button primary">开始刷题</router-link>
-          <router-link to="/personal-center" class="hero-button secondary">探索功能</router-link>
+          <router-link to="/analysis" class="hero-button secondary">探索功能</router-link>
         </div>
       </div>
       <div class="code-animation">
@@ -109,16 +109,16 @@
       </h2>
 
       <div class="features-grid">
-        <!-- 个人中心功能 -->
+        <!-- 分析功能 -->
         <div class="advanced-feature-card">
           <div class="card-video-wrapper">
-            <video src="/vedios/personal-center.mp4" class="card-video" autoplay muted loop playsinline></video>
+            <video src="/vedios/analysis.mp4" class="card-video" autoplay muted loop playsinline></video>
             <div class="card-overlay"></div>
           </div>
           <div class="card-content">
             <h3 class="wave-text">个性化学习路径</h3>
             <p class="fade-text"><strong style="font-size: 1.2em; color: orange;">DeepSeek R1</strong>为你专属服务, 生成<strong style="font-size: 1.2em; color: orange;">量身定制</strong>的学习路径, 智能推荐适合你的题目和学习资源。</p>
-            <router-link to="/personal-center" class="card-link">
+            <router-link to="/analysis" class="card-link">
               <span class="fliping-text">探索更多</span>
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" fill="currentColor"/>
