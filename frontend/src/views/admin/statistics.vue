@@ -397,7 +397,8 @@ const fetchProblemDetails = async (userId) => {
     const params = {
       userId,
       page: problemCurrentPage.value,
-      pageSize: 10
+      pageSize: 10,
+      solved: true
     }
 
     const response = await axios.get('/api/admin/statistics/student-problems', { params })

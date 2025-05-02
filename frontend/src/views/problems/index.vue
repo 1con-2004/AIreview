@@ -824,6 +824,7 @@ export default {
     // 获取用户题目完成状态
     async fetchUserProblemStatus () {
       try {
+        console.log('开始获取用户题目状态...')
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         const token = userInfo.token || store.getters.getAccessToken
         if (!token) {
@@ -846,10 +847,14 @@ export default {
         // 获取用户提交状态
         const headers = { Authorization: `Bearer ${token}` }
         try {
-          // 注意这里使用明确的完整API路径，避免路由混淆
-          console.log('请求API路径：/api/problems/user-status')
+          // 主要修改点：使用 solved=true 参数，只获取已通过的题目
+          // 这样可以确保只要题目曾经通过过，就会被标记为已完成
+          console.log('请求API路径：/api/problems/user-status?solved=true')
           const response = await request.get('/api/problems/user-status', {
-            params: { problem_ids: problemIds.join(',') },
+            params: { 
+              problem_ids: problemIds.join(','),
+              solved: true  // 关键参数：只获取曾经解决过的题目
+            },
             headers
           })
 
@@ -859,8 +864,9 @@ export default {
             // 创建题目ID到状态的映射
             const statusMap = {}
             response.data.forEach(item => {
-              if (item && item.problem_id && item.status) {
-                statusMap[item.problem_id] = item.status
+              if (item && item.problem_id) {
+                // 只要在返回结果中存在，就说明该题目已经通过
+                statusMap[item.problem_id] = 'Accepted'
               }
             })
 
@@ -884,16 +890,20 @@ export default {
           }
         } catch (apiError) {
           console.error('API请求失败:', apiError)
-          // 尝试备选方案：直接获取用户所有题目状态
+          // 尝试备选方案：直接获取用户所有已通过的题目状态
           try {
-            console.log('尝试备选方案获取用户题目状态，请求路径: /api/user/problem-status')
-            const acceptedResponse = await request.get('/api/user/problem-status', { headers })
+            console.log('尝试备选方案获取用户题目状态，请求路径: /api/user/problem-status?solved=true')
+            const acceptedResponse = await request.get('/api/user/problem-status', { 
+              params: { solved: true }, // 关键参数：只获取曾经解决过的题目
+              headers 
+            })
 
             if (acceptedResponse && acceptedResponse.success && Array.isArray(acceptedResponse.data)) {
               const statusMap = {}
               acceptedResponse.data.forEach(item => {
                 if (item && item.problem_id) {
-                  statusMap[item.problem_id] = item.status
+                  // 只要在返回结果中存在，就说明该题目已经通过
+                  statusMap[item.problem_id] = 'Accepted'
                 }
               })
 

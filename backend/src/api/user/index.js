@@ -178,16 +178,30 @@ router.get('/info', authenticateToken, async (req, res) => {
 router.get('/problem-status', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    const showOnlySolved = req.query.solved === 'true'; // 检查是否只查询已解决过的题目
     
-    console.log('正在获取用户题目状态, userId:', userId);
+    console.log('正在获取用户题目状态, userId:', userId, 'onlySolved:', showOnlySolved);
 
-    // 查询用户已通过的所有题目
-    const query = `
-      SELECT DISTINCT problem_id, 
-        FIRST_VALUE(status) OVER (PARTITION BY problem_id ORDER BY created_at DESC) as status
-      FROM submissions 
-      WHERE user_id = ?
-    `;
+    let query;
+    
+    if (showOnlySolved) {
+      // 查询用户已通过的所有题目
+      query = `
+        SELECT DISTINCT
+          problem_id,
+          'Accepted' as status
+        FROM submissions 
+        WHERE user_id = ? AND status = 'Accepted'
+      `;
+    } else {
+      // 查询用户所有题目的最新状态
+      query = `
+        SELECT DISTINCT problem_id, 
+          FIRST_VALUE(status) OVER (PARTITION BY problem_id ORDER BY created_at DESC) as status
+        FROM submissions 
+        WHERE user_id = ?
+      `;
+    }
     
     const [results] = await pool.query(query, [userId]);
     console.log('查询到的用户题目状态:', results.length, '条记录');

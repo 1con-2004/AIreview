@@ -175,10 +175,10 @@ router.get('/students', async (req, res) => {
  */
 router.get('/student-problems', async (req, res) => {
   try {
-    const { userId, page = 1, pageSize = 10 } = req.query;
+    const { userId, page = 1, pageSize = 10, solved = false } = req.query;
     const offset = (page - 1) * pageSize;
     
-    console.log('获取学生题目完成情况:', { userId, page, pageSize });
+    console.log('获取学生题目完成情况:', { userId, page, pageSize, solved });
     
     if (!userId) {
       return res.status(400).json({
@@ -195,49 +195,99 @@ router.get('/student-problems', async (req, res) => {
     
     const total = countResult[0].total;
     
-    // 获取题目列表及完成情况
-    const [problems] = await db.query(`
-      SELECT 
-        p.id,
-        p.problem_number,
-        p.title,
-        p.difficulty,
-        COALESCE(
-          (SELECT status 
-           FROM submissions s 
-           WHERE s.user_id = ? AND s.problem_id = p.id 
-           ORDER BY created_at DESC 
-           LIMIT 1), 
-          'Not Attempted'
-        ) as status,
-        (
-          SELECT COUNT(*) 
-          FROM submissions s 
-          WHERE s.user_id = ? AND s.problem_id = p.id
-        ) as submission_count,
-        (
-          SELECT created_at 
-          FROM submissions s 
-          WHERE s.user_id = ? AND s.problem_id = p.id 
-          ORDER BY created_at DESC 
-          LIMIT 1
-        ) as last_submission_time,
-        (
-          SELECT created_at 
-          FROM submissions s 
-          WHERE s.user_id = ? AND s.problem_id = p.id 
-          ORDER BY created_at ASC 
-          LIMIT 1
-        ) as first_submission_time,
-        (
-          SELECT AVG(runtime) 
-          FROM submissions s 
-          WHERE s.user_id = ? AND s.problem_id = p.id AND s.status = 'Accepted'
-        ) as average_execution_time
-      FROM problems p
-      ORDER BY p.problem_number
-      LIMIT ? OFFSET ?
-    `, [userId, userId, userId, userId, userId, parseInt(pageSize), parseInt(offset)]);
+    // 根据solved参数决定使用哪种SQL查询
+    let query;
+    if (solved === 'true') {
+      // 当solved=true时，只要曾经通过过题目（有Accepted记录），就标记为Accepted
+      query = `
+        SELECT 
+          p.id,
+          p.problem_number,
+          p.title,
+          p.difficulty,
+          CASE 
+            WHEN EXISTS (
+              SELECT 1 
+              FROM submissions s 
+              WHERE s.user_id = ? AND s.problem_id = p.id AND s.status = 'Accepted'
+            ) THEN 'Accepted'
+            ELSE 'Not Attempted'
+          END as status,
+          (
+            SELECT COUNT(*) 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id
+          ) as submission_count,
+          (
+            SELECT created_at 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) as last_submission_time,
+          (
+            SELECT created_at 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id 
+            ORDER BY created_at ASC 
+            LIMIT 1
+          ) as first_submission_time,
+          (
+            SELECT AVG(runtime) 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id AND s.status = 'Accepted'
+          ) as average_execution_time
+        FROM problems p
+        ORDER BY p.problem_number
+        LIMIT ? OFFSET ?
+      `;
+    } else {
+      // 默认行为：获取最新的状态
+      query = `
+        SELECT 
+          p.id,
+          p.problem_number,
+          p.title,
+          p.difficulty,
+          COALESCE(
+            (SELECT status 
+             FROM submissions s 
+             WHERE s.user_id = ? AND s.problem_id = p.id 
+             ORDER BY created_at DESC 
+             LIMIT 1), 
+            'Not Attempted'
+          ) as status,
+          (
+            SELECT COUNT(*) 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id
+          ) as submission_count,
+          (
+            SELECT created_at 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) as last_submission_time,
+          (
+            SELECT created_at 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id 
+            ORDER BY created_at ASC 
+            LIMIT 1
+          ) as first_submission_time,
+          (
+            SELECT AVG(runtime) 
+            FROM submissions s 
+            WHERE s.user_id = ? AND s.problem_id = p.id AND s.status = 'Accepted'
+          ) as average_execution_time
+        FROM problems p
+        ORDER BY p.problem_number
+        LIMIT ? OFFSET ?
+      `;
+    }
+    
+    const [problems] = await db.query(query, [userId, userId, userId, userId, userId, parseInt(pageSize), parseInt(offset)]);
     
     console.log(`查询到 ${problems.length} 条题目记录`);
     

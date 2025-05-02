@@ -477,6 +477,7 @@ const fetchUserData = async () => {
 const fetchProblemList = async () => {
   problemLoading.value = true
   try {
+    // 先获取题目列表
     const response = await axios.get('/api/user/profile/problems', {
       params: {
         page: problemCurrentPage.value,
@@ -484,8 +485,46 @@ const fetchProblemList = async () => {
       }
     })
 
-    problemList.value = response.data.data || []
+    const problemData = response.data.data || []
+    problemList.value = problemData
     totalProblemsCount.value = response.data.total || 0
+
+    // 获取题目ID列表
+    const problemIds = problemData.map(problem => problem.id).filter(id => id)
+    
+    if (problemIds.length > 0) {
+      try {
+        // 使用与index.vue相同的API获取用户题目状态
+        const statusResponse = await axios.get('/api/user/problem-status', {
+          params: { solved: true } // 关键参数：只获取曾经解决过的题目
+        })
+        
+        if (statusResponse.data && statusResponse.data.success && Array.isArray(statusResponse.data.data)) {
+          // 创建题目ID到状态的映射
+          const statusMap = {}
+          statusResponse.data.data.forEach(item => {
+            if (item && item.problem_id) {
+              // 只要在返回结果中存在，就说明该题目已经通过
+              statusMap[item.problem_id] = 'Accepted'
+            }
+          })
+
+          // 更新题目完成状态
+          problemList.value = problemData.map(problem => ({
+            ...problem,
+            status: statusMap[problem.id] || problem.status || 'Not Started'
+          }))
+          
+          console.log('更新后的题目状态:', problemList.value.filter(p => p.status === 'Accepted').map(p => ({
+            id: p.id,
+            title: p.title,
+            status: p.status
+          })))
+        }
+      } catch (statusError) {
+        console.error('获取用户题目状态失败:', statusError)
+      }
+    }
   } catch (error) {
     console.error('获取题目列表失败:', error)
     ElMessage.error('获取题目列表失败，请稍后再试')

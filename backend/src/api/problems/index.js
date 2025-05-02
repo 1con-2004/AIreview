@@ -411,13 +411,14 @@ router.get('/user-status', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const problemIdsString = req.query.problem_ids ? req.query.problem_ids.split(',') : [];
+    const showOnlySolved = req.query.solved === 'true'; // 检查是否只查询已解决过的题目
     
     // 过滤掉不是数字的ID并转换为数字
     const problemIds = problemIdsString
       .filter(id => !isNaN(parseInt(id)) && id.trim() !== '')
       .map(id => parseInt(id));
     
-    console.log('获取用户题目状态, userId:', userId, 'problemIds:', problemIds);
+    console.log('获取用户题目状态, userId:', userId, 'problemIds:', problemIds, 'onlySolved:', showOnlySolved);
     
     if (!problemIds.length) {
       return res.json({
@@ -426,25 +427,44 @@ router.get('/user-status', authenticateToken, async (req, res) => {
       });
     }
     
-    // 查询用户对这些题目的最新提交状态
-    // 注意：这里不再依赖getProblemById函数，直接查询submissions表
-    const query = `
-      SELECT 
-        s1.problem_id,
-        s1.status,
-        s1.created_at
-      FROM submissions s1
-      INNER JOIN (
-        SELECT problem_id, MAX(created_at) as latest_date
-        FROM submissions
-        WHERE user_id = ? AND problem_id IN (?)
-        GROUP BY problem_id
-      ) s2
-      ON s1.problem_id = s2.problem_id AND s1.created_at = s2.latest_date
-      WHERE s1.user_id = ?
-    `;
+    let query;
+    let params;
     
-    const [statusRecords] = await db.query(query, [userId, problemIds, userId]);
+    if (showOnlySolved) {
+      // 查询用户是否曾经解决过这些题目（只要有一次Accepted即可）
+      query = `
+        SELECT DISTINCT
+          problem_id,
+          'Accepted' as status,
+          MAX(created_at) as created_at
+        FROM submissions
+        WHERE user_id = ? 
+          AND problem_id IN (?) 
+          AND status = 'Accepted'
+        GROUP BY problem_id
+      `;
+      params = [userId, problemIds];
+    } else {
+      // 查询用户对这些题目的最新提交状态
+      query = `
+        SELECT 
+          s1.problem_id,
+          s1.status,
+          s1.created_at
+        FROM submissions s1
+        INNER JOIN (
+          SELECT problem_id, MAX(created_at) as latest_date
+          FROM submissions
+          WHERE user_id = ? AND problem_id IN (?)
+          GROUP BY problem_id
+        ) s2
+        ON s1.problem_id = s2.problem_id AND s1.created_at = s2.latest_date
+        WHERE s1.user_id = ?
+      `;
+      params = [userId, problemIds, userId];
+    }
+    
+    const [statusRecords] = await db.query(query, params);
     
     console.log('查询到的用户题目状态:', statusRecords.length, '条记录');
     
