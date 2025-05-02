@@ -134,6 +134,14 @@ const routes = [
     meta: {
       title: '埋点功能测试'
     }
+  },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: () => import('@/views/statistics/index.vue'),
+    meta: {
+      title: '统计'
+    }
   }
 ]
 
