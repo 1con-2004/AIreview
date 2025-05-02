@@ -79,6 +79,35 @@
           </el-button>
         </div>
 
+        <!-- 学习路径生成进度条 -->
+        <div v-if="showProgressBar" class="ai-loading-container">
+          <div class="ai-loading-content">
+            <div class="ai-loading-logo">
+              <!-- 问知星球 SVG Logo -->
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="28" cy="28" r="28" fill="url(#paint0_linear)" />
+                <path d="M21.4858 15.1716C21.0953 14.781 20.4621 14.781 20.0716 15.1716C19.6811 15.5621 19.6811 16.1953 20.0716 16.5858L21.4858 15.1716ZM28 23.0858L27.2929 23.7929C27.6834 24.1834 28.3166 24.1834 28.7071 23.7929L28 23.0858ZM35.9284 15.1716C36.3189 14.781 36.9521 14.781 37.3426 15.1716C37.7332 15.5621 37.7332 16.1953 37.3426 16.5858L35.9284 15.1716ZM20.0716 16.5858L27.2929 23.7929L28.7071 22.3787L21.4858 15.1716L20.0716 16.5858ZM28.7071 23.7929L35.9284 16.5858L37.3426 15.1716L30.1213 22.3787L28.7071 23.7929Z" fill="white" />
+                <path d="M21.4858 40.8284C21.0953 41.219 20.4621 41.219 20.0716 40.8284C19.6811 40.4379 19.6811 39.8047 20.0716 39.4142L21.4858 40.8284ZM28 32.9142L27.2929 32.2071C27.6834 31.8166 28.3166 31.8166 28.7071 32.2071L28 32.9142ZM35.9284 40.8284C36.3189 41.219 36.9521 41.219 37.3426 40.8284C37.7332 40.4379 37.7332 39.8047 37.3426 39.4142L35.9284 40.8284ZM20.0716 39.4142L27.2929 32.2071L28.7071 33.6213L21.4858 40.8284L20.0716 39.4142ZM28.7071 32.2071L35.9284 39.4142L37.3426 40.8284L30.1213 33.6213L28.7071 32.2071Z" fill="white" />
+                <path d="M39.4142 20.0716C39.8047 19.6811 40.4379 19.6811 40.8284 20.0716C41.219 20.4621 41.219 21.0953 40.8284 21.4858L39.4142 20.0716ZM32.9142 28L33.6213 28.7071C33.2307 29.0976 32.5976 29.0976 32.2071 28.7071L32.9142 28ZM40.8284 35.9284C41.219 36.3189 41.219 36.9521 40.8284 37.3426C40.4379 37.7332 39.8047 37.7332 39.4142 37.3426L40.8284 35.9284ZM40.8284 21.4858L33.6213 28.7071L32.2071 27.2929L39.4142 20.0716L40.8284 21.4858ZM32.2071 28.7071L39.4142 35.9284L40.8284 37.3426L33.6213 27.2929L32.2071 28.7071Z" fill="white" />
+                <path d="M15.1716 20.0716C14.781 19.6811 14.781 19.0479 15.1716 18.6574C15.5621 18.2668 16.1953 18.2668 16.5858 18.6574L15.1716 20.0716ZM23.0858 28L23.7929 27.2929C24.1834 27.6834 24.1834 28.3166 23.7929 28.7071L23.0858 28ZM16.5858 37.3426C16.1953 37.7332 15.5621 37.7332 15.1716 37.3426C14.781 36.9521 14.781 36.3189 15.1716 35.9284L16.5858 37.3426ZM16.5858 18.6574L23.7929 25.8787L22.3787 27.2929L15.1716 20.0716L16.5858 18.6574ZM23.7929 30.1213L16.5858 37.3426L15.1716 35.9284L22.3787 28.7071L23.7929 30.1213Z" fill="white" />
+                <defs>
+                  <linearGradient id="paint0_linear" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3A7BD5" />
+                    <stop offset="1" stop-color="#2196F3" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="ai-loading-text">
+              <div class="ai-loading-title">{{ loadingStage }}</div>
+              <div class="ai-progress-container">
+                <div class="ai-progress-bar" :style="{ width: progressWidth + '%', background: progressBackground }"></div>
+                <span class="ai-progress-text">{{ progressWidth }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 弱点分析板块 -->
         <div class="learning-path-weakness" v-if="weaknessAnalysis.length > 0">
           <h3 class="block-title">
@@ -320,6 +349,21 @@ const problemList = ref([])
 const totalProblemsCount = ref(0)
 const problemCurrentPage = ref(1)
 
+// 新增进度条状态变量
+const showProgressBar = ref(false)
+const progressWidth = ref(0)
+const progressBackground = ref('linear-gradient(90deg, #3A7BD5 0%, #2196F3 100%)')
+const loadingStage = ref('准备生成学习路径...')
+const progressTimer = ref(null)
+const loadingStages = [
+  '分析学习历史...',
+  '识别知识薄弱点...',
+  '匹配学习资源...',
+  '生成推荐题目...',
+  '优化学习路径...',
+  '完成路径生成!'
+]
+
 // 图表数据状态
 const completionData = ref(null)
 const errorTypeData = ref(null)
@@ -368,6 +412,75 @@ const checkIsStudent = async () => {
 const fetchLearningPath = async (forceRefresh = false) => {
   learningPathLoading.value = true
   try {
+    await fetchLearningPathReal(forceRefresh)
+  } catch (error) {
+    console.error('获取学习路径数据失败:', error)
+    ElMessage.error('获取学习路径数据失败，请稍后再试')
+  } finally {
+    learningPathLoading.value = false
+    refreshLoading.value = false
+  }
+}
+
+// 刷新学习路径
+const refreshLearningPath = async () => {
+  refreshLoading.value = true
+  showProgressBar.value = true
+  progressWidth.value = 0
+  loadingStage.value = loadingStages[0]
+  
+  // 清除之前的计时器
+  if (progressTimer.value) {
+    clearInterval(progressTimer.value)
+  }
+  
+  // 模拟进度增长
+  const totalTime = 20000 // 总时间20秒
+  const interval = 200 // 每200毫秒更新一次
+  const totalSteps = totalTime / interval
+  const stageSteps = Math.floor(totalSteps / loadingStages.length)
+  let currentStep = 0
+  let currentStageIndex = 0
+  
+  progressTimer.value = setInterval(() => {
+    currentStep++
+    
+    // 更新进度百分比 - 采用非线性增长，开始慢，中间快，结束慢
+    const progress = currentStep / totalSteps
+    if (progress <= 0.2) {
+      // 开始阶段慢速增长
+      progressWidth.value = Math.min(100, Math.floor((progress / 0.2) * 20))
+    } else if (progress <= 0.8) {
+      // 中间阶段快速增长
+      progressWidth.value = Math.min(100, Math.floor(20 + ((progress - 0.2) / 0.6) * 60))
+    } else {
+      // 结束阶段慢速增长
+      progressWidth.value = Math.min(100, Math.floor(80 + ((progress - 0.8) / 0.2) * 20))
+    }
+    
+    // 更新阶段文本
+    if (currentStep % stageSteps === 0 && currentStageIndex < loadingStages.length - 1) {
+      currentStageIndex++
+      loadingStage.value = loadingStages[currentStageIndex]
+    }
+    
+    // 完成后清除计时器
+    if (currentStep >= totalSteps || progressWidth.value >= 100) {
+      clearInterval(progressTimer.value)
+      progressWidth.value = 100
+      loadingStage.value = loadingStages[loadingStages.length - 1]
+      
+      // 设置一个短暂延迟让用户看到100%完成状态
+      setTimeout(() => {
+        fetchLearningPathReal(true)
+      }, 500)
+    }
+  }, interval)
+}
+
+// 实际获取学习路径数据的函数
+const fetchLearningPathReal = async (forceRefresh = false) => {
+  try {
     // 将并行请求改为串行请求，避免数据库死锁
     // 1. 首先请求弱点分析
     const weaknessRes = await axios.get('/api/learning-path/weakness', { params: { refresh: forceRefresh } })
@@ -413,25 +526,15 @@ const fetchLearningPath = async (forceRefresh = false) => {
     // 3. 最后请求推荐题目
     const recommendRes = await axios.get('/api/learning-path/recommend', { params: { refresh: forceRefresh } })
     recommendProblems.value = recommendRes.data.data || []
+    
+    ElMessage.success('学习路径已刷新')
   } catch (error) {
     console.error('获取学习路径数据失败:', error)
     ElMessage.error('获取学习路径数据失败，请稍后再试')
   } finally {
     learningPathLoading.value = false
     refreshLoading.value = false
-  }
-}
-
-// 刷新学习路径
-const refreshLearningPath = async () => {
-  refreshLoading.value = true
-  // 添加延迟，确保之前的请求已完成
-  try {
-    await fetchLearningPath(true)
-    ElMessage.success('学习路径已刷新')
-  } catch (error) {
-    console.error('刷新学习路径失败:', error)
-    ElMessage.error('刷新学习路径失败，请稍后再试')
+    showProgressBar.value = false
   }
 }
 
@@ -887,6 +990,12 @@ onUnmounted(() => {
       chart.dispose()
     }
   })
+  
+  // 清除进度条定时器
+  if (progressTimer.value) {
+    clearInterval(progressTimer.value)
+    progressTimer.value = null
+  }
 })
 
 // 格式化内容，支持换行符和基本Markdown风格
@@ -1064,6 +1173,116 @@ const getPointColor = (index) => {
   margin-bottom: 24px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* AI学习路径生成进度条样式 */
+.ai-loading-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 30, 46, 0.95);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.ai-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 20px;
+}
+
+.ai-loading-logo {
+  margin-bottom: 24px;
+  animation: pulse 2s infinite;
+}
+
+.ai-loading-text {
+  width: 100%;
+}
+
+.ai-loading-title {
+  font-size: 20px;
+  color: #e6edf3;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.ai-progress-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  position: relative;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.ai-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
+}
+
+.ai-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.ai-progress-text {
+  font-size: 14px;
+  color: #a6accd;
+  margin-top: 8px;
+  display: block;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .section-header {

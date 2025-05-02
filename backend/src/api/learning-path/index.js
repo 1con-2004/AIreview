@@ -241,55 +241,82 @@ router.get('/directions', authenticateToken, async (req, res) => {
       await connection.query('DELETE FROM learning_path_directions WHERE user_id = ?', [userId]);
     }
     
-    // 获取标签数据，从问题表直接获取常用标签
-    const [tags] = await connection.query(`
-      SELECT tag 
-      FROM (
-        SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(tags, ',', n.n), ',', -1)) as tag
-        FROM problems
-        JOIN (
-          SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
-          SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
-        ) n
-        WHERE n.n <= 1 + LENGTH(tags) - LENGTH(REPLACE(tags, ',', ''))
-        GROUP BY tag
-      ) t
-      WHERE tag != ''
-      ORDER BY RAND()
-      LIMIT 3
-    `);
+    // 首先获取用户现有的弱点分析数据
+    const [existingWeaknessTags] = await connection.query(
+      'SELECT tag FROM learning_path_weakness_analysis WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
     
-    if (tags.length === 0) {
-      console.log(`[${requestId}] 未找到可用标签，使用默认标签`);
-      tags.push({ tag: '数组' }, { tag: '排序' }, { tag: '字符串' });
+    // 获取标签数据，优先使用已存在的弱点分析标签
+    let selectedTags = [];
+    
+    if (existingWeaknessTags.length > 0) {
+      console.log(`[${requestId}] 使用已存在的弱点分析标签，数量: ${existingWeaknessTags.length}`);
+      // 使用已有的标签，最多取3个
+      selectedTags = existingWeaknessTags.slice(0, 3);
+    } else {
+      // 如果没有弱点分析数据，再从问题表获取标签
+      console.log(`[${requestId}] 未找到弱点分析标签，从问题表获取常用标签`);
+      const [tags] = await connection.query(`
+        SELECT tag 
+        FROM (
+          SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(tags, ',', n.n), ',', -1)) as tag
+          FROM problems
+          JOIN (
+            SELECT 1 as n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL 
+            SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
+          ) n
+          WHERE n.n <= 1 + LENGTH(tags) - LENGTH(REPLACE(tags, ',', ''))
+          GROUP BY tag
+        ) t
+        WHERE tag != ''
+        ORDER BY RAND()
+        LIMIT 3
+      `);
+      
+      if (tags.length === 0) {
+        console.log(`[${requestId}] 未找到可用标签，使用默认标签`);
+        selectedTags = [{ tag: '数组' }, { tag: '排序' }, { tag: '字符串' }];
+      } else {
+        selectedTags = tags;
+      }
+      
+      // 重要修改：只在非强制刷新模式下自动创建弱点分析记录
+      if (!forceRefresh) {
+        console.log(`[${requestId}] 非强制刷新模式，为没有弱点分析的标签创建记录`);
+        // 为这些标签创建弱点分析记录
+        for (const tagObj of selectedTags) {
+          // 检查标签是否在弱点分析表中存在
+          const [existingTag] = await connection.query(
+            'SELECT tag FROM learning_path_weakness_analysis WHERE tag = ? AND user_id = ? LIMIT 1',
+            [tagObj.tag, userId]
+          );
+          
+          if (existingTag.length === 0) {
+            console.log(`[${requestId}] 标签 ${tagObj.tag} 在弱点分析表中不存在，添加一条记录`);
+            
+            // 添加一条默认的弱点分析记录
+            const defaultIdea = `学习 "${tagObj.tag}" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪`;
+            
+            await connection.query(
+              'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
+              [userId, tagObj.tag, defaultIdea]
+            );
+          }
+        }
+      } else {
+        console.log(`[${requestId}] 强制刷新模式，不自动创建弱点分析记录，依赖/weakness接口的结果`);
+      }
     }
     
-    console.log(`[${requestId}] 找到${tags.length}个标签用于生成学习方向`);
+    console.log(`[${requestId}] 找到${selectedTags.length}个标签用于生成学习方向`);
     
     // 为每个标签生成学习资源，使用固定的URL模板
     const allDirections = [];
     
-    for (const tagObj of tags) {
+    for (const tagObj of selectedTags) {
       const tag = tagObj.tag;
       console.log(`[${requestId}] 为标签 ${tag} 生成学习资源`);
-      
-      // 检查标签是否在弱点分析表中存在，若不存在则先创建
-      const [existingTag] = await connection.query(
-        'SELECT tag FROM learning_path_weakness_analysis WHERE tag = ? AND user_id = ? LIMIT 1',
-        [tag, userId]
-      );
-      
-      if (existingTag.length === 0) {
-        console.log(`[${requestId}] 标签 ${tag} 在弱点分析表中不存在，添加一条记录`);
-        
-        // 添加一条默认的弱点分析记录
-        const defaultIdea = `学习 "${tag}" 相关的概念和技巧 👨‍💻\n\n掌握这个知识点可以帮助你提高解题能力和代码质量 🚀\n\n核心要点：\n- 理解基本原理和实现方式 📝\n- 掌握常见应用场景 🔍\n- 学习典型解题策略 💡\n\n多做相关练习，理解其核心思想！💪`;
-        
-        await connection.query(
-          'INSERT INTO learning_path_weakness_analysis (user_id, tag, idea) VALUES (?, ?, ?)',
-          [userId, tag, defaultIdea]
-        );
-      }
       
       // 使用固定URL格式生成三个平台的URL
       const resources = [
@@ -384,7 +411,7 @@ router.get('/recommend', authenticateToken, async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
     
-    // 如果不是强制刷新, 首先检查是否有已存在的推荐题目
+    // 如果不是强制刷新, 首先检查是否有已存在的推荐题目(强制限制显示6道题目)
     if (!forceRefresh) {
       const [existingRecommendations] = await connection.query(`
         SELECT r.*, 
@@ -394,7 +421,7 @@ router.get('/recommend', authenticateToken, async (req, res) => {
         LEFT JOIN problems p ON r.problem_number = p.problem_number
         WHERE r.user_id = ? 
         ORDER BY r.created_at DESC 
-        LIMIT 5
+        LIMIT 6
       `, [userId]);
       
       if (existingRecommendations.length > 0) {
