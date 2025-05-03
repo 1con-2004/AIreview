@@ -556,4 +556,42 @@ router.get('/student-submission-time/:userId', async (req, res) => {
   }
 });
 
+/**
+ * 获取全体学生知识点掌握情况
+ */
+router.get('/knowledge-radar', async (req, res) => {
+  try {
+    console.log('获取全体学生知识点掌握情况');
+
+    const [stats] = await db.query(`
+      SELECT 
+        p.tags as knowledge_point,
+        COUNT(DISTINCT p.id) as total_problems,
+        COUNT(DISTINCT CASE WHEN s.status = 'Accepted' THEN s.problem_id END) as completed_problems,
+        ROUND(
+          COUNT(DISTINCT CASE WHEN s.status = 'Accepted' THEN s.problem_id END) * 100.0 / 
+          NULLIF(COUNT(DISTINCT p.id), 0), 
+          2
+        ) as mastery_percentage
+      FROM problems p
+      LEFT JOIN submissions s ON p.id = s.problem_id
+      WHERE p.tags IS NOT NULL AND p.tags != ''
+      GROUP BY p.tags
+      ORDER BY mastery_percentage DESC
+      LIMIT 8
+    `);
+
+    return res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('获取全体学生知识点掌握情况失败:', error);
+    return res.status(500).json({
+      success: false,
+      message: '服务器错误，获取全体学生知识点掌握情况失败'
+    });
+  }
+});
+
 module.exports = router; 

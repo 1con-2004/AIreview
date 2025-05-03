@@ -55,8 +55,8 @@
               <div id="categoryTreeChart" class="chart"></div>
             </div>
             <div class="chart-card">
-              <h3>难度分布柱状图</h3>
-              <div id="difficultyBarChart" class="chart"></div>
+              <h3>全部学生知识点掌握情况</h3>
+              <div id="knowledgeSystemRadarChart" class="chart"></div>
             </div>
           </div>
         </div>
@@ -328,7 +328,7 @@ const systemChartData = ref({
   difficultyDist: null,
   categoryTree: null,
   completionRank: null,
-  difficultyBar: null
+  knowledgeRadar: null
 })
 
 // 存储图表实例的引用
@@ -343,7 +343,7 @@ const charts = ref({
   difficultyDistChart: null,
   categoryTreeChart: null,
   completionRankChart: null,
-  difficultyBarChart: null
+  knowledgeSystemRadarChart: null
 })
 
 // 获取班级列表
@@ -465,6 +465,10 @@ const fetchSystemChartData = async () => {
     // 获取难度分布柱状图数据
     const difficultyBarResponse = await axios.get('/api/admin/statistics/difficulty-bar')
     systemChartData.value.difficultyBar = difficultyBarResponse.data
+    
+    // 获取全部学生知识点掌握情况雷达图数据
+    const knowledgeRadarResponse = await axios.get('/api/admin/statistics/knowledge-radar')
+    systemChartData.value.knowledgeRadar = knowledgeRadarResponse.data
 
     // 初始化系统图表
     initSystemCharts()
@@ -880,44 +884,51 @@ const initSystemCharts = () => {
     }
   }
 
-  // 初始化难度分布柱状图
-  if (systemChartData.value.difficultyBar) {
-    const difficultyBarElement = document.getElementById('difficultyBarChart')
-    if (difficultyBarElement) {
-      charts.value.difficultyBarChart = echarts.init(difficultyBarElement)
-      charts.value.difficultyBarChart.setOption({
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'shadow' }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-        xAxis: {
-          type: 'category',
-          data: ['简单', '中等', '困难']
-        },
-        yAxis: {
-          type: 'value',
-          name: '题目数量'
-        },
-        series: [{
-          name: '题目数量',
-          type: 'bar',
-          data: systemChartData.value.difficultyBar.data,
-          itemStyle: {
-            color: function (params) {
-              const colors = {
-                简单: '#67C23A',
-                中等: '#E6A23C',
-                困难: '#F56C6C'
-              }
-              return colors[params.name] || '#409EFF'
+  // 初始化全部学生知识点掌握情况
+  if (systemChartData.value.knowledgeRadar) {
+    const knowledgeSystemElement = document.getElementById('knowledgeSystemRadarChart')
+    if (knowledgeSystemElement) {
+      charts.value.knowledgeSystemRadarChart = echarts.init(knowledgeSystemElement)
+      charts.value.knowledgeSystemRadarChart.setOption({
+        tooltip: { trigger: 'axis' },
+        radar: {
+          indicator: systemChartData.value.knowledgeRadar.data.map(item => ({
+            name: item.knowledge_point,
+            max: 100
+          })),
+          shape: 'circle',
+          center: ['50%', '50%'],
+          radius: '60%',
+          splitNumber: 5,
+          axisName: {
+            color: '#333'
+          },
+          splitArea: {
+            show: true,
+            areaStyle: {
+              color: ['#f5f7fa', '#e4e7ed']
+            }
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: '#dcdfe6'
             }
           }
+        },
+        series: [{
+          type: 'radar',
+          data: [{
+            value: systemChartData.value.knowledgeRadar.data.map(item => parseFloat(item.mastery_percentage)),
+            name: '知识点掌握度',
+            symbolSize: 4,
+            lineStyle: {
+              width: 2
+            },
+            areaStyle: {
+              opacity: 0.3
+            }
+          }]
         }]
       })
     }
