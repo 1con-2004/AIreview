@@ -46,14 +46,14 @@
         <div class="feature-text">
           <h3 class="drop-text">满血DeepSeek R1模型 , 助力代码分析</h3>
           <p class="feature-description">
-          搭载<strong style="font-size: 1.2em; color: orange;">满血DeepSeek R1模型</strong> , 以突破性的深度思考功能构建代码解析矩阵，深度解构每一行代码的语法逻辑 <br>
+          搭载<strong style="font-size: 1.2em; color: orange;">满血DeepSeek R1模型</strong> , 以及最新版的DeepSeek V3-0324 和 快速AI大模型GLM-4-FLASH <br>
           <strong style="font-size: 1.2em; color: orange;">毫秒级</strong>智能扫描 , 精准定位潜在语法隐患、复杂逻辑断层 <br>
-          无论是细微的语法瑕疵、复杂的逻辑漏洞，还是关键的性能瓶颈，<strong style="font-size: 1.2em; color: orange;">DeepSeek R1 模型</strong>都能敏锐洞察
+          无论是细微的语法瑕疵、复杂的逻辑漏洞，还是关键的性能瓶颈，<strong style="font-size: 1.2em; color: orange;">AI助手</strong>都能敏锐洞察
           </p>
           <div class="feature-tags">
             <span class="tag">满血模型</span>
             <span class="tag">多模态处理</span>
-            <span class="tag">毫秒级响应</span>
+            <span class="tag">深度思考</span>
           </div>
         </div>
         <div class="feature-video-container">
@@ -66,14 +66,14 @@
         <div class="feature-text">
           <h3 class="drop-text">个性化学习计划</h3>
           <p class="feature-description">
-            依托<strong style="font-size: 1.2em; color: orange;">满血 DeepSeek R1 模型</strong>，基于您的学习历史数据, 运用先进的<strong style="font-size: 1.2em; color: orange;">机器学习算法</strong>，智能生成定制化学习计划 <br>
-            系统通过<strong style="font-size: 1.2em; color: orange;">实时分析与动态评估</strong>，为您精准推送契合当前编程水平的题目集与知识点矩阵 <br>
-            借助<strong style="font-size: 1.2em; color: orange;">自适应学习机制</strong>，持续微调学习计划，让您时刻处于高效学习的最优区间，在代码世界中稳健进阶
+            依托<strong style="font-size: 1.2em; color: orange;">AI大模型</strong>，基于您的学习历史数据, 实时调用<strong style="font-size: 1.2em; color: orange;">AI大模型</strong>，智能生成定制化学习计划 <br>
+            系统通过<strong style="font-size: 1.2em; color: orange;">分析您的历史代码</strong>，为您精准推送契合当前编程水平的学习方向和推荐题目 <br>
+            借助<strong style="font-size: 1.2em; color: orange;">个性化分析</strong>，帮助您持续微调学习计划，让您时刻处于高效学习的最优区间，在代码世界中稳健进阶
           </p>
           <div class="feature-tags">
-            <span class="tag">先进机器学习算法</span>
             <span class="tag">实时分析</span>
-            <span class="tag">自适应学习机制</span>
+            <span class="tag">个性化</span>
+            <span class="tag">自适应</span>
           </div>
         </div>
         <div class="feature-video-container">
@@ -81,19 +81,17 @@
         </div>
       </div>
 
-      <!-- 精确搜索功能 -->
+      <!-- 自动统计功能 -->
       <div class="feature-row">
         <div class="feature-text">
-          <h3 class="drop-text">精确题目搜索</h3>
+          <h3 class="drop-text"></h3>
           <p class="feature-description">
-            采用先进的<strong style="font-size: 1.2em; color: orange;">后端算法</strong>搭建多维度标签体系 , 让你快速找到所需题目 . 支持按难度、主题、算法类型等多种<strong style="font-size: 1.2em; color: orange;">方式筛选</strong> <br>
-            运用二级标签深度嵌套搜索和智能标签<strong style="font-size: 1.2em; color: orange;">关键词匹配算法</strong>, 让题目筛选更加精准、高效 <br>
-            无论是准备面试还是参加竞赛，都能轻松找到最匹配的练习题 <br>
+            自动统计您的<strong style="font-size: 1.2em; color: orange;">提交行为</strong>,自动生成提交数量趋势图、提交时间分布图、代码行数统计图、语言趋势偏好图<br>
+            让您更了解您的<strong style="font-size: 1.2em; color: orange;">行为习惯</strong>, 让编程更加有趣 <br>
           </p>
           <div class="feature-tags">
-            <span class="tag">多维筛选</span>
-            <span class="tag">标签体系</span>
-            <span class="tag">精准匹配</span>
+            <span class="tag">自动统计</span>
+            <span class="tag">美观图表</span>
           </div>
         </div>
         <div class="feature-video-container">
