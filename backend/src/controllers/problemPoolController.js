@@ -428,6 +428,35 @@ async function importProblemDirect(req, res) {
       
       const newProblemId = problemResult.insertId;
       
+      // 处理标签与分类的关联
+      if (data.tags && data.tags.trim()) {
+        console.log(`处理题目ID ${newProblemId} 的标签 "${data.tags}" 与分类关联`);
+        
+        // 获取所有分类
+        const [categories] = await pool.query('SELECT id, name FROM problem_categories');
+        const categoryMap = {};
+        categories.forEach(cat => {
+          categoryMap[cat.name.toLowerCase()] = cat.id;
+        });
+
+        // 处理标签
+        const tagList = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        
+        // 为每个标签创建关联
+        for (const tag of tagList) {
+          const categoryId = categoryMap[tag.toLowerCase()];
+          if (categoryId) {
+            await pool.query(
+              'INSERT INTO problem_category_relations (problem_id, category_id) VALUES (?, ?)',
+              [newProblemId, categoryId]
+            );
+            console.log(`为题目 ${newProblemId} 添加标签 ${tag}，分类ID: ${categoryId}`);
+          } else {
+            console.warn(`未找到标签 "${tag}" 对应的分类`);
+          }
+        }
+      }
+      
       // 2. 插入测试用例
       if (data.test_cases && data.test_cases.length > 0) {
         console.log(`使用提交的测试用例，数量: ${data.test_cases.length}`);

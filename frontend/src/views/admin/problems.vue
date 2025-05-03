@@ -160,8 +160,12 @@
             </span>
           </div>
           <div class="col-category">
-            <span class="category-tag" v-for="tag in problem.tags ? problem.tags.split(',') : []" :key="tag">
-              {{ tag }}
+            <span 
+              class="category-tag" 
+              v-for="tag in (problem.tags && problem.tags.trim()) ? problem.tags.split(',').filter(t => t.trim()) : []" 
+              :key="tag"
+            >
+              {{ tag.trim() }}
             </span>
           </div>
           <div class="col-submit">{{ problem.total_submissions || '0' }}</div>
@@ -849,7 +853,12 @@ const handleCloseDialog = () => {
 // 处理标签字符串，将中文逗号转换为英文逗号
 const processTagString = (tags) => {
   if (!tags) return ''
-  return tags.replace(/，/g, ',').split(',').filter(tag => tag.trim()).join(',')
+  // 替换中文逗号为英文逗号，过滤空标签，去除前后空格
+  return tags.replace(/，/g, ',')
+    .split(',')
+    .filter(tag => tag.trim())
+    .map(tag => tag.trim())
+    .join(',')
 }
 
 const handleSubmit = async () => {
@@ -887,12 +896,33 @@ const handleSubmit = async () => {
     console.log('开始创建题目，表单数据:', createForm.value)
 
     const formData = { ...createForm.value }
-    formData.tags = processTagString(formData.tags)
+    // 确保标签正确处理
+    formData.tags = processTagString(formData.tags || '')
 
-    const token = localStorage.getItem('token')
+    // 首先尝试从store中获取token
+    let accessToken = store.getters.getAccessToken
+
+    // 如果store中没有，再尝试从localStorage获取
+    if (!accessToken) {
+      const userInfoStr = localStorage.getItem('userInfo')
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null
+      accessToken = userInfo?.accessToken || localStorage.getItem('accessToken') || localStorage.getItem('token')
+    }
+
+    if (!accessToken) {
+      console.error('认证token不存在')
+      toast.add({
+        severity: 'error',
+        summary: '错误',
+        detail: '认证失败，请重新登录',
+        life: 3000
+      })
+      return
+    }
+
     const response = await axios.post('/api/problems/create', formData, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
 
@@ -1057,9 +1087,12 @@ const fetchProblems = async () => {
       // 更新所有标签
       const tags = new Set()
       problems.value.forEach(problem => {
-        if (problem.tags) {
+        if (problem.tags && problem.tags.trim()) {
           problem.tags.split(',').forEach(tag => {
-            tags.add(tag.trim())
+            const trimmedTag = tag.trim()
+            if (trimmedTag) {
+              tags.add(trimmedTag)
+            }
           })
         }
       })
@@ -1279,7 +1312,8 @@ const saveContentEdit = async () => {
     }
 
     const formData = { ...editForm.value }
-    formData.tags = processTagString(formData.tags)
+    // 确保标签正确处理
+    formData.tags = processTagString(formData.tags || '')
 
     console.log('开始保存题目内容修改，ID:', currentProblem.value.id)
 

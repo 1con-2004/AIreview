@@ -1049,6 +1049,41 @@ router.put('/:id', authenticateToken, async (req, res) => {
         });
       }
 
+      // 处理标签与分类的关联
+      if (tags !== undefined) {
+        // 删除原有的分类关联
+        await db.query(
+          'DELETE FROM problem_category_relations WHERE problem_id = ?',
+          [problemId]
+        );
+
+        if (tags && tags.trim()) {
+          // 获取所有分类
+          const [categories] = await db.query('SELECT id, name FROM problem_categories');
+          const categoryMap = {};
+          categories.forEach(cat => {
+            categoryMap[cat.name.toLowerCase()] = cat.id;
+          });
+
+          // 处理标签
+          const tagList = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+          
+          // 为每个标签创建关联
+          for (const tag of tagList) {
+            const categoryId = categoryMap[tag.toLowerCase()];
+            if (categoryId) {
+              await db.query(
+                'INSERT INTO problem_category_relations (problem_id, category_id) VALUES (?, ?)',
+                [problemId, categoryId]
+              );
+              console.log(`为题目 ${problemId} 更新标签 ${tag}，分类ID: ${categoryId}`);
+            } else {
+              console.warn(`未找到标签 "${tag}" 对应的分类`);
+            }
+          }
+        }
+      }
+
       // 如果提供了测试用例,更新测试用例
       if (Array.isArray(test_cases)) {
         // 删除原有的测试用例
@@ -1259,14 +1294,21 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       [problemId]
     );
 
-    // 5. 删除题目
+    // 5. 删除题目分类关联
+    console.log('删除题目分类关联数据...');
+    await connection.query(
+      'DELETE FROM problem_category_relations WHERE problem_id = ?',
+      [problemId]
+    );
+
+    // 6. 删除题目
     console.log('删除题目数据...');
     await connection.query(
       'DELETE FROM problems WHERE id = ?',
       [problemId]
     );
 
-    // 6. 自动重新排序剩余题目的编号
+    // 7. 自动重新排序剩余题目的编号
     console.log('自动重新排序剩余题目的编号...');
     
     // 获取所有剩余的题目，按照编号排序
@@ -1457,6 +1499,33 @@ router.post('/create', authenticateToken, async (req, res) => {
       );
 
       const problemId = result.insertId;
+
+      // 处理标签与分类的关联
+      if (tags && tags.trim()) {
+        // 获取所有分类
+        const [categories] = await db.query('SELECT id, name FROM problem_categories');
+        const categoryMap = {};
+        categories.forEach(cat => {
+          categoryMap[cat.name.toLowerCase()] = cat.id;
+        });
+
+        // 处理标签
+        const tagList = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        
+        // 为每个标签创建关联
+        for (const tag of tagList) {
+          const categoryId = categoryMap[tag.toLowerCase()];
+          if (categoryId) {
+            await db.query(
+              'INSERT INTO problem_category_relations (problem_id, category_id) VALUES (?, ?)',
+              [problemId, categoryId]
+            );
+            console.log(`为题目 ${problemId} 添加标签 ${tag}，分类ID: ${categoryId}`);
+          } else {
+            console.warn(`未找到标签 "${tag}" 对应的分类`);
+          }
+        }
+      }
 
       // 插入题目解答到solution_main表
       const [solutionMainResult] = await db.query(
