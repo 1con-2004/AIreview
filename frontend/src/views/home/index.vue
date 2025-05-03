@@ -84,7 +84,7 @@
       <!-- 自动统计功能 -->
       <div class="feature-row">
         <div class="feature-text">
-          <h3 class="drop-text"></h3>
+          <h3 class="drop-text">行为记录统计</h3>
           <p class="feature-description">
             自动统计您的<strong style="font-size: 1.2em; color: orange;">提交行为</strong>,自动生成提交数量趋势图、提交时间分布图、代码行数统计图、语言趋势偏好图<br>
             让您更了解您的<strong style="font-size: 1.2em; color: orange;">行为习惯</strong>, 让编程更加有趣 <br>
@@ -134,7 +134,7 @@
           <div class="card-content">
             <h3 class="wave-text">数据可视化分析</h3>
             <p class="fade-text"><strong style="font-size: 1.2em; color: orange;">DeepSeek搭配Echarts</strong>, 生成专属于你的数据可视化图表</p>
-            <router-link to="/dashboard" class="card-link">
+            <router-link to="/analysis" class="card-link">
               <span class="fliping-text">探索更多</span>
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" fill="currentColor"/>
