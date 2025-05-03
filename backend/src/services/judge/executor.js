@@ -45,8 +45,18 @@ class Executor {
       this.sandbox = await createSandbox(normalizedLanguage);
       await this.sandbox.init();
       
+      // 单独处理Java类名问题
+      let code = submission.code;
+      if (standardLanguage === 'java') {
+        // 检查是否有Main类
+        const hasMainClass = /public\s+class\s+Main\s*\{/.test(code);
+        if (hasMainClass) {
+          console.log('检测到Main类，保持原样提交');
+        }
+      }
+      
       if (standardLanguage === 'c' || standardLanguage === 'cpp') {
-        const compileResult = await this.sandbox.compile(submission.code, standardLanguage);
+        const compileResult = await this.sandbox.compile(code, standardLanguage);
         if (compileResult.error) {
           console.error('编译错误:', compileResult.error);
           return {
@@ -60,7 +70,7 @@ class Executor {
       for (const testCase of testCases) {
         console.log('执行测试用例:', testCase);
         
-        const result = await this.sandbox.run(submission.code, submission.language, testCase.input);
+        const result = await this.sandbox.run(code, submission.language, testCase.input);
         
         if (result.error) {
           return {
@@ -133,6 +143,21 @@ class Executor {
       
       // 支持C++的不同写法
       const standardLanguage = normalizedLanguage === 'c++' ? 'cpp' : normalizedLanguage;
+      
+      // 单独处理Java类名问题
+      if (standardLanguage === 'java') {
+        // 检查是否有Main类
+        const hasMainClass = /public\s+class\s+Main\s*\{/.test(code);
+        if (hasMainClass) {
+          console.log('检测到Main类，保持原样提交');
+        }
+        
+        // 检查任意public类
+        const classMatch = code.match(/public\s+class\s+(\w+)\s*\{/);
+        if (classMatch && classMatch[1]) {
+          console.log(`检测到公共类 ${classMatch[1]}，确保文件名匹配`);
+        }
+      }
       
       // 初始化沙箱
       this.sandbox = await createSandbox(normalizedLanguage);

@@ -14,6 +14,17 @@ router.post('/problems/:id/submit', async (req, res) => {
 
   console.log('收到判题请求:', { problemIdParam, language });
   
+  // 预处理代码，针对Java处理不同类名格式
+  let processedCode = code;
+  if (language.toLowerCase() === 'java') {
+    // 检查Java代码是否包含public类
+    const publicClassMatch = /public\s+class\s+(\w+)\s*\{/.test(code);
+    if (publicClassMatch) {
+      const className = RegExp.$1;
+      console.log(`检测到public类 ${className}`);
+    }
+  }
+  
   let connection;
   let sandbox;
   try {
@@ -83,7 +94,7 @@ router.post('/problems/:id/submit', async (req, res) => {
     // 3. 创建提交记录
     const [submission] = await connection.execute(
       'INSERT INTO submissions (user_id, problem_id, problem_number, code, language, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, actualProblemId, problems[0].problem_number, code, language, 'Pending']
+      [userId, actualProblemId, problems[0].problem_number, processedCode, language, 'Pending']
     );
     console.log('创建提交记录成功, ID:', submission.insertId);
 
@@ -91,7 +102,7 @@ router.post('/problems/:id/submit', async (req, res) => {
     console.log('开始判题...');
     const judgeResult = await submitCode({
       submissionId: submission.insertId,
-      code,
+      code: processedCode,
       language,
       problem: problems[0],
       testCases
@@ -385,8 +396,18 @@ router.post('/problems/:id/run', async (req, res) => {
     console.log('语言:', language);
     console.log('输入:', input);
 
-    // 使用新的调试执行方法
-    const result = await executor.executeDebug(code, language, input);
+    // 预处理Java代码
+    let processedCode = code;
+    if (language.toLowerCase() === 'java') {
+      // 检查是否包含public类
+      const publicClassMatch = code.match(/public\s+class\s+(\w+)\s*\{/);
+      if (publicClassMatch && publicClassMatch[1]) {
+        console.log(`检测到public类 ${publicClassMatch[1]}`);
+      }
+    }
+
+    // 使用执行器执行代码
+    const result = await executor.executeDebug(processedCode, language, input);
     console.log('调试执行结果:', result);
 
     if (result.status === 'error') {

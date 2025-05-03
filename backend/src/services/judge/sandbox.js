@@ -225,53 +225,90 @@ class Sandbox {
         }
       } else if (standardLanguage === 'java') {
         // 创建Java源文件和输入文件
-        const javaFile = `${this.workDir}/temp_${Date.now()}.java`;
+        
+        // 检查Java类名并确保文件名正确
+        let className = 'Solution'; // 默认类名
+        const classMatch = processedCode.match(/public\s+class\s+(\w+)\s*\{/);
+        if (classMatch && classMatch[1]) {
+          className = classMatch[1];
+          console.log(`从代码中提取到public类名: ${className}`);
+        }
+        
+        // 公共类必须与文件名一致
+        const javaFile = `${this.workDir}/${className}.java`;
+        console.log('Java文件路径:', javaFile);
+        
         const inputFile = `${this.workDir}/input.txt`;
+        
+        // 获取当前目录的存在性
+        await execCommand(`docker exec ${this.containerId} bash -c "mkdir -p ${this.workDir}"`);
+        
+        console.log('将Java代码写入容器:', javaFile);
         
         // 将代码写入容器
         const base64Code = Buffer.from(processedCode).toString('base64');
         await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Code}' | base64 -d > ${javaFile}"`);
+        console.log('Java代码已写入容器');
         
         // 将输入写入容器
         const base64Input = Buffer.from(input || '').toString('base64');
         await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Input}' | base64 -d > ${inputFile}"`);
-
+        console.log('输入已写入容器');
+        
         try {
-          // 使用专门的Java执行方法
-          result = await this.runJava(javaFile, inputFile);
+          // 在容器中编译Java代码
+          console.log(`编译Java文件: ${javaFile}`);
+          const compileCommand = `javac ${javaFile}`;
+          const compileResult = await execCommand(`docker exec ${this.containerId} ${compileCommand}`);
           
-          if (result.error) {
-            // 清理文件
-            try {
-              await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
-            } catch (e) {
-              console.error('清理文件失败:', e);
-            }
-            
+          if (compileResult.stderr) {
+            console.error('Java编译错误:', compileResult.stderr);
             return {
-              error: result.error
+              error: compileResult.stderr || '编译失败'
+            };
+          }
+          
+          // 获取Java文件所在目录，用于运行编译后的class文件
+          const javaDir = path.dirname(javaFile);
+          
+          // 在容器中运行Java代码
+          console.log(`运行Java类: ${className}, 目录: ${javaDir}`);
+          const runCommand = `cd ${javaDir} && cat ${inputFile} | java ${className}`;
+          console.log('运行命令:', runCommand);
+          
+          const { stdout, stderr } = await execCommand(`docker exec ${this.containerId} bash -c "${runCommand}"`);
+          
+          if (stderr) {
+            console.error('Java运行错误:', stderr);
+            return {
+              error: stderr || '运行时错误'
             };
           }
           
           // 获取内存使用情况
           const memory = await this.getMemoryUsage();
           
+          // 获取运行时间
+          const [seconds, nanoseconds] = process.hrtime(startTime);
+          const runtime = seconds * 1000 + nanoseconds / 1000000;
+          
           // 清理文件
-          await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
+          await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile} ${javaDir}/${className}.class`);
           
           return {
-            output: result.stdout,
-            runtime: result.runtime || 0,
+            output: stdout,
+            runtime,
             memory
           };
         } catch (error) {
+          console.error('Java执行失败:', error);
           // 清理文件
           try {
             await execCommand(`docker exec ${this.containerId} rm -f ${javaFile} ${inputFile}`);
           } catch (e) {
             console.error('清理文件失败:', e);
           }
-
+          
           return {
             error: error.message || '执行Java代码失败'
           };
@@ -385,19 +422,58 @@ class Sandbox {
 
   async runJava(javaFile, inputPath) {
     try {
-      // 复制Java文件到容器
-      const fileName = path.basename(javaFile);
-      const containerPath = `/app/${fileName}`;
-      await this.copyToContainer(javaFile, containerPath);
+      console.log('运行Java方法被调用，文件路径:', javaFile);
       
-      // 复制输入文件到容器
-      const inputFileName = path.basename(inputPath);
-      const containerInputPath = `/app/${inputFileName}`;
-      await this.copyToContainer(inputPath, containerInputPath);
+      // 首先确保文件存在
+      const checkFileCommand = `docker exec ${this.containerId} bash -c "if [ -f ${javaFile} ]; then echo 'exists'; else echo 'not_exists'; fi"`;
+      const { stdout: fileExists } = await execCommand(checkFileCommand);
+      
+      if (fileExists.trim() !== 'exists') {
+        console.error(`Java文件不存在: ${javaFile}`);
+        return {
+          error: `Java文件未找到: ${javaFile}`
+        };
+      }
+      
+      // 读取文件内容以确定类名
+      const { stdout: fileContent } = await execCommand(`docker exec ${this.containerId} bash -c "cat ${javaFile}"`);
+      
+      // 从源代码内容中提取类名
+      let className = 'Solution'; // 默认类名
+      const classMatch = fileContent.match(/public\s+class\s+(\w+)\s*\{/);
+      if (classMatch && classMatch[1]) {
+        className = classMatch[1];
+        console.log(`从Java文件中提取到类名: ${className}`);
+        
+        // 检查文件名是否和类名一致
+        const fileName = path.basename(javaFile);
+        const expectedFileName = `${className}.java`;
+        
+        if (fileName !== expectedFileName) {
+          console.log(`文件名 ${fileName} 与类名 ${className} 不一致，重命名文件`);
+          
+          // 创建新的文件
+          const javaDir = path.dirname(javaFile);
+          const correctJavaFile = `${javaDir}/${expectedFileName}`;
+          
+          // 将内容复制到新文件
+          const base64Content = Buffer.from(fileContent).toString('base64');
+          await execCommand(`docker exec ${this.containerId} bash -c "echo '${base64Content}' | base64 -d > ${correctJavaFile}"`);
+          
+          // 更新文件路径
+          javaFile = correctJavaFile;
+        }
+      } else {
+        console.log(`未找到公共类定义，使用默认类名: ${className}`);
+      }
+      
+      // 创建输入文件
+      console.log('准备输入数据');
+      await execCommand(`docker exec ${this.containerId} bash -c "if [ ! -f ${inputPath} ]; then touch ${inputPath}; fi"`);
       
       // 在容器中编译Java代码
-      console.log(`编译Java文件: ${fileName}`);
-      const compileCommand = `javac ${containerPath}`;
+      console.log(`编译Java文件: ${javaFile}`);
+      const compileCommand = `javac ${javaFile}`;
       const compileResult = await execCommand(`docker exec ${this.containerId} ${compileCommand}`);
       
       if (compileResult.stderr) {
@@ -406,23 +482,13 @@ class Sandbox {
         };
       }
       
-      // 获取Java文件内容
-      const fileContent = await fs.readFile(javaFile, 'utf8');
-      
-      // 尝试从文件内容中提取类名
-      let className = 'Solution'; // 默认使用Solution类名（与preprocessJavaCode方法中的默认类名一致）
-      const classMatch = fileContent.match(/\bclass\s+(\w+)\s*\{/);
-      if (classMatch && classMatch[1]) {
-        className = classMatch[1];
-        console.log(`从代码中提取到类名: ${className}`);
-      } else {
-        console.log(`未找到类定义，使用默认类名: ${className}`);
-      }
+      // 获取Java文件所在目录，用于运行编译后的class文件
+      const javaDir = path.dirname(javaFile);
       
       // 在容器中运行Java代码
-      console.log(`运行Java类: ${className}`);
+      console.log(`运行Java类: ${className}, 目录: ${javaDir}`);
       const { stdout, stderr } = await execCommand(
-        `docker exec ${this.containerId} bash -c "cat ${containerInputPath} | java -cp /app ${className}"`
+        `docker exec ${this.containerId} bash -c "cd ${javaDir} && cat ${inputPath} | java ${className}"`
       );
       
       if (stderr) {
@@ -440,6 +506,28 @@ class Sandbox {
       return {
         error: error.message || '执行Java代码失败'
       };
+    }
+  }
+  
+  // 帮助方法：将Java代码写入容器并返回内容
+  async writeJavaFileInContainer(javaFile) {
+    try {
+      // 查看容器是否已存在该文件
+      const checkFileCommand = `docker exec ${this.containerId} bash -c "if [ -f ${javaFile} ]; then echo 'exists'; else echo 'not_exists'; fi"`;
+      const { stdout: fileExists } = await execCommand(checkFileCommand);
+      
+      if (fileExists.trim() === 'exists') {
+        // 文件存在，获取内容
+        const { stdout } = await execCommand(`docker exec ${this.containerId} bash -c "cat ${javaFile}"`);
+        return stdout;
+      } else {
+        console.error(`Java文件不存在: ${javaFile}`);
+        // 返回文件不存在
+        return '';
+      }
+    } catch (error) {
+      console.error('检查Java文件失败:', error);
+      return ''; // 失败时返回空字符串
     }
   }
 
@@ -604,8 +692,15 @@ if __name__ == "__main__":
     
     // 如果没有类定义，添加类包装
     if (!hasClass) {
-      // 使用自动生成的临时文件名作为类名，确保匹配
-      const className = `Solution`;
+      // 提取类名 - 如果不存在就用Solution
+      let className = `Solution`;
+      // 检查提交代码中是否有自定义类名
+      const classNameMatch = processedCode.match(/\bclass\s+(\w+)\s*\{/);
+      if (classNameMatch && classNameMatch[1]) {
+        className = classNameMatch[1];
+        console.log(`从代码中提取到类名: ${className}`);
+      }
+      
       processedCode = `class ${className} {
     ${processedCode.replace(/^/gm, '    ')}
 }`;
