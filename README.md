@@ -8,7 +8,6 @@
 - **个性化学习路径**: 基于用户学习情况智能推荐学习路径
 - **多语言支持**: 支持多种编程语言的在线编程与评测
 - **实时反馈**: 提供即时的代码执行结果与改进建议
-- **社区互动**: 用户可分享代码、讨论解题思路
 - **课堂管理**: 支持教师创建课堂、布置作业和管理学生
 
 ## 项目结构
@@ -92,6 +91,320 @@ AIreview/
    - 前端：http://localhost
    - 后端API：http://localhost/api
    - 健康检查：http://localhost/health
+
+## 公网服务器部署指南 (Ubuntu 24.04)
+
+### 前置准备
+
+1. **准备一台公网服务器**
+   - 推荐配置：2核4G内存或更高
+   - 操作系统：Ubuntu 24.04 LTS
+   - 开放端口：80, 443, 3307（MySQL外部访问，可选）
+
+2. **域名配置（可选）**
+   - 将域名解析到服务器IP
+   - 配置HTTPS需要域名（可选）
+
+### 部署步骤
+
+1. **服务器环境初始化**
+   ```bash
+   # 更新系统
+   sudo apt update
+   sudo apt upgrade -y
+   
+   # 安装基础工具
+   sudo apt install -y git curl wget nano vim
+   ```
+
+2. **获取项目代码**
+   ```bash
+   # 克隆项目
+   git clone <仓库URL> AIreview
+   cd AIreview
+   
+   # 或者上传本地代码到服务器
+   # 在本地执行: scp -r /本地项目路径/AIreview user@服务器IP:~/
+   ```
+
+3. **配置防火墙**
+   ```bash
+   # 运行防火墙配置脚本
+   sudo chmod +x setup-firewall.sh
+   sudo ./setup-firewall.sh
+   ```
+
+4. **配置Docker权限**
+   ```bash
+   # 运行Docker权限修复脚本
+   sudo chmod +x fix-docker-permissions.sh
+   sudo ./fix-docker-permissions.sh
+   ```
+
+5. **部署项目**
+   ```bash
+   # 简化部署方式（推荐）
+   sudo chmod +x deploy-simple.sh
+   sudo ./deploy-simple.sh
+   
+   # 或者使用完整部署流程
+   sudo chmod +x prepare-server.sh
+   sudo ./prepare-server.sh
+   
+   sudo chmod +x fix-nginx-permissions.sh
+   sudo ./fix-nginx-permissions.sh
+   
+   sudo chmod +x start-containers.sh
+   sudo ./start-containers.sh
+   ```
+
+6. **前端构建**
+
+   如果在低配置服务器上直接构建前端会遇到内存不足问题，推荐在本地构建后上传：
+   ```bash
+   # 在本地构建前端
+   cd frontend
+   yarn install
+   yarn build
+   
+   # 打包前端文件
+   cd dist
+   tar -czf ../../dist.tar.gz *
+   cd ../..
+   
+   # 上传到服务器
+   scp dist.tar.gz user@服务器IP:~/AIreview/
+   
+   # 在服务器上解压
+   # 登录到服务器后执行:
+   cd ~/AIreview
+   mkdir -p frontend/dist
+   tar -xzf dist.tar.gz -C frontend/dist
+   ./fix-nginx-permissions.sh
+   ```
+
+   或使用项目自带的部署脚本：
+   ```bash
+   # 在本地执行
+   ./build-frontend.sh 服务器IP SSH端口
+   ```
+
+7. **验证部署**
+   ```bash
+   # 运行诊断脚本
+   sudo chmod +x diagnose.sh
+   sudo ./diagnose.sh
+   ```
+
+### 远程数据库管理
+
+1. **开放数据库远程连接**
+   ```bash
+   # 确保防火墙允许3307端口
+   sudo ufw allow 3307/tcp
+   
+   # 登录MySQL创建远程用户
+   docker exec -it aireview-db mysql -uroot -proot
+   
+   # 在MySQL中执行
+   CREATE USER 'remote'@'%' IDENTIFIED BY '你的密码';
+   GRANT ALL PRIVILEGES ON AIreview.* TO 'remote'@'%';
+   FLUSH PRIVILEGES;
+   exit;
+   ```
+
+2. **使用客户端连接**
+   - 主机: 服务器IP
+   - 端口: 3307
+   - 用户名: remote（或其他创建的用户）
+   - 密码: 你设置的密码
+   - 数据库: AIreview
+
+3. **数据库备份与恢复**
+
+   创建自动备份脚本：
+   ```bash
+   cat > db-backup.sh << 'EOF'
+   #!/bin/bash
+   
+   # 设置备份目录
+   BACKUP_DIR=~/db_backups
+   mkdir -p $BACKUP_DIR
+   
+   # 备份文件名（使用日期）
+   BACKUP_FILE=$BACKUP_DIR/aireview_$(date +%Y%m%d_%H%M%S).sql
+   
+   # 执行备份
+   echo "开始备份数据库..."
+   docker exec aireview-db mysqldump -u root -proot AIreview > $BACKUP_FILE
+   
+   # 压缩备份
+   gzip $BACKUP_FILE
+   
+   # 保留最近30天的备份，删除更早的
+   find $BACKUP_DIR -name "aireview_*.sql.gz" -type f -mtime +30 -delete
+   
+   echo "数据库备份完成: ${BACKUP_FILE}.gz"
+   EOF
+   
+   chmod +x db-backup.sh
+   ```
+
+   设置定时备份：
+   ```bash
+   # 编辑crontab
+   crontab -e
+   
+   # 添加每天凌晨2点备份的任务
+   0 2 * * * ~/AIreview/db-backup.sh >> ~/db_backup.log 2>&1
+   ```
+
+   恢复数据库：
+   ```bash
+   cat > db-restore.sh << 'EOF'
+   #!/bin/bash
+   
+   if [ $# -ne 1 ]; then
+     echo "用法: $0 备份文件.sql[.gz]"
+     exit 1
+   fi
+   
+   BACKUP_FILE=$1
+   
+   # 处理压缩文件
+   if [[ $BACKUP_FILE == *.gz ]]; then
+     echo "解压备份文件..."
+     gunzip -c $BACKUP_FILE > /tmp/restore.sql
+     BACKUP_FILE=/tmp/restore.sql
+   fi
+   
+   echo "停止容器..."
+   docker-compose down
+   
+   echo "启动数据库容器..."
+   docker-compose up -d db
+   
+   echo "等待数据库启动..."
+   sleep 20
+   
+   echo "恢复数据..."
+   cat $BACKUP_FILE | docker exec -i aireview-db mysql -u root -proot AIreview
+   
+   echo "启动其他服务..."
+   docker-compose up -d
+   
+   echo "数据库恢复完成！"
+   EOF
+   
+   chmod +x db-restore.sh
+   ```
+
+### 更新与维护
+
+1. **代码更新流程**
+   ```bash
+   # 在服务器上
+   cd ~/AIreview
+   git pull  # 拉取最新代码
+   
+   # 如果更新了后端代码
+   docker-compose restart backend
+   
+   # 如果需要重新构建前端
+   # 推荐在本地构建后上传
+   ./deploy-to-server.sh  # 在本地执行
+   ```
+
+2. **日志管理**
+   ```bash
+   # 查看容器日志
+   docker-compose logs -f
+   
+   # 查看特定容器日志
+   docker logs aireview-nginx
+   docker logs aireview-backend
+   docker logs aireview-db
+   
+   # 管理日志级别
+   chmod +x log-manager.sh
+   ./log-manager.sh
+   ```
+
+3. **性能监控**
+   ```bash
+   # 检查容器资源使用
+   docker stats
+   
+   # 系统资源监控
+   htop  # 如需安装: sudo apt install htop
+   ```
+
+### 常见问题解决
+
+1. **Nginx容器显示为unhealthy**
+
+   可能原因：
+   - 健康检查接口未正确配置
+   - wget工具未安装
+
+   解决方案：
+   ```bash
+   # 创建修复脚本
+   cat > fix-health.sh << 'EOF'
+   #!/bin/bash
+   echo "正在修复Nginx健康检查..."
+   
+   # 检查健康检查路径是否配置
+   if grep -q "location /health" ./nginx/default.conf; then
+     echo "健康检查路径已配置"
+   else
+     echo "添加健康检查路径到Nginx配置..."
+     sed -i '/server {/a \    # 健康检查接口\n    location /health {\n        return 200 '"'"'ok'"'"';\n        add_header Content-Type text/plain;\n    }' ./nginx/default.conf
+   fi
+   
+   # 安装wget
+   docker exec aireview-nginx apk add --no-cache wget
+   
+   # 重启Nginx容器
+   docker restart aireview-nginx
+   
+   echo "健康检查修复完成。"
+   EOF
+   
+   chmod +x fix-health.sh
+   ./fix-health.sh
+   ```
+
+2. **前端构建内存不足**
+
+   解决方案：
+   - 增加交换空间：
+     ```bash
+     sudo fallocate -l 2G /swapfile
+     sudo chmod 600 /swapfile
+     sudo mkswap /swapfile
+     sudo swapon /swapfile
+     echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+     ```
+   - 使用本地构建并上传
+   - 修改构建参数：
+     ```bash
+     # 增加Node内存限制
+     export NODE_OPTIONS="--max-old-space-size=1024"
+     ```
+
+3. **Docker网络问题**
+
+   解决方案：
+   ```bash
+   # 重建网络
+   docker network rm aireview_network
+   docker network create --driver bridge aireview_network
+   
+   # 重启容器
+   docker-compose down
+   docker-compose up -d
+   ```
 
 ### 开发模式(针对MacOS系统)
 
@@ -247,13 +560,12 @@ chmod +x log-manager.sh
 
 - 管理员账号：admin
 - 密码：admin123
+- 更多账号 [参考预设账号汇总表](./docs/accounts.md)
 
 ## 项目文档
 
 更多详细信息请查看项目文档目录：
-- 架构设计：`docs/architecture.md`
 - API文档：`project_information/api_information/`
-- 部署指南：`docker-deployment-guide.md`
 - 技术规范：`project_information/`
 
 ## 技术支持
