@@ -84,16 +84,16 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const menuItems = ref([
-  { name: '系统首页', path: '/admin/dashboard', icon: 'fas fa-home' },
+  { name: '系统统计', path: '/admin/dashboard', icon: 'fas fa-home' },
+  { name: '数据概览', path: '/admin/statistics', icon: 'fas fa-chart-bar' },
   { name: '用户管理', path: '/admin/users', icon: 'fas fa-users', hideForRoles: ['teacher'] }, // 老师不能访问
   { name: '题目管理', path: '/admin/problems', icon: 'fas fa-tasks' },
-  // { name: '社区管理', path: '/admin/community', icon: 'fas fa-comments' },
   { name: '学生管理', path: '/admin/students', icon: 'fas fa-user-graduate' },
-  { name: '课堂管理', path: '/admin/classrooms', icon: 'fas fa-chalkboard-teacher' },
-  { name: '学习计划', path: '/admin/learning-plans', icon: 'fas fa-road', hideForRoles: ['teacher'] }, // 老师不能访问
-  { name: '数据统计', path: '/admin/statistics', icon: 'fas fa-chart-bar' },
-  { name: '埋点分析', path: '/admin/analytics-dashboard', icon: 'fas fa-chart-line', hideForRoles: ['teacher'] }, // 老师不能访问
+  { name: '计划管理', path: '/admin/learning-plans', icon: 'fas fa-road', hideForRoles: ['teacher'] }, // 老师不能访问
   { name: '系统设置', path: '/admin/settings', icon: 'fas fa-cog' }
+  // { name: '社区管理', path: '/admin/community', icon: 'fas fa-comments' },
+  // { name: '课堂管理', path: '/admin/classrooms', icon: 'fas fa-chalkboard-teacher' },
+  // { name: '埋点分析', path: '/admin/analytics-dashboard', icon: 'fas fa-chart-line', hideForRoles: ['teacher'] }, // 老师不能访问
 ])
 
 // 获取当前用户角色
