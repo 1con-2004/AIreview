@@ -291,7 +291,7 @@ router.patch('/user-profile', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
     const userId = req.user.id;
-    const { username, email, displayName, gender, location, bio } = req.body;
+    const { email, displayName, gender, location, bio } = req.body;
     
     console.log(`[INFO] [${new Date().toISOString()}] 更新用户资料请求，用户ID: ${userId}`);
     console.log(`[INFO] [${new Date().toISOString()}] 请求数据:`, req.body);
@@ -299,62 +299,29 @@ router.patch('/user-profile', authenticateToken, async (req, res) => {
     // 开始事务
     await connection.beginTransaction();
     
-    // 1. 更新users表中的字段(用户名和邮箱)
-    if (username || email) {
-      // 检查用户名唯一性
-      if (username) {
-        const [usernameCheck] = await connection.query(
-          'SELECT id FROM users WHERE username = ? AND id != ?',
-          [username, userId]
-        );
-        
-        if (usernameCheck.length > 0) {
-          await connection.rollback();
-          return res.status(400).json({ 
-            success: false,
-            message: '用户名已存在' 
-          });
-        }
-      }
-      
+    // 1. 更新users表中的邮箱字段
+    if (email) {
       // 检查邮箱唯一性
-      if (email) {
-        const [emailCheck] = await connection.query(
-          'SELECT id FROM users WHERE email = ? AND id != ?',
-          [email, userId]
-        );
-        
-        if (emailCheck.length > 0) {
-          await connection.rollback();
-          return res.status(400).json({ 
-            success: false,
-            message: '邮箱已被使用' 
-          });
-        }
+      const [emailCheck] = await connection.query(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, userId]
+      );
+      
+      if (emailCheck.length > 0) {
+        await connection.rollback();
+        return res.status(400).json({ 
+          success: false,
+          message: '邮箱已被使用' 
+        });
       }
       
-      // 构建更新语句
-      let updateUserSql = 'UPDATE users SET ';
-      const updateUserParams = [];
+      // 更新邮箱
+      await connection.query(
+        'UPDATE users SET email = ? WHERE id = ?',
+        [email, userId]
+      );
       
-      if (username) {
-        updateUserSql += 'username = ?, ';
-        updateUserParams.push(username);
-      }
-      
-      if (email) {
-        updateUserSql += 'email = ?, ';
-        updateUserParams.push(email);
-      }
-      
-      // 移除最后的逗号和空格
-      updateUserSql = updateUserSql.slice(0, -2);
-      
-      updateUserSql += ' WHERE id = ?';
-      updateUserParams.push(userId);
-      
-      await connection.query(updateUserSql, updateUserParams);
-      console.log(`[INFO] [${new Date().toISOString()}] 已更新users表`);
+      console.log(`[INFO] [${new Date().toISOString()}] 已更新users表的email字段`);
     }
     
     // 2. 更新user_profile表中的字段
@@ -435,9 +402,14 @@ router.patch('/user-profile', authenticateToken, async (req, res) => {
     // 提交事务
     await connection.commit();
     
-    // 查询最新用户名和邮箱，返回给前端
+    // 查询最新邮箱和显示名称，返回给前端
     const [userRow] = await connection.query(
-      'SELECT username, email FROM users WHERE id = ?', 
+      'SELECT email FROM users WHERE id = ?', 
+      [userId]
+    );
+    
+    const [profileRow] = await connection.query(
+      'SELECT display_name FROM user_profile WHERE user_id = ?',
       [userId]
     );
     
@@ -446,8 +418,8 @@ router.patch('/user-profile', authenticateToken, async (req, res) => {
       success: true,
       message: '更新成功',
       data: {
-        username: userRow[0].username,
-        email: userRow[0].email
+        email: userRow[0].email,
+        displayName: profileRow.length > 0 ? profileRow[0].display_name : null
       }
     });
   } catch (error) {

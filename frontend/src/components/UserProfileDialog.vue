@@ -34,19 +34,19 @@
 
           <!-- 用户名 -->
           <div class="field">
-            <label>用户名</label>
+            <label>显示名称</label>
             <div class="p-inputgroup">
               <InputText
-                v-model="userData.username"
-                :disabled="!isCurrentUser || loading.username"
+                v-model="userData.displayName"
+                :disabled="!isCurrentUser || loading.displayName"
                 class="w-full"
-                placeholder="设置用户名"
+                placeholder="设置显示名称"
               />
               <Button
                 v-if="isCurrentUser"
                 icon="pi pi-check"
-                :loading="loading.username"
-                @click="handleSave('username')"
+                :loading="loading.displayName"
+                @click="handleSave('displayName')"
               />
             </div>
           </div>
@@ -167,10 +167,9 @@ export default {
     // 用户数据
     const userData = reactive({
       userId: '',
-      username: '',
+      displayName: '',
       email: '',
       avatarUrl: '/uploads/avatars/default-avatar.png',
-      displayName: '',
       gender: '',
       location: '',
       bio: ''
@@ -179,9 +178,8 @@ export default {
     // 加载状态
     const loading = reactive({
       profile: false,
-      username: false,
-      email: false,
       displayName: false,
+      email: false,
       gender: false,
       location: false,
       bio: false,
@@ -214,10 +212,9 @@ export default {
 
           // 更新用户数据
           userData.userId = data.userId // 从nickname获取
-          userData.username = data.username // 从display_name获取
+          userData.displayName = data.displayName // 从display_name获取
           userData.email = data.email
           userData.avatarUrl = data.avatarUrl
-          userData.displayName = data.displayName
           userData.gender = data.gender
           userData.location = data.location
           userData.bio = data.bio
@@ -322,11 +319,11 @@ export default {
       try {
         const response = await axios.patch('/api/user/user-profile', data)
         if (response.data.success) {
-          // 如果更新了用户名或邮箱，更新Vuex状态
-          if (field === 'username' || field === 'email') {
+          // 如果更新了邮箱，更新Vuex状态
+          if (field === 'email') {
             store.commit('setUser', {
               ...store.state.user,
-              [field]: response.data.data[field]
+              email: response.data.data.email
             })
           }
           toast.add({
