@@ -90,7 +90,7 @@ const menuItems = ref([
   { name: '题目管理', path: '/admin/problems', icon: 'fas fa-tasks' },
   { name: '学生管理', path: '/admin/students', icon: 'fas fa-user-graduate' },
   { name: '计划管理', path: '/admin/learning-plans', icon: 'fas fa-road', hideForRoles: ['teacher'] }, // 老师不能访问
-  { name: '系统设置', path: '/admin/settings', icon: 'fas fa-cog' }
+  // { name: '系统设置', path: '/admin/settings', icon: 'fas fa-cog' }
   // { name: '社区管理', path: '/admin/community', icon: 'fas fa-comments' },
   // { name: '课堂管理', path: '/admin/classrooms', icon: 'fas fa-chalkboard-teacher' },
   // { name: '埋点分析', path: '/admin/analytics-dashboard', icon: 'fas fa-chart-line', hideForRoles: ['teacher'] }, // 老师不能访问
