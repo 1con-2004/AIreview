@@ -11,6 +11,12 @@ const dbConfig = require('../../config/db');
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../../config/jwt');
 
+// 导入 profile 路由模块
+const profileRouter = require('./profile');
+
+// 使用 profile 路由
+router.use('/', profileRouter);
+
 // 配置文件上传
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

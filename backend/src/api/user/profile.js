@@ -367,4 +367,79 @@ router.get('/problems', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * 修改用户密码
+ * 需要验证原密码，成功后更新为新密码
+ */
+router.post('/update-password', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+    
+    // 参数验证
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: '原密码和新密码不能为空'
+      });
+    }
+    
+    // 判断新旧密码是否相同
+    if (oldPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: '新密码不能与原密码相同'
+      });
+    }
+    
+    // 查询用户信息，获取当前密码
+    const [users] = await db.query(
+      'SELECT password FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+    
+    const user = users[0];
+    
+    // 验证原密码
+    const bcrypt = require('bcrypt');
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: '原密码错误'
+      });
+    }
+    
+    // 加密新密码
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    
+    // 更新密码
+    await db.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [hashedPassword, userId]
+    );
+    
+    return res.json({
+      success: true,
+      message: '密码修改成功'
+    });
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    return res.status(500).json({
+      success: false,
+      message: '修改密码失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 

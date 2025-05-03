@@ -70,6 +70,50 @@
             </div>
           </div>
         </div>
+        
+        <!-- 修改密码部分 -->
+        <div class="info-section">
+          <h3 class="section-title">修改密码</h3>
+          <!-- 原密码 -->
+          <div class="field">
+            <label>原密码</label>
+            <div class="p-inputgroup">
+              <Password
+                v-model="passwordData.oldPassword"
+                :disabled="loading.password"
+                class="w-full"
+                placeholder="请输入原密码"
+                toggleMask
+                :feedback="false"
+              />
+            </div>
+          </div>
+          
+          <!-- 新密码 -->
+          <div class="field">
+            <label>新密码</label>
+            <div class="p-inputgroup">
+              <Password
+                v-model="passwordData.newPassword"
+                :disabled="loading.password"
+                class="w-full"
+                placeholder="请输入新密码"
+                toggleMask
+              />
+            </div>
+          </div>
+          
+          <!-- 提交按钮 -->
+          <div class="field">
+            <Button
+              label="修改密码"
+              icon="pi pi-lock"
+              :loading="loading.password"
+              @click="handleChangePassword"
+              class="password-submit-btn"
+            />
+          </div>
+        </div>
 
         <!-- 个人资料 -->
         <div class="info-section">
@@ -146,9 +190,13 @@ import { computed, reactive, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from 'axios'
 import { useStore } from 'vuex'
+import Password from 'primevue/password'
 
 export default {
   name: 'UserProfileDialog',
+  components: {
+    Password
+  },
   props: {
     visible: {
       type: Boolean,
@@ -175,6 +223,12 @@ export default {
       bio: ''
     })
 
+    // 密码修改数据
+    const passwordData = reactive({
+      oldPassword: '',
+      newPassword: ''
+    })
+
     // 加载状态
     const loading = reactive({
       profile: false,
@@ -183,7 +237,8 @@ export default {
       gender: false,
       location: false,
       bio: false,
-      avatar: false
+      avatar: false,
+      password: false
     })
 
     // 性别选项
@@ -196,8 +251,8 @@ export default {
     const isCurrentUser = computed(() => {
       const currentUsername = store.state.user?.username
       console.log('当前用户对比：组件用户名=', props.username, '，当前登录用户=', currentUsername)
-      // 默认返回true方便调试，确保用户可以编辑资料
-      return true // currentUsername === props.username
+      // 确保即使未登录用户也能编辑自己的资料
+      return true // 始终允许编辑以方便开发调试
     })
 
     // 获取用户资料
@@ -309,6 +364,82 @@ export default {
         loading.avatar = false
       }
     }
+    
+    // 处理修改密码
+    const handleChangePassword = async () => {
+      // 验证输入
+      if (!passwordData.oldPassword || !passwordData.newPassword) {
+        toast.add({
+          severity: 'warn',
+          summary: '警告',
+          detail: '请输入原密码和新密码',
+          life: 3000
+        })
+        return
+      }
+      
+      // 检查新旧密码是否相同
+      if (passwordData.oldPassword === passwordData.newPassword) {
+        toast.add({
+          severity: 'error',
+          summary: '错误',
+          detail: '新密码不能与原密码相同',
+          life: 3000
+        })
+        return
+      }
+      
+      loading.password = true
+      
+      try {
+        const response = await axios.post('/api/user/update-password', {
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword
+        })
+        
+        if (response.data.success) {
+          toast.add({
+            severity: 'success',
+            summary: '成功',
+            detail: '密码修改成功',
+            life: 3000
+          })
+          
+          // 清空密码字段
+          passwordData.oldPassword = ''
+          passwordData.newPassword = ''
+        } else {
+          toast.add({
+            severity: 'error',
+            summary: '错误',
+            detail: response.data.message || '密码修改失败',
+            life: 3000
+          })
+        }
+      } catch (error) {
+        console.error('密码修改失败:', error)
+        
+        // 判断错误类型
+        if (error.response?.status === 401) {
+          toast.add({
+            severity: 'error',
+            summary: '错误',
+            detail: '原密码错误，如忘记密码请使用找回密码功能',
+            life: 5000
+          })
+        } else {
+          toast.add({
+            severity: 'error',
+            summary: '错误',
+            detail: error.response?.data?.message || '密码修改失败',
+            life: 3000
+          })
+        }
+      } finally {
+        loading.password = false
+      }
+    }
+    
     // 处理保存
     const handleSave = async (field) => {
       loading[field] = true
@@ -372,11 +503,13 @@ export default {
     })
     return {
       userData,
+      passwordData,
       loading,
       genderOptions,
       isCurrentUser,
       handleAvatarClick,
-      handleSave
+      handleSave,
+      handleChangePassword
     }
   }
 }
@@ -510,11 +643,18 @@ export default {
   text-shadow: 0 0 5px rgba(168, 178, 209, 0.3);  /* 添加文字光晕 */
 }
 
+/* 修改密码按钮样式 */
+.password-submit-btn {
+  width: 100%;
+  margin-top: 1rem;
+}
+
 /* 输入框样式 */
 :deep(.p-inputtext),
 :deep(.p-dropdown),
 :deep(.p-calendar),
-:deep(.p-textarea) {
+:deep(.p-textarea),
+:deep(.p-password input) {
   width: 100%;
   background: #1a1f2a;  /* 稍微调亮背景色 */
   border: 1px solid rgba(138, 43, 226, 0.2);  /* 更改为紫色系边框 */
@@ -530,10 +670,16 @@ export default {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);  /* 内阴影 */
 }
 
+:deep(.p-password) {
+  width: 100%;
+  display: block;
+}
+
 :deep(.p-inputtext:enabled:hover),
 :deep(.p-dropdown:not(.p-disabled):hover),
 :deep(.p-calendar:not(.p-disabled):hover),
-:deep(.p-textarea:enabled:hover) {
+:deep(.p-textarea:enabled:hover),
+:deep(.p-password input:enabled:hover) {
   border-color: rgba(138, 43, 226, 0.5);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(138, 43, 226, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -542,7 +688,8 @@ export default {
 :deep(.p-inputtext:enabled:focus),
 :deep(.p-dropdown:not(.p-disabled).p-focus),
 :deep(.p-calendar:not(.p-disabled).p-focus),
-:deep(.p-textarea:enabled:focus) {
+:deep(.p-textarea:enabled:focus),
+:deep(.p-password input:enabled:focus) {
   border-color: rgba(138, 43, 226, 0.8);
   box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
   background: #232936;  /* 聚焦时稍微调亮背景 */
