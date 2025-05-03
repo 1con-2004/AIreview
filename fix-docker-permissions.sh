@@ -1,15 +1,23 @@
 #!/bin/bash
 
-# Docker权限修复脚本
+# Docker权限修复脚本 (Ubuntu 24.04)
 # 解决Docker容器无法访问Docker守护进程的问题
 
-echo "===== Docker权限修复脚本 ====="
+echo "===== Docker权限修复脚本 (Ubuntu 24.04) ====="
 
 # 检查是否以root权限运行
 if [ "$(id -u)" != "0" ]; then
    echo "此脚本需要root权限，请使用sudo运行"
    echo "用法: sudo $0"
    exit 1
+fi
+
+# 检查Docker是否已安装
+if ! command -v docker &> /dev/null; then
+  echo "Docker未安装，正在安装..."
+  apt-get update
+  apt-get install -y docker.io docker-compose
+  echo "Docker已安装"
 fi
 
 # 检查Docker服务是否运行

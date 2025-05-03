@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "======================"
-echo "AIreview服务器诊断工具"
+echo "AIreview服务器诊断工具 (Ubuntu 24.04)"
 echo "======================"
 
 # 检查系统信息
@@ -73,11 +73,11 @@ curl -s http://localhost/health || echo "Nginx健康检查失败"
 echo ""
 
 echo "防火墙状态："
-systemctl status firewalld | grep Active
+ufw status | grep Status
 echo ""
 
 echo "开放端口："
-firewall-cmd --list-ports
+ufw status | grep -E '(80|443|3307)'
 echo ""
 
 # 提供修复建议
@@ -120,8 +120,8 @@ echo "   chmod -R 777 ./backend/logs"
 
 # 防火墙建议
 echo "7. 确保防火墙已开放80端口："
-echo "   firewall-cmd --zone=public --add-port=80/tcp --permanent"
-echo "   firewall-cmd --reload"
+echo "   sudo ufw allow 80/tcp"
+echo "   sudo ufw reload"
 
 echo ""
 echo "执行完整修复，请运行："

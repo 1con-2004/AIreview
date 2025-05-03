@@ -1,8 +1,18 @@
 #!/bin/bash
 
 echo "======================"
-echo "AIreview简化部署脚本"
+echo "AIreview简化部署脚本 (Ubuntu 24.04)"
 echo "======================"
+
+# 检查Docker是否已安装
+if ! command -v docker &> /dev/null; then
+  echo "Docker未安装，正在安装..."
+  apt-get update
+  apt-get install -y docker.io docker-compose
+  echo "Docker已安装，启动服务..."
+  systemctl start docker
+  systemctl enable docker
+fi
 
 # 检查前端文件是否存在
 echo "检查前端文件..."
@@ -99,7 +109,7 @@ echo "您可以通过以下地址访问您的应用:"
 echo -e "http://$SERVER_IP\n"
 echo -e "===============================\n"
 echo "如果仍然无法访问，请尝试以下操作:"
-echo "1. 确保80端口已开放: firewall-cmd --zone=public --add-port=80/tcp --permanent && firewall-cmd --reload"
+echo "1. 确保80端口已开放: sudo ufw allow 80/tcp"
 echo "2. 手动重启容器: docker restart aireview-nginx aireview-backend aireview-db"
 echo "3. 检查容器日志: docker logs aireview-nginx"
 echo -e "===============================\n" 

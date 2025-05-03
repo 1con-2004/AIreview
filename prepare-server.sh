@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "======================"
-echo "AIreview部署环境检查与修复"
+echo "AIreview部署环境检查与修复 (Ubuntu 24.04)"
 echo "======================"
 
 # 修复Docker网络问题
@@ -94,6 +94,6 @@ echo -e "===============================\n"
 echo "如果仍然无法访问，请检查服务器防火墙设置:"
 echo "1. 确保80端口已开放"
 echo "2. 执行以下命令开放端口:"
-echo "   firewall-cmd --zone=public --add-port=80/tcp --permanent"
-echo "   firewall-cmd --reload"
+echo "   sudo ufw allow 80/tcp"
+echo "   sudo ufw reload"
 echo -e "===============================\n" 

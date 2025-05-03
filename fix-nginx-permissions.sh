@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 修复Nginx容器的文件权限
-echo "正在修复Nginx容器的文件权限..."
+# 修复Nginx容器的文件权限 (Ubuntu 24.04)
+echo "正在修复Nginx容器的文件权限 (Ubuntu 24.04)..."
 
 # 确保前端构建文件存在
 if [ ! -d "./frontend/dist" ]; then
@@ -25,6 +25,9 @@ echo "设置文件权限..."
 chmod -R 755 ./frontend/dist
 chmod -R 755 ./uploads
 chmod -R 777 ./uploads/avatars
+
+# 确保Docker在运行
+systemctl is-active --quiet docker || systemctl start docker
 
 # 重启Nginx容器
 echo "重启Nginx容器..."
