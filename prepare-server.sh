@@ -62,19 +62,19 @@ sleep 10
 
 # 验证容器是否正常运行
 echo "验证容器是否正常运行..."
-if ! docker ps | grep -q "aireview-nginx"; then
+if ! docker ps | grep -q "nginx"; then
   echo "Nginx容器未正常运行"
   docker logs aireview-nginx
   exit 1
 fi
 
-if ! docker ps | grep -q "aireview-backend"; then
+if ! docker ps | grep -q "backend"; then
   echo "后端容器未正常运行"
   docker logs aireview-backend
   exit 1
 fi
 
-if ! docker ps | grep -q "aireview-db"; then
+if ! docker ps | grep -q "db"; then
   echo "数据库容器未正常运行"
   docker logs aireview-db
   exit 1
