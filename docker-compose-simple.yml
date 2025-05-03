@@ -1,0 +1,103 @@
+services:
+  # Nginx服务
+  nginx:
+    container_name: aireview-nginx
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/dist:/usr/share/nginx/html
+      # 直接使用前端public目录中的图标，不使用dist目录中的，避免权限问题
+      - ./frontend/public/icons:/usr/share/nginx/html/icons:rw
+      # 添加上传文件目录挂载，确保Nginx可以直接访问
+      - ./uploads:/usr/share/nginx/html/uploads:rw
+      # 确保avatars目录也能正确挂载
+      - ./uploads/avatars:/usr/share/nginx/html/uploads/avatars:rw
+    depends_on:
+      - backend
+    networks:
+      - aireview_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 后端服务
+  backend:
+    container_name: aireview-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: aireview-backend:latest
+    volumes:
+      - ./backend:/app:rw
+      - backend_modules:/app/node_modules
+      - ./backend/logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./uploads:/app/public/uploads
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=AIreview
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - JUDGE_NETWORK=aireview_network
+      - CHOKIDAR_USEPOLLING=true
+      # 添加DeepSeek相关配置
+      - DEEPSEEK_API_KEY=sk-b593d34ca1f24fc6a8c66c216de03399
+      - DEEPSEEK_API_URL=https://api.deepseek.com/chat/completions
+      - DEEPSEEK_BALANCE_URL=https://api.deepseek.com/user/balance
+      - DEEPSEEK_MODELS_URL=https://api.deepseek.com/models
+    privileged: true
+    depends_on:
+      - db
+    networks:
+      - aireview_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', res => (res.statusCode === 200 ? process.exit(0) : process.exit(1)))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 数据库服务
+  db:
+    container_name: aireview-db
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_allowed_packet=128M --default-time-zone='+8:00'
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=AIreview
+      - MYSQL_USER=aireview
+      - MYSQL_PASSWORD=aireview
+      - TZ=Asia/Shanghai
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    networks:
+      - aireview_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 60s
+
+networks:
+  aireview_network:
+    name: aireview_network
+    driver: bridge
+
+volumes:
+  db_data:
+    name: aireview_db_data
+  backend_modules:
+    name: aireview_backend_modules 
