@@ -345,13 +345,43 @@ export default {
         })
 
         // 更新头像
-        userData.avatarUrl = response.data.avatar_url.replace('public', '')
+        userData.avatarUrl = response.data.avatar_url.replace('public/', '')
         toast.add({
           severity: 'success',
           summary: '成功',
           detail: '头像上传成功',
           life: 3000
         })
+        
+        // 更新localStorage中的用户信息
+        try {
+          const userInfoStr = localStorage.getItem('userInfo')
+          if (userInfoStr) {
+            const userInfo = JSON.parse(userInfoStr)
+            userInfo.avatar_url = response.data.avatar_url
+            localStorage.setItem('userInfo', JSON.stringify(userInfo))
+            console.log('已更新localStorage中的头像URL:', response.data.avatar_url)
+          }
+        } catch (error) {
+          console.error('更新localStorage中用户头像失败:', error)
+        }
+        
+        // 触发头像更新事件，通知导航栏组件
+        window.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+          detail: { avatarUrl: response.data.avatar_url }
+        }))
+        console.log('已触发头像更新事件:', response.data.avatar_url)
+        
+        // 更新Vuex状态(如果使用)
+        try {
+          store.commit('setUser', {
+            ...store.state.user,
+            avatar_url: response.data.avatar_url
+          })
+          console.log('已更新Vuex中的头像URL')
+        } catch (error) {
+          console.error('更新Vuex中用户头像失败:', error)
+        }
       } catch (error) {
         console.error('头像上传失败:', error)
         toast.add({

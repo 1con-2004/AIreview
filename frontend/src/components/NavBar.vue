@@ -146,6 +146,13 @@ const getFullAvatarUrl = (url) => {
     console.log('处理public/前缀头像，结果:', `/${realPath}?t=${Date.now()}`)
     return `/${realPath}?t=${Date.now()}`
   }
+  
+  // 处理以public/uploads开头的路径
+  if (url.includes('public/uploads/avatars/')) {
+    const fileName = url.split('/').pop()
+    console.log('从public/uploads/avatars/获取文件名:', fileName)
+    return `/uploads/avatars/${fileName}?t=${Date.now()}`
+  }
 
   // 如果url包含uploads/avatars，构建完整URL
   if (url.includes('uploads/avatars/')) {
@@ -280,9 +287,31 @@ const checkLoginStatus = async () => {
 } */
 
 // 使用防抖函数包装checkLoginStatus
-const debouncedCheckLoginStatus = debounce(async () => {
+const debouncedCheckLoginStatus = debounce(async (event) => {
   console.log('执行防抖后的登录状态检查')
-  await checkLoginStatus()
+  
+  // 检查事件是否包含头像URL信息
+  if (event && event.detail && event.detail.avatarUrl) {
+    console.log('从事件中获取到新头像URL:', event.detail.avatarUrl)
+    
+    // 更新组件中的头像URL
+    avatarUrl.value = getFullAvatarUrl(event.detail.avatarUrl)
+    
+    // 更新会话存储中的头像URL
+    try {
+      const sessionUserInfo = sessionStorageManager.getUserInfo()
+      if (sessionUserInfo) {
+        sessionUserInfo.avatar_url = event.detail.avatarUrl
+        sessionStorageManager.saveUserInfo(sessionUserInfo)
+        console.log('已更新会话存储中的头像URL')
+      }
+    } catch (error) {
+      console.error('更新会话存储中的头像URL失败:', error)
+    }
+  } else {
+    // 如果事件中没有头像信息，则执行常规的登录状态检查
+    await checkLoginStatus()
+  }
 }, 300)
 
 const openUserProfileDialog = () => {
@@ -640,17 +669,8 @@ onMounted(() => {
 
   console.log('初始同步完成，登录状态:', isLoggedIn.value, '用户名:', username.value)
 
-  // 监听头像更新事件，使用防抖函数避免频繁调用
-  window.addEventListener('userAvatarUpdated', debouncedCheckLoginStatus)
-
-  // 监听用户信息变更事件，直接同步状态而不是仅检查一致性
-  window.addEventListener('userInfoChanged', userInfoChangeHandler)
-
-  // 监听存储变化事件
-  window.addEventListener('storage', storageChangeHandler)
-
-  // 添加页面刷新前检测
-  window.addEventListener('beforeunload', beforeUnloadHandler)
+  // 设置事件监听
+  setupEventListeners()
 
   // 添加全局方法以强制重新加载
   window.forceReloadUserInfo = () => {
@@ -704,7 +724,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   // 移除事件监听
-  window.removeEventListener('userAvatarUpdated', debouncedCheckLoginStatus)
+  window.removeEventListener('userAvatarUpdated', handleAvatarUpdated)
   window.removeEventListener('userInfoChanged', userInfoChangeHandler)
   window.removeEventListener('storage', storageChangeHandler)
   window.removeEventListener('beforeunload', beforeUnloadHandler)
@@ -908,6 +928,27 @@ const beforeUnloadHandler = () => {
     console.log('页面即将刷新，保存当前用户状态:', username.value)
     sessionStorage.setItem('last_active_user', username.value)
   }
+}
+
+// 修改事件监听添加参数
+const setupEventListeners = () => {
+  // 监听头像更新事件，传递事件对象到防抖函数
+  window.addEventListener('userAvatarUpdated', handleAvatarUpdated)
+  
+  // 监听用户信息变更事件
+  window.addEventListener('userInfoChanged', userInfoChangeHandler)
+  
+  // 监听存储变化事件
+  window.addEventListener('storage', storageChangeHandler)
+  
+  // 添加页面刷新前检测
+  window.addEventListener('beforeunload', beforeUnloadHandler)
+}
+
+// 处理头像更新事件的函数
+const handleAvatarUpdated = (event) => {
+  console.log('接收到头像更新事件:', event)
+  debouncedCheckLoginStatus(event)
 }
 </script>
 
