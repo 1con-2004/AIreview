@@ -53,3 +53,7 @@ mvnw
 mvnw.cmd
 pom.xml
 AIreview.iml
+
+# 服务器备份的配置
+database-backup.sql
+frontend-dist.tar.gz
