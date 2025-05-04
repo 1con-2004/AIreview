@@ -9,12 +9,19 @@ const fs = require('fs');
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../../../frontend/public/icons');
-    console.log('上传目录:', uploadDir);
+    // 使用app/public/icons作为上传目录，确保在容器中能正确访问
+    const uploadDir = path.join('/app/public/icons');
+    console.log('上传目录绝对路径:', uploadDir);
+    console.log('当前目录:', __dirname);
     // 确保上传目录存在
     if (!fs.existsSync(uploadDir)) {
-      console.log('创建上传目录');
+      console.log('创建上传目录:', uploadDir);
       fs.mkdirSync(uploadDir, { recursive: true });
+    } else {
+      console.log('上传目录已存在');
+      // 列出目录中的文件
+      const files = fs.readdirSync(uploadDir);
+      console.log('目录中的文件:', files);
     }
     cb(null, uploadDir);
   },
@@ -870,22 +877,28 @@ router.post('/:id/icon', authenticateToken, (req, res, next) => {
 
     // 获取旧图标路径
     const oldIconPath = plan[0].icon;
-    if (oldIconPath) {
-      const fullOldPath = path.join(__dirname, '../../../../frontend/public', oldIconPath);
+    if (oldIconPath && oldIconPath !== '/icons/default.png') {
+      // 修正旧文件路径，使用容器内正确的路径
+      const oldFilename = path.basename(oldIconPath);
+      const fullOldPath = path.join('/app/public/icons', oldFilename);
       console.log('尝试删除旧图标:', fullOldPath);
       // 尝试删除旧图标
       try {
         if (fs.existsSync(fullOldPath)) {
           fs.unlinkSync(fullOldPath);
           console.log('成功删除旧图标');
+        } else {
+          console.log('旧图标文件不存在，无需删除');
         }
       } catch (err) {
         console.error('删除旧图标失败:', err);
       }
     }
 
+    // 构建新图标的相对路径
     const iconPath = `/icons/${req.file.filename}`;
     console.log('新图标路径:', iconPath);
+    console.log('新图标实际文件路径:', req.file.path);
 
     // 更新数据库中的图标路径
     await db.query(
@@ -899,10 +912,19 @@ router.post('/:id/icon', authenticateToken, (req, res, next) => {
       newIconPath: iconPath
     });
 
+    // 构建完整的URL以供前端使用
+    const iconUrl = `${req.protocol}://${req.get('host')}${iconPath}`;
+    console.log('完整的图标URL:', iconUrl);
+
+    // 返回更详细的响应
     res.json({
       success: true,
       message: '学习计划图标已更新',
-      data: { icon: iconPath }
+      data: { 
+        icon: iconPath,
+        iconUrl: iconUrl,
+        filename: req.file.filename
+      }
     });
   } catch (error) {
     console.error('更新学习计划图标失败:', error);
@@ -917,7 +939,7 @@ router.post('/:id/icon', authenticateToken, (req, res, next) => {
     }
     res.status(500).json({
       success: false,
-      message: '更新学习计划图标失败'
+      message: '更新学习计划图标失败: ' + error.message
     });
   }
 });

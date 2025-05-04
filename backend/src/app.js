@@ -198,10 +198,15 @@ app.use(session({
 }));
 
 // 解析 JSON 请求体
-app.use(express.json());
+app.use(express.json({ 
+  limit: '5mb' // 增加JSON请求体大小限制到5MB
+}));
 
 // 确保解析JSON请求体能够正常工作
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ 
+  extended: true,
+  limit: '5mb' // 增加URL编码请求体大小限制到5MB
+}));
 
 // 添加响应头中间件，确保所有响应使用UTF-8编码，并添加跨域头
 app.use((req, res, next) => {
@@ -252,21 +257,23 @@ app.use('/api/uploads', express.static(path.join(__dirname, '../public/uploads')
 
 // 添加 /icons 路径，以便前端可以通过 /icons 访问图标文件
 app.use('/icons', express.static(path.join(__dirname, '../public/icons')));
+// 添加 /public/icons 路径，以支持Nginx反向代理
+app.use('/public/icons', express.static(path.join(__dirname, '../public/icons')));
 
 // 添加直接访问public目录的路径
 app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use('/api/public', express.static(path.join(__dirname, '../public')));
 
-app.use('/icons', express.static(iconsPath, {
-    setHeaders: (res, path, stat) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Access-Control-Allow-Methods', 'GET');
-        res.set('Cache-Control', 'public, max-age=3600');
-    }
-}));
+// 提供调试信息，列出静态文件目录中的文件
+console.log('图标目录内容:');
+if (fs.existsSync(iconsPath)) {
+  const iconFiles = fs.readdirSync(iconsPath);
+  console.log(iconFiles);
+} else {
+  console.log('图标目录不存在');
+}
 
-// 为icons提供额外的路径支持
-app.use('/api/icons', express.static(iconsPath, {
+app.use('/icons', express.static(iconsPath, {
     setHeaders: (res, path, stat) => {
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET');

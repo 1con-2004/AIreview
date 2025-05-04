@@ -72,8 +72,21 @@
       <el-form :model="form" ref="formRef" :rules="formRules" label-width="100px">
         <el-form-item label="学习计划图标" prop="icon">
           <div class="icon-container">
-            <img v-if="form.icon" :src="form.icon" class="icon-preview" />
-            <img v-else src="/icons/default.png" class="icon-preview" />
+            <img
+              v-if="form.icon"
+              :src="form.icon"
+              class="icon-preview"
+              :class="{ 'uploading': form.uploading }"
+            />
+            <img
+              v-else
+              src="/icons/default.png"
+              class="icon-preview"
+              :class="{ 'uploading': form.uploading }"
+            />
+            <div v-if="form.uploading" class="upload-progress">
+              上传中...
+            </div>
             <el-upload
               class="upload-icon"
               :headers="{
@@ -88,8 +101,11 @@
               name="icon"
               :auto-upload="true"
               :http-request="customUpload"
+              :disabled="form.uploading"
             >
-              <el-button size="default" type="primary" class="upload-button">上传图标</el-button>
+              <el-button size="default" type="primary" class="upload-button" :disabled="form.uploading">
+                {{ form.uploading ? '上传中...' : '上传图标' }}
+              </el-button>
             </el-upload>
           </div>
         </el-form-item>
@@ -249,7 +265,8 @@ const form = ref({
   problems: [],
   pendingIcon: null,
   icon: null,
-  difficulty_level: ''
+  difficulty_level: '',
+  uploading: false // 新增上传状态追踪
 })
 const searchQuery = ref('')
 const currentPage = ref(1)
@@ -499,33 +516,74 @@ const submitForm = async () => {
           : '/api/learning-plans'
         const method = isEditing.value ? 'put' : 'post'
 
-        // 在提交前处理标签
+        // 准备提交的数据
         const payload = {
-          ...form.value,
+          id: form.value.id,
+          title: form.value.title,
+          description: form.value.description,
           tagsInput: processTags().join(','),
           points: form.value.points.split(/[,\n]/).map(p => p.trim()).filter(p => p).join(','),
           estimated_days: form.value.duration,
           difficulty_level: form.value.difficulty_level
         }
 
+        // 在开发环境打印payload大小
+        const payloadStr = JSON.stringify(payload)
+        console.log('提交数据大小:', payloadStr.length, '字节')
+
+        // 如果数据过大，自动截断描述和要点
+        if (payloadStr.length > 80000) {
+          if (payload.description && payload.description.length > 300) {
+            payload.description = payload.description.substring(0, 300) + '...'
+          }
+          if (payload.points && payload.points.length > 300) {
+            payload.points = payload.points.substring(0, 300) + '...'
+          }
+          console.log('数据过大，已自动截断，新大小:', JSON.stringify(payload).length, '字节')
+
+          toast.add({
+            severity: 'warn',
+            summary: '提示',
+            detail: '内容过长已自动截断，请减少描述文本长度'
+          })
+        }
+
         const response = await axios[method](url, payload)
 
-        if (response.data.success) {
+        if (response.data && response.data.success) {
           // 保存新创建的计划ID
           const planId = response.data.data.id
           form.value.id = planId // 更新表单中的ID
 
           // 如果有待上传的图标，现在上传
           if (form.value.pendingIcon) {
-            await uploadPendingIcon()
+            try {
+              await uploadPendingIcon()
+            } catch (iconError) {
+              console.error('图标上传失败，但计划已创建:', iconError)
+              toast.add({
+                severity: 'warn',
+                summary: '部分成功',
+                detail: '学习计划已创建，但图标上传失败'
+              })
+            }
           }
 
           // 更新题目列表
-          await axios.put(`/api/learning-plans/${planId}/problems`, {
-            problems: form.value.problems
-          }, {
-            headers: { Authorization: `Bearer ${getAuthToken()}` }
-          })
+          try {
+            await axios.put(`/api/learning-plans/${planId}/problems`, {
+              problems: form.value.problems
+            }, {
+              headers: { Authorization: `Bearer ${getAuthToken()}` }
+            })
+          } catch (problemsError) {
+            console.error('题目更新失败，但计划已创建:', problemsError)
+            toast.add({
+              severity: 'warn',
+              summary: '部分成功',
+              detail: '学习计划已创建，但题目关联失败'
+            })
+          }
 
           toast.add({
             severity: 'success',
@@ -534,13 +592,29 @@ const submitForm = async () => {
           })
           closeDialog()
           fetchLearningPlans()
+        } else {
+          throw new Error(response.data?.message || '服务器返回未知错误')
         }
       } catch (error) {
         console.error(`${isEditing.value ? '修改' : '创建'}学习计划失败:`, error)
+
+        let errorMessage = `${isEditing.value ? '修改' : '创建'}学习计划失败`
+
+        // 处理413错误
+        if (error.response?.status === 413) {
+          errorMessage = '请求数据过大，请减少描述内容或降低图片质量'
+        } else if (error.response?.status === 500) {
+          errorMessage = '服务器内部错误，请尝试减少内容长度或联系管理员'
+        } else if (error.response?.data?.message) {
+          errorMessage += ': ' + error.response.data.message
+        } else if (error.message) {
+          errorMessage += ': ' + error.message
+        }
+
         toast.add({
           severity: 'error',
           summary: '错误',
-          detail: `${isEditing.value ? '修改' : '创建'}学习计划失败`
+          detail: errorMessage
         })
       }
     }
@@ -632,39 +706,171 @@ const customUpload = async (options) => {
   console.log('开始自定义上传', options)
   console.log('当前计划ID:', form.value.id)
 
-  // 检查是否有计划ID
-  if (!form.value.id) {
-    console.log('新建计划，保存图标到 pendingIcon')
-    form.value.pendingIcon = options.file
-    // 预览选择的图片
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      form.value.icon = e.target.result
+  try {
+    // 设置上传中状态
+    form.value.uploading = true
+
+    // 首先压缩图片
+    const compressedFile = await compressImage(options.file)
+    console.log('原始文件大小: ', options.file.size / 1024 / 1024, 'MB')
+    console.log('压缩后文件大小: ', compressedFile.size / 1024 / 1024, 'MB')
+
+    // 检查是否有计划ID
+    if (!form.value.id) {
+      console.log('新建计划，保存压缩后图标到 pendingIcon')
+      form.value.pendingIcon = compressedFile
+      // 预览选择的图片
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        form.value.icon = e.target.result
+      }
+      reader.readAsDataURL(compressedFile)
+
+      toast.add({
+        severity: 'info',
+        summary: '提示',
+        detail: '图标已压缩并暂存，将在保存学习计划后自动上传'
+      })
+
+      // 提供一个模拟的成功响应
+      const mockResponse = {
+        success: true,
+        data: {
+          icon: URL.createObjectURL(compressedFile)
+        },
+        message: '图标已暂存，将在保存学习计划后上传'
+      }
+
+      if (options.onSuccess) {
+        options.onSuccess(mockResponse)
+      }
+      form.value.uploading = false
+      return
     }
-    reader.readAsDataURL(options.file)
+
+    await uploadIcon({ ...options, file: compressedFile })
+  } catch (error) {
+    console.error('处理上传时发生错误:', error)
+    form.value.uploading = false
 
     toast.add({
-      severity: 'info',
-      summary: '提示',
-      detail: '图标将在保存学习计划后自动上传'
+      severity: 'error',
+      summary: '错误',
+      detail: '图片处理失败: ' + (error.message || '未知错误')
     })
 
-    // 提供一个模拟的成功响应
-    const mockResponse = {
-      success: true,
-      data: {
-        icon: URL.createObjectURL(options.file)
-      },
-      message: '图标已暂存，将在保存学习计划后上传'
+    if (options.onError) {
+      options.onError(error)
     }
-
-    if (options.onSuccess) {
-      options.onSuccess(mockResponse)
-    }
-    return
   }
+}
 
-  await uploadIcon(options)
+// 修改图片压缩方法，确保输出更小的文件
+const compressImage = (file) => {
+  return new Promise((resolve, reject) => {
+    // 目标文件大小上限 (0.5MB)，降低上限确保不超过后端限制
+    const MAX_FILE_SIZE = 512 * 1024
+
+    // 如果文件已经足够小，直接返回
+    if (file.size <= MAX_FILE_SIZE) {
+      return resolve(file)
+    }
+
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target.result
+
+      img.onload = () => {
+        // 计算压缩比例（基于文件大小）
+        let quality = Math.min(0.7, MAX_FILE_SIZE / file.size)
+        // 对于大图片，额外降低质量
+        if (file.size > 2 * 1024 * 1024) quality *= 0.5
+
+        const canvas = document.createElement('canvas')
+
+        // 计算宽高约束（最大500px，保持比例）
+        const MAX_WIDTH = 500
+        const MAX_HEIGHT = 500
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // 转换为Blob
+        canvas.toBlob(
+          (blob) => {
+            // 创建新文件对象
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg', // 强制转换为jpeg以获得更好的压缩率
+              lastModified: Date.now()
+            })
+
+            console.log('压缩后大小:', compressedFile.size / 1024, 'KB')
+
+            // 如果仍然太大，递归压缩
+            if (compressedFile.size > MAX_FILE_SIZE && quality > 0.1) {
+              // 使用更低的质量再次压缩
+              quality *= 0.7
+
+              // 重新绘制一个更小的尺寸
+              const newCanvas = document.createElement('canvas')
+              const newWidth = Math.floor(width * 0.8)
+              const newHeight = Math.floor(height * 0.8)
+
+              newCanvas.width = newWidth
+              newCanvas.height = newHeight
+
+              const newCtx = newCanvas.getContext('2d')
+              newCtx.drawImage(img, 0, 0, newWidth, newHeight)
+
+              newCanvas.toBlob(
+                (newBlob) => {
+                  const recompressedFile = new File([newBlob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                  })
+                  console.log('再次压缩后大小:', recompressedFile.size / 1024, 'KB')
+                  resolve(recompressedFile)
+                },
+                'image/jpeg',
+                quality * 0.8
+              )
+            } else {
+              resolve(compressedFile)
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+
+      img.onerror = () => {
+        reject(new Error('图片加载失败'))
+      }
+    }
+
+    reader.onerror = (error) => {
+      reject(error)
+    }
+  })
 }
 
 // 新增上传图标的方法
@@ -673,6 +879,7 @@ const uploadIcon = async (options) => {
   formData.append('icon', options.file)
 
   try {
+    // 确保使用相对路径，避免localhost硬编码
     const uploadUrl = `/api/learning-plans/${form.value.id}/icon`
     console.log('发送请求到:', uploadUrl)
 
@@ -713,12 +920,16 @@ const uploadIcon = async (options) => {
     if (options.onError) {
       options.onError(error)
     }
+  } finally {
+    form.value.uploading = false
   }
 }
 
 // 新增处理待上传图标的方法
 const uploadPendingIcon = async () => {
   if (!form.value.pendingIcon) return
+
+  form.value.uploading = true
 
   await uploadIcon({
     file: form.value.pendingIcon,
@@ -734,10 +945,23 @@ const uploadPendingIcon = async () => {
 // 修改处理上传成功的方法
 const handleIconUploadSuccess = (response) => {
   console.log('上传成功响应:', response)
+  form.value.uploading = false
 
-  // 如果响应是undefined或null，显示错误信息
+  // 如果响应是undefined或null，尝试使用之前的预览
   if (!response) {
-    console.error('上传响应为空')
+    console.error('上传响应为空，使用本地预览')
+
+    // 如果有本地预览，继续使用
+    if (form.value.icon && typeof form.value.icon === 'string' &&
+        (form.value.icon.startsWith('blob:') || form.value.icon.startsWith('data:'))) {
+      toast.add({
+        severity: 'warning',
+        summary: '警告',
+        detail: '服务器响应为空，使用本地预览图（重新加载页面后可能不可见）'
+      })
+      return
+    }
+
     toast.add({
       severity: 'error',
       summary: '错误',
@@ -748,17 +972,35 @@ const handleIconUploadSuccess = (response) => {
 
   try {
     // 处理不同的响应格式
-    const responseData = response.data || response
-    const isSuccess = response.success || responseData.success
-    const iconData = responseData.icon || responseData.data?.icon
+    console.log('处理响应数据类型:', typeof response)
 
+    // 尝试解析字符串响应
+    if (typeof response === 'string') {
+      try {
+        response = JSON.parse(response)
+        console.log('已解析字符串响应:', response)
+      } catch (e) {
+        console.log('响应不是有效JSON，按原样使用')
+      }
+    }
+
+    const responseData = response.data || response
+    console.log('处理后的responseData:', responseData)
+
+    const isSuccess = response.success || responseData.success
+    const iconData = responseData.icon || responseData.data?.icon || responseData.iconUrl || responseData.data?.iconUrl
+
+    console.log('成功标志:', isSuccess)
+    console.log('图标数据:', iconData)
+
+    // 首先检查是否明确上传成功
     if (isSuccess && iconData) {
       // 如果是临时预览URL，直接使用
       if (iconData instanceof Blob || (typeof iconData === 'string' && iconData.startsWith('blob:'))) {
         form.value.icon = iconData
       } else {
-        // 使用相对路径，让Nginx处理代理
-        form.value.icon = iconData.startsWith('http')
+        // 使用服务器返回的URL或路径
+        form.value.icon = typeof iconData === 'string' && iconData.startsWith('http')
           ? iconData
           : iconData // 直接使用相对路径
       }
@@ -767,6 +1009,41 @@ const handleIconUploadSuccess = (response) => {
         severity: 'success',
         summary: '成功',
         detail: response.message || responseData.message || '图标上传成功'
+      })
+    }
+    // 检查是否为base64图片数据
+    else if (responseData && typeof responseData === 'string' && responseData.startsWith('data:image')) {
+      // 支持直接返回base64数据的情况
+      form.value.icon = responseData
+      toast.add({
+        severity: 'success',
+        summary: '成功',
+        detail: '图标上传成功'
+      })
+    }
+    // 检查完整的响应对象结构
+    else if (response && response.data && typeof response.data === 'object') {
+      console.log('处理复杂响应对象')
+      const iconUrl = response.data.iconUrl || response.data.icon
+      if (iconUrl) {
+        form.value.icon = iconUrl
+        toast.add({
+          severity: 'success',
+          summary: '成功',
+          detail: '图标上传成功'
+        })
+      } else {
+        throw new Error('响应中没有找到有效的图标URL')
+      }
+    }
+    // 如果完全找不到有效的图标数据，尝试保留本地预览
+    else if (form.value.icon && typeof form.value.icon === 'string' &&
+             (form.value.icon.startsWith('blob:') || form.value.icon.startsWith('data:'))) {
+      console.log('没有有效的图标数据，保留本地预览')
+      toast.add({
+        severity: 'warning',
+        summary: '警告',
+        detail: '服务器未返回图标路径，使用本地预览图（重新加载页面后可能不可见）'
       })
     } else {
       throw new Error('上传响应格式无效')
@@ -785,10 +1062,16 @@ const handleIconUploadSuccess = (response) => {
 const handleIconUploadError = (error) => {
   console.error('图标上传失败:', error)
   console.error('错误详情:', error.response || error.message || error)
+  form.value.uploading = false
 
   let errorMessage = '图标上传失败'
   if (error.response) {
-    errorMessage = error.response.data.message || errorMessage
+    errorMessage = error.response.data?.message || errorMessage
+
+    // 处理413错误
+    if (error.response.status === 413) {
+      errorMessage = '图片大小超过服务器限制，请尝试使用更小的图片'
+    }
   } else if (error.message) {
     errorMessage = error.message
   }
@@ -805,7 +1088,7 @@ const beforeIconUpload = (file) => {
   console.log('准备上传文件:', file)
 
   const isImage = file.type.startsWith('image/')
-  const isLt5M = file.size / 1024 / 1024 < 5
+  const isLt10M = file.size / 1024 / 1024 < 10 // 放宽到10MB，因为会自动压缩
 
   if (!isImage) {
     toast.add({
@@ -815,11 +1098,11 @@ const beforeIconUpload = (file) => {
     })
     return false
   }
-  if (!isLt5M) {
+  if (!isLt10M) {
     toast.add({
       severity: 'error',
       summary: '错误',
-      detail: '图片大小不能超过 5MB!'
+      detail: '图片大小不能超过 10MB!'
     })
     return false
   }
@@ -1122,6 +1405,7 @@ const beforeIconUpload = (file) => {
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
 }
 
 .icon-preview {
@@ -1130,12 +1414,29 @@ const beforeIconUpload = (file) => {
   border-radius: 12px;
   object-fit: cover;
   margin-bottom: 10px;
+  transition: opacity 0.3s;
+}
+
+.icon-preview.uploading {
+  opacity: 0.5;
 }
 
 .upload-button {
   width: 100%;
   padding: 10px;
   font-size: 16px;
+}
+
+.upload-progress {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: bold;
+  background: rgba(255,255,255,0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .points-description {
