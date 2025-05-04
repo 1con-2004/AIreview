@@ -191,7 +191,7 @@ export default {
           total_submissions: parseInt(problem.total_submissions) || 0,
           tags: Array.isArray(problem.tags)
             ? problem.tags
-            : (problem.tags ? problem.tags.split(',').map(tag => tag.trim()) : [])
+            : (problem.tags ? problem.tags.replace(/，/g, ',').split(',').map(tag => tag.trim()) : [])
         }))
 
         console.log('处理后的题目列表:', this.problems)

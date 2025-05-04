@@ -160,9 +160,9 @@
             </span>
           </div>
           <div class="col-category">
-            <span 
-              class="category-tag" 
-              v-for="tag in (problem.tags && problem.tags.trim()) ? problem.tags.split(',').filter(t => t.trim()) : []" 
+            <span
+              class="category-tag"
+              v-for="tag in (problem.tags && problem.tags.trim()) ? problem.tags.replace(/，/g, ',').split(',').filter(t => t.trim()) : []"
               :key="tag"
             >
               {{ tag.trim() }}
@@ -854,9 +854,7 @@ const handleCloseDialog = () => {
 const processTagString = (tags) => {
   if (!tags) return ''
   // 替换中文逗号为英文逗号，过滤空标签，去除前后空格
-  return tags.replace(/，/g, ',')
-    .split(',')
-    .filter(tag => tag.trim())
+  return tags.replace(/，/g, ',').split(',').filter(tag => tag.trim())
     .map(tag => tag.trim())
     .join(',')
 }
@@ -1088,7 +1086,7 @@ const fetchProblems = async () => {
       const tags = new Set()
       problems.value.forEach(problem => {
         if (problem.tags && problem.tags.trim()) {
-          problem.tags.split(',').forEach(tag => {
+          problem.tags.replace(/，/g, ',').split(',').forEach(tag => {
             const trimmedTag = tag.trim()
             if (trimmedTag) {
               tags.add(trimmedTag)

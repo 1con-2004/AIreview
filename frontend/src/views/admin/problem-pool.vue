@@ -149,7 +149,7 @@
             </span>
           </div>
           <div class="col-tags">
-            <span class="category-tag" v-for="tag in problem.tags ? problem.tags.split(',') : []" :key="tag">
+            <span class="category-tag" v-for="tag in problem.tags ? problem.tags.replace(/，/g, ',').split(',') : []" :key="tag">
               {{ tag }}
             </span>
           </div>
@@ -312,7 +312,7 @@ const fetchProblems = async () => {
       const tags = new Set()
       problems.value.forEach(problem => {
         if (problem.tags) {
-          problem.tags.split(',').forEach(tag => {
+          problem.tags.replace(/，/g, ',').split(',').forEach(tag => {
             tags.add(tag.trim())
           })
         }

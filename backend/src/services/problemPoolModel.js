@@ -156,7 +156,9 @@ async function getTagList() {
   const tagSet = new Set();
   rows.forEach(row => {
     if (row.tags) {
-      row.tags.split(',').forEach(tag => {
+      // 先将中文逗号替换为英文逗号
+      const normalizedTags = row.tags.replace(/，/g, ',');
+      normalizedTags.split(',').forEach(tag => {
         tag = tag.trim();
         if (tag) {
           tagSet.add(tag);
@@ -433,20 +435,35 @@ async function importProblem(id, data) {
       });
 
       // 处理标签
-      const tagList = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const tagList = tags.replace(/，/g, ',').split(',').map(tag => tag.trim()).filter(tag => tag);
       
       // 为每个标签创建关联
       for (const tag of tagList) {
-        const categoryId = categoryMap[tag.toLowerCase()];
-        if (categoryId) {
-          await connection.query(
-            'INSERT INTO problem_category_relations (problem_id, category_id) VALUES (?, ?)',
-            [newProblemId, categoryId]
+        let categoryId = categoryMap[tag.toLowerCase()];
+        
+        // 如果标签不存在，则创建新标签
+        if (!categoryId) {
+          console.log(`未找到标签 "${tag}"，将自动创建新标签`);
+          
+          // 创建新标签
+          const [insertResult] = await connection.query(
+            'INSERT INTO problem_categories (name, description, level, order_num) VALUES (?, ?, ?, ?)',
+            [tag, '待修改', 1, 0]
           );
-          console.log(`为题目 ${newProblemId} 添加标签 ${tag}，分类ID: ${categoryId}`);
-        } else {
-          console.warn(`未找到标签 "${tag}" 对应的分类`);
+          
+          categoryId = insertResult.insertId;
+          console.log(`成功创建新标签 "${tag}"，分类ID: ${categoryId}`);
+          
+          // 更新本地缓存
+          categoryMap[tag.toLowerCase()] = categoryId;
         }
+        
+        // 创建题目与标签的关联
+        await connection.query(
+          'INSERT INTO problem_category_relations (problem_id, category_id) VALUES (?, ?)',
+          [newProblemId, categoryId]
+        );
+        console.log(`为题目 ${newProblemId} 添加标签 ${tag}，分类ID: ${categoryId}`);
       }
     }
     

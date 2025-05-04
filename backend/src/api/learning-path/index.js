@@ -72,7 +72,7 @@ router.get('/weakness', authenticateToken, async (req, res) => {
       if (!sub.tags) return;
       
       // 分割标签并处理每个标签
-      const tags = sub.tags.split(',').map(tag => tag.trim());
+      const tags = sub.tags.replace(/，/g, ',').split(',').map(tag => tag.trim());
       
       tags.forEach(tag => {
         if (!tagStats[tag]) {

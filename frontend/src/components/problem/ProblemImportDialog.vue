@@ -325,9 +325,7 @@ const loadCategories = async () => {
 const tags = computed({
   get: () => {
     if (!formData.tags) return []
-    return typeof formData.tags === 'string'
-      ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-      : formData.tags
+    return formData.tags.replace(/，/g, ',').split(',').map(tag => tag.trim()).filter(tag => tag)
   },
   set: (value) => {
     formData.tags = value.join(',')

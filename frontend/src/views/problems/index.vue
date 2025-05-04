@@ -785,7 +785,7 @@ export default {
             problem_number: problem.problem_number || '',
             title: problem.title || '',
             difficulty: problem.difficulty || '简单',
-            tags: typeof problem.tags === 'string' ? problem.tags.split(',').map(tag => tag.trim()) : [],
+            tags: typeof problem.tags === 'string' ? problem.tags.replace(/，/g, ',').split(',').map(tag => tag.trim()) : [],
             total_submissions: parseInt(problem.total_submissions) || 0,
             acceptance_rate: parseFloat(problem.acceptance_rate) || 0,
             status: problem.status || 'Not Started',
