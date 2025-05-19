@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "AIreview服务器诊断工具 (Ubuntu 24.04)"
 echo "======================"
@@ -48,9 +52,9 @@ echo ""
 
 # 检查文件结构
 echo "文件结构检查："
-if [ -d "./frontend/dist" ]; then
+if [ -d "$ROOT_DIR/frontend/dist" ]; then
   echo "前端构建目录存在"
-  if [ -f "./frontend/dist/index.html" ]; then
+  if [ -f "$ROOT_DIR/frontend/dist/index.html" ]; then
     echo "index.html文件存在"
   else
     echo "警告：index.html文件不存在"
@@ -59,7 +63,7 @@ else
   echo "警告：前端构建目录不存在"
 fi
 
-if [ -f "./nginx/default.conf" ]; then
+if [ -f "$ROOT_DIR/nginx/default.conf" ]; then
   echo "Nginx配置文件存在"
 else
   echo "警告：Nginx配置文件不存在"
@@ -114,9 +118,9 @@ fi
 
 # 检查文件权限建议
 echo "6. 修复文件权限："
-echo "   chmod -R 755 ./frontend/dist"
-echo "   chmod -R 777 ./uploads"
-echo "   chmod -R 777 ./backend/logs"
+echo "   chmod -R 755 $ROOT_DIR/frontend/dist"
+echo "   chmod -R 777 $ROOT_DIR/uploads"
+echo "   chmod -R 777 $ROOT_DIR/backend/logs"
 
 # 防火墙建议
 echo "7. 确保防火墙已开放80端口："
@@ -125,5 +129,5 @@ echo "   sudo ufw reload"
 
 echo ""
 echo "执行完整修复，请运行："
-echo "./deploy-simple.sh"
+echo "$ROOT_DIR/scripts/deploy-simple.sh"
 echo "" 

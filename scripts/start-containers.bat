@@ -2,6 +2,10 @@
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
+:: 转到项目根目录
+cd /d "%~dp0\.."
+set ROOT_DIR=%cd%
+
 echo ===== AIreview Docker环境启动 =====
 
 :: 获取当前用户ID
@@ -16,7 +20,7 @@ echo 设置环境变量: DOCKER_GROUP_ID=!DOCKER_GROUP_ID!, UID=!CURRENT_UID!
 
 :: 构建前端代码
 echo 正在构建前端代码...
-cd frontend
+cd %ROOT_DIR%\frontend
 if exist yarn.lock (
     call yarn install
     call yarn build
@@ -24,17 +28,17 @@ if exist yarn.lock (
     call npm install
     call npm run build
 )
-cd ..
+cd %ROOT_DIR%
 
 :: 拉取必要的Docker镜像
 echo 正在拉取必要的Docker镜像...
 docker-compose pull nginx db
 
 :: 确保Nginx配置目录存在
-if not exist nginx mkdir nginx
+if not exist %ROOT_DIR%\nginx mkdir %ROOT_DIR%\nginx
 
 :: 检查Nginx配置文件是否存在
-if not exist nginx\default.conf (
+if not exist %ROOT_DIR%\nginx\default.conf (
     echo Nginx配置文件不存在，创建默认配置...
     (
         echo server {
@@ -108,19 +112,20 @@ if not exist nginx\default.conf (
         echo         add_header Content-Type text/plain;
         echo     }
         echo }
-    ) > nginx\default.conf
+    ) > %ROOT_DIR%\nginx\default.conf
 ) else (
     echo Nginx配置文件已存在，跳过创建...
 )
 
 :: 确保存在必要的目录
-if not exist backend\logs mkdir backend\logs
-if not exist backend\uploads mkdir backend\uploads
-if not exist backend\temp mkdir backend\temp
-if not exist uploads\avatars mkdir uploads\avatars
+if not exist %ROOT_DIR%\backend\logs mkdir %ROOT_DIR%\backend\logs
+if not exist %ROOT_DIR%\backend\uploads mkdir %ROOT_DIR%\backend\uploads
+if not exist %ROOT_DIR%\backend\temp mkdir %ROOT_DIR%\backend\temp
+if not exist %ROOT_DIR%\uploads\avatars mkdir %ROOT_DIR%\uploads\avatars
 
 :: 启动容器
 echo 启动Docker容器...
+cd %ROOT_DIR%
 docker-compose down
 docker-compose up -d
 
@@ -136,4 +141,4 @@ echo 前端访问地址: http://localhost
 echo 后端API地址: http://localhost/api
 echo 健康检查: http://localhost/health
 
-pause
+pause 

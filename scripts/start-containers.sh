@@ -3,6 +3,10 @@
 # AIreview Docker启动脚本
 # 解决Docker权限问题并启动服务
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "===== AIreview Docker环境启动 ====="
 
 # 获取Docker组ID
@@ -34,32 +38,32 @@ echo "设置环境变量: DOCKER_GROUP_ID=$DOCKER_GROUP_ID, UID=$CURRENT_UID"
 # 设置前端构建目录权限
 echo "设置前端构建目录权限..."
 # 确保目录存在
-mkdir -p frontend/dist/uploads
+mkdir -p $ROOT_DIR/frontend/dist/uploads
 
 # 递归删除 dist 目录（如果存在）
-if [ -d "frontend/dist" ]; then
-    sudo rm -rf frontend/dist
+if [ -d "$ROOT_DIR/frontend/dist" ]; then
+    sudo rm -rf $ROOT_DIR/frontend/dist
 fi
 
 # 创建新的 dist 目录并设置权限
-mkdir -p frontend/dist
-sudo chown -R $USER:$GROUP_ID frontend/dist
-sudo chmod -R 755 frontend/dist
+mkdir -p $ROOT_DIR/frontend/dist
+sudo chown -R $USER:$GROUP_ID $ROOT_DIR/frontend/dist
+sudo chmod -R 755 $ROOT_DIR/frontend/dist
 
 echo "正在构建前端代码..."
-cd frontend
+cd $ROOT_DIR/frontend
 yarn install
 FORCE_COLOR=true yarn build
-cd ..
+cd $ROOT_DIR
 
 # 确保构建后的目录权限正确
-if [ -d "frontend/dist" ]; then
-    sudo chown -R $USER:$GROUP_ID frontend/dist
-    sudo chmod -R 755 frontend/dist
+if [ -d "$ROOT_DIR/frontend/dist" ]; then
+    sudo chown -R $USER:$GROUP_ID $ROOT_DIR/frontend/dist
+    sudo chmod -R 755 $ROOT_DIR/frontend/dist
     
     # 特别处理 uploads 目录
-    mkdir -p frontend/dist/uploads
-    sudo chmod -R 777 frontend/dist/uploads
+    mkdir -p $ROOT_DIR/frontend/dist/uploads
+    sudo chmod -R 777 $ROOT_DIR/frontend/dist/uploads
 fi
 
 # 拉取必要的Docker镜像
@@ -67,12 +71,12 @@ echo "正在拉取必要的Docker镜像..."
 docker-compose pull nginx db
 
 # 确保Nginx配置目录存在
-mkdir -p nginx
+mkdir -p $ROOT_DIR/nginx
 
 # 检查Nginx配置文件是否存在
-if [ ! -f nginx/default.conf ]; then
+if [ ! -f $ROOT_DIR/nginx/default.conf ]; then
   echo "Nginx配置文件不存在，创建默认配置..."
-  cat > nginx/default.conf << 'EOF'
+  cat > $ROOT_DIR/nginx/default.conf << 'EOF'
 server {
     listen 80;
     server_name localhost;
@@ -150,19 +154,20 @@ else
 fi
 
 # 确保存在必要的目录
-mkdir -p backend/logs
-mkdir -p backend/uploads
-mkdir -p backend/temp
-mkdir -p uploads/avatars
+mkdir -p $ROOT_DIR/backend/logs
+mkdir -p $ROOT_DIR/backend/uploads
+mkdir -p $ROOT_DIR/backend/temp
+mkdir -p $ROOT_DIR/uploads/avatars
 
 # 设置目录权限
-chmod -R 777 backend/logs
-chmod -R 777 backend/uploads
-chmod -R 777 backend/temp
-chmod -R 777 uploads
+chmod -R 777 $ROOT_DIR/backend/logs
+chmod -R 777 $ROOT_DIR/backend/uploads
+chmod -R 777 $ROOT_DIR/backend/temp
+chmod -R 777 $ROOT_DIR/uploads
 
 # 启动容器
 echo "启动Docker容器..."
+cd $ROOT_DIR
 docker-compose down
 docker-compose up -d
 

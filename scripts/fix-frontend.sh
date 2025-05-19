@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "前端文件修复脚本"
 echo "======================"
@@ -8,35 +12,35 @@ echo "======================"
 SERVER_IP=$(hostname -I | awk '{print $1}')
 
 # 检查是否存在前端文件
-if [ -f "./frontend-dist.tar.gz" ]; then
+if [ -f "$ROOT_DIR/frontend-dist.tar.gz" ]; then
   echo "发现前端构建压缩包，开始解压..."
   
   # 确保目录存在
-  mkdir -p ./frontend/dist
+  mkdir -p $ROOT_DIR/frontend/dist
   
   # 解压文件
-  tar -xzf frontend-dist.tar.gz -C ./frontend/dist
+  tar -xzf $ROOT_DIR/frontend-dist.tar.gz -C $ROOT_DIR/frontend/dist
   
   # 删除压缩包
-  rm -f frontend-dist.tar.gz
+  rm -f $ROOT_DIR/frontend-dist.tar.gz
   
-  echo "前端文件已解压到 ./frontend/dist 目录"
+  echo "前端文件已解压到 $ROOT_DIR/frontend/dist 目录"
   
   # 修复权限
   echo "修复文件权限..."
-  chmod -R 755 ./frontend/dist
+  chmod -R 755 $ROOT_DIR/frontend/dist
   
   echo "前端文件部署完成！"
-  echo "请运行 ./deploy-simple.sh 重启服务"
+  echo "请运行 $ROOT_DIR/scripts/deploy-simple.sh 重启服务"
 else
   echo "未找到前端构建压缩包 (frontend-dist.tar.gz)"
   echo "请按照以下步骤操作："
-  echo "1. 在本地执行: ./build-frontend.sh $SERVER_IP 1335"
+  echo "1. 在本地执行: $ROOT_DIR/scripts/build-frontend.sh $SERVER_IP 1335"
   echo "2. 如果无法直接上传，请手动将生成的frontend-dist.tar.gz上传到服务器"
   echo "3. 上传后再次运行此脚本"
   
   # 创建上传说明
-  cat > UPLOAD_GUIDE.txt << EOL
+  cat > $ROOT_DIR/UPLOAD_GUIDE.txt << EOL
 前端文件上传说明
 ================
 
@@ -58,11 +62,11 @@ else
    - 上传到路径: /root/AIreview/
 
 4. 上传完成后，在服务器上运行:
-   ./fix-frontend.sh
+   ./scripts/fix-frontend.sh
 
 5. 最后重启服务:
-   ./deploy-simple.sh
+   ./scripts/deploy-simple.sh
 EOL
   
-  echo "已创建上传指南: UPLOAD_GUIDE.txt"
+  echo "已创建上传指南: $ROOT_DIR/UPLOAD_GUIDE.txt"
 fi 

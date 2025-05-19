@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "一键部署脚本"
 echo "======================"
@@ -10,12 +14,12 @@ SSH_PORT="1335"
 USERNAME="root"
 
 # 清理旧文件
-rm -f frontend-dist.tar.gz 2>/dev/null || true
-rm -f database-backup.sql 2>/dev/null || true
+rm -f $ROOT_DIR/frontend-dist.tar.gz 2>/dev/null || true
+rm -f $ROOT_DIR/database-backup.sql 2>/dev/null || true
 
 # 本地构建前端
 echo "在本地构建前端..."
-cd frontend
+cd $ROOT_DIR/frontend
 yarn install
 yarn build
 
@@ -30,21 +34,22 @@ echo "前端构建成功！"
 # 创建临时压缩包
 echo "打包前端文件..."
 cd dist
-tar -czf ../../frontend-dist.tar.gz *
-cd ../..
+tar -czf $ROOT_DIR/frontend-dist.tar.gz *
+cd $ROOT_DIR
 
 echo "前端构建包已生成: frontend-dist.tar.gz"
 
 # 导出数据库
 echo "导出本地数据库..."
-if [ -f "db/init/AIreview.sql" ]; then
+if [ -f "$ROOT_DIR/db/init/AIreview.sql" ]; then
     echo "使用本地SQL文件同步数据库"
-    cp db/init/AIreview.sql database-backup.sql
+    cp $ROOT_DIR/db/init/AIreview.sql $ROOT_DIR/database-backup.sql
 else
     echo "从Docker容器导出数据库..."
-    docker-compose exec -T db mysqldump -u root -proot AIreview > database-backup.sql
+    cd $ROOT_DIR
+    docker-compose exec -T db mysqldump -u root -proot AIreview > $ROOT_DIR/database-backup.sql
     # 检查导出是否成功
-    if [ ! -s "database-backup.sql" ]; then
+    if [ ! -s "$ROOT_DIR/database-backup.sql" ]; then
         echo "数据库导出失败！请确保Docker容器正在运行"
         exit 1
     fi
@@ -64,15 +69,15 @@ if ssh -p $SSH_PORT -o ConnectTimeout=5 $USERNAME@$SERVER_IP "echo 连接成功"
     ssh -p $SSH_PORT $USERNAME@$SERVER_IP "mkdir -p ~/AIreview/frontend/dist"
     
     # 上传文件
-    scp -P $SSH_PORT frontend-dist.tar.gz database-backup.sql $USERNAME@$SERVER_IP:~/AIreview/
+    scp -P $SSH_PORT $ROOT_DIR/frontend-dist.tar.gz $ROOT_DIR/database-backup.sql $USERNAME@$SERVER_IP:~/AIreview/
     
     # 解压文件、导入数据库并重启服务
     ssh -p $SSH_PORT $USERNAME@$SERVER_IP "cd ~/AIreview && \
-        ./fix-frontend.sh && \
+        ./scripts/fix-frontend.sh && \
         echo '导入数据库...' && \
         docker-compose exec -T db mysql -u root -proot AIreview < database-backup.sql && \
         echo '数据库导入完成' && \
-        ./deploy-simple.sh"
+        ./scripts/deploy-simple.sh"
     
     echo "部署成功完成！"
     echo "您可以通过以下地址访问应用:"
@@ -89,9 +94,9 @@ else
     echo ""
     echo "上传后，在服务器执行:"
     echo "cd ~/AIreview"
-    echo "./fix-frontend.sh"
+    echo "./scripts/fix-frontend.sh"
     echo "docker-compose exec -T db mysql -u root -proot AIreview < database-backup.sql"
-    echo "./deploy-simple.sh"
+    echo "./scripts/deploy-simple.sh"
 fi
 
 exit 0 

@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+当你发现无法修改文件时,原因是 AI 工具 edit_file 功能在处理 markdown 文件时的限制或者 bug。当使用 edit_file 工具时，模型可能无法正确解析或应用对 markdown 文件的更改。
+这个问题的解决方法是：
+使用命令行工具（如 echo、sed 等）直接修改文件
+或者创建一个新文件并替换旧文件
+在你以后需要修改文件时，你要优先使用命令行工具来完成修改。

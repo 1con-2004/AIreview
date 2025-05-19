@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "AIreview部署环境检查与修复 (Ubuntu 24.04)"
 echo "======================"
@@ -10,30 +14,31 @@ systemctl restart docker
 
 # 创建必要的目录
 echo "创建必要的目录结构..."
-mkdir -p ./uploads/avatars
-mkdir -p ./frontend/public/uploads/avatars/temp
-mkdir -p ./backend/logs
-mkdir -p ./backend/public/uploads/avatars
-mkdir -p ./backend/public/uploads/icons
+mkdir -p $ROOT_DIR/uploads/avatars
+mkdir -p $ROOT_DIR/frontend/public/uploads/avatars/temp
+mkdir -p $ROOT_DIR/backend/logs
+mkdir -p $ROOT_DIR/backend/public/uploads/avatars
+mkdir -p $ROOT_DIR/backend/public/uploads/icons
 
 # 修复文件权限
 echo "修复文件权限..."
-chmod -R 755 ./frontend/dist 2>/dev/null || true
-chmod -R 755 ./uploads
-chmod -R 777 ./uploads/avatars
-chmod -R 755 ./backend
-chmod -R 777 ./backend/logs
-chmod -R 777 ./backend/public/uploads
+chmod -R 755 $ROOT_DIR/frontend/dist 2>/dev/null || true
+chmod -R 755 $ROOT_DIR/uploads
+chmod -R 777 $ROOT_DIR/uploads/avatars
+chmod -R 755 $ROOT_DIR/backend
+chmod -R 777 $ROOT_DIR/backend/logs
+chmod -R 777 $ROOT_DIR/backend/public/uploads
 
 # 检查Nginx配置文件
 echo "检查Nginx配置文件..."
-if [ ! -f "./nginx/default.conf" ]; then
+if [ ! -f "$ROOT_DIR/nginx/default.conf" ]; then
   echo "Nginx配置文件不存在"
   exit 1
 fi
 
 # 停止并删除已有容器和网络
 echo "停止并删除已有容器和网络..."
+cd $ROOT_DIR
 docker-compose down
 docker network prune -f
 
@@ -47,13 +52,14 @@ docker system prune -f
 
 # 调整docker-compose的网络配置
 echo "临时修改docker-compose.yml网络配置..."
-sed -i.bak 's/ipam:/# ipam:/g' docker-compose.yml
-sed -i 's/  config:/  # config:/g' docker-compose.yml
-sed -i 's/    - subnet: 172.18.0.0\/16/    # - subnet: 172.18.0.0\/16/g' docker-compose.yml
-sed -i 's/      gateway: 172.18.0.1/      # gateway: 172.18.0.1/g' docker-compose.yml
+sed -i.bak 's/ipam:/# ipam:/g' $ROOT_DIR/docker-compose.yml
+sed -i 's/  config:/  # config:/g' $ROOT_DIR/docker-compose.yml
+sed -i 's/    - subnet: 172.18.0.0\/16/    # - subnet: 172.18.0.0\/16/g' $ROOT_DIR/docker-compose.yml
+sed -i 's/      gateway: 172.18.0.1/      # gateway: 172.18.0.1/g' $ROOT_DIR/docker-compose.yml
 
 # 重新构建并启动所有容器
 echo "重新构建并启动所有容器..."
+cd $ROOT_DIR
 docker-compose up -d
 
 # 等待容器启动

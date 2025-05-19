@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "前端构建脚本"
 echo "======================"
@@ -16,7 +20,7 @@ SSH_PORT=${2:-22}  # 默认端口是22，但可以通过第二个参数指定
 
 # 本地构建前端
 echo "在本地构建前端..."
-cd frontend
+cd $ROOT_DIR/frontend
 yarn install
 yarn build
 
@@ -31,8 +35,8 @@ echo "前端构建成功！"
 # 创建临时压缩包
 echo "打包前端文件..."
 cd dist
-tar -czf ../../frontend-dist.tar.gz *
-cd ../..
+tar -czf $ROOT_DIR/frontend-dist.tar.gz *
+cd $ROOT_DIR
 
 # 上传到服务器
 echo "上传到服务器 $SERVER_IP，端口 $SSH_PORT..."
@@ -48,7 +52,7 @@ echo "测试SSH连接..."
 if ! ssh -p $SSH_PORT -o ConnectTimeout=5 $USERNAME@$SERVER_IP "echo 连接成功"; then
     echo "无法连接到服务器，请检查SSH连接设置"
     echo "生成的文件 frontend-dist.tar.gz 已准备好，您可以手动上传"
-    echo "上传后在服务器上运行 ./fix-frontend.sh"
+    echo "上传后在服务器上运行 ./scripts/fix-frontend.sh"
     exit 1
 fi
 
@@ -58,16 +62,16 @@ ssh -p $SSH_PORT $USERNAME@$SERVER_IP "mkdir -p ~/AIreview/frontend/dist"
 
 # 上传文件
 echo "上传文件..."
-scp -P $SSH_PORT frontend-dist.tar.gz $USERNAME@$SERVER_IP:~/AIreview/
+scp -P $SSH_PORT $ROOT_DIR/frontend-dist.tar.gz $USERNAME@$SERVER_IP:~/AIreview/
 
 # 解压文件到正确位置
 echo "解压文件..."
 ssh -p $SSH_PORT $USERNAME@$SERVER_IP "cd ~/AIreview && tar -xzf frontend-dist.tar.gz -C frontend/dist && rm frontend-dist.tar.gz"
 
 echo "前端文件已成功上传到服务器！"
-echo "现在您可以在服务器上运行 ./deploy-simple.sh"
+echo "现在您可以在服务器上运行 ./scripts/deploy-simple.sh"
 
 # 清理本地临时文件
-rm -f frontend-dist.tar.gz
+rm -f $ROOT_DIR/frontend-dist.tar.gz
 
-exit 0 
+exit 0

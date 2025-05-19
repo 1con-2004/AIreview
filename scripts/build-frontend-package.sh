@@ -1,12 +1,16 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "前端构建包生成脚本"
 echo "======================"
 
 # 本地构建前端
 echo "在本地构建前端..."
-cd frontend
+cd $ROOT_DIR/frontend
 yarn install
 yarn build
 
@@ -21,8 +25,8 @@ echo "前端构建成功！"
 # 创建临时压缩包
 echo "打包前端文件..."
 cd dist
-tar -czf ../../frontend-dist.tar.gz *
-cd ../..
+tar -czf $ROOT_DIR/frontend-dist.tar.gz *
+cd $ROOT_DIR
 
 echo "前端构建包已生成: frontend-dist.tar.gz"
 echo "请将此文件上传到服务器的 /root/AIreview/ 目录"
@@ -33,7 +37,7 @@ echo "- 用户名: root"
 
 echo "上传后，在服务器上运行:"
 echo "cd /root/AIreview"
-echo "./fix-frontend.sh"
-echo "./deploy-simple.sh"
+echo "./scripts/fix-frontend.sh"
+echo "./scripts/deploy-simple.sh"
 
 exit 0 

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "======================"
 echo "AIreview简化部署脚本 (Ubuntu 24.04)"
 echo "======================"
@@ -16,42 +20,43 @@ fi
 
 # 检查前端文件是否存在
 echo "检查前端文件..."
-if [ ! -d "./frontend/dist" ] || [ ! -f "./frontend/dist/index.html" ]; then
+if [ ! -d "$ROOT_DIR/frontend/dist" ] || [ ! -f "$ROOT_DIR/frontend/dist/index.html" ]; then
   echo "警告: 前端构建文件不存在"
   echo "请先在本地构建前端并上传到服务器，或者确保frontend/dist目录中有有效的文件"
-  echo "您可以在本地使用 ./build-frontend.sh <服务器IP> 来构建并上传"
+  echo "您可以在本地使用 $ROOT_DIR/scripts/build-frontend.sh <服务器IP> 来构建并上传"
   
   # 创建空白页，至少让服务能启动
-  mkdir -p ./frontend/dist
-  echo "<html><body><h1>AIreview</h1><p>前端文件尚未正确部署，请完成前端构建</p></body></html>" > ./frontend/dist/index.html
+  mkdir -p $ROOT_DIR/frontend/dist
+  echo "<html><body><h1>AIreview</h1><p>前端文件尚未正确部署，请完成前端构建</p></body></html>" > $ROOT_DIR/frontend/dist/index.html
   echo "已创建临时index.html文件，以便服务能启动"
 fi
 
 # 创建必要的目录
 echo "创建必要的目录结构..."
-mkdir -p ./uploads/avatars
-mkdir -p ./frontend/public/uploads/avatars/temp
-mkdir -p ./backend/logs
-mkdir -p ./backend/public/uploads/avatars
-mkdir -p ./backend/public/uploads/icons
+mkdir -p $ROOT_DIR/uploads/avatars
+mkdir -p $ROOT_DIR/frontend/public/uploads/avatars/temp
+mkdir -p $ROOT_DIR/backend/logs
+mkdir -p $ROOT_DIR/backend/public/uploads/avatars
+mkdir -p $ROOT_DIR/backend/public/uploads/icons
 
 # 修复文件权限
 echo "修复文件权限..."
-chmod -R 755 ./frontend/dist 2>/dev/null || true
-chmod -R 755 ./uploads
-chmod -R 777 ./uploads/avatars
-chmod -R 755 ./backend
-chmod -R 777 ./backend/logs
-chmod -R 777 ./backend/public/uploads
+chmod -R 755 $ROOT_DIR/frontend/dist 2>/dev/null || true
+chmod -R 755 $ROOT_DIR/uploads
+chmod -R 777 $ROOT_DIR/uploads/avatars
+chmod -R 755 $ROOT_DIR/backend
+chmod -R 777 $ROOT_DIR/backend/logs
+chmod -R 777 $ROOT_DIR/backend/public/uploads
 
 # 检查简化版配置文件
-if [ ! -f "./docker-compose-simple.yml" ]; then
+if [ ! -f "$ROOT_DIR/docker-compose-simple.yml" ]; then
   echo "错误: 简化版docker-compose配置文件不存在"
   exit 1
 fi
 
 # 停止所有已有容器
 echo "停止所有已有容器..."
+cd $ROOT_DIR
 docker-compose down 2>/dev/null || true
 docker stop aireview-nginx aireview-backend aireview-db 2>/dev/null || true
 docker rm aireview-nginx aireview-backend aireview-db 2>/dev/null || true
@@ -71,6 +76,7 @@ sleep 5
 
 # 使用简化配置文件启动服务
 echo "使用简化配置启动服务..."
+cd $ROOT_DIR
 docker-compose -f docker-compose-simple.yml up -d
 
 # 等待容器启动

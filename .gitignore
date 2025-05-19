@@ -32,7 +32,6 @@ Thumbs.db
 /backend/uploads/
 /backend/temp/
 /frontend/dist/
-/.cursor/
 # 忽略以下文件和文件夹
 /.idea/
 /.mvn/
@@ -48,7 +47,6 @@ Thumbs.db
 *.pid.lock
 
 # 相关编译器配置
-/.cursor/
 mvnw
 mvnw.cmd
 pom.xml

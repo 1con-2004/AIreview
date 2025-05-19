@@ -3,6 +3,10 @@
 # Docker权限修复脚本 (Ubuntu 24.04)
 # 解决Docker容器无法访问Docker守护进程的问题
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "===== Docker权限修复脚本 (Ubuntu 24.04) ====="
 
 # 检查是否以root权限运行
@@ -74,7 +78,7 @@ fi
 
 # 重启Docker容器
 echo "6. 重启AIreview服务容器..."
-cd $(dirname $0) # 确保在项目根目录
+cd $ROOT_DIR # 确保在项目根目录
 docker-compose restart backend
 if [ $? -ne 0 ]; then
   echo "重启容器失败，您可能需要手动重启: docker-compose restart backend"
@@ -85,4 +89,4 @@ fi
 echo "===== 权限修复完成 ====="
 echo "注意：您需要重新登录系统或开启新的终端窗口才能使组权限生效"
 echo "如果问题仍然存在，请尝试重启Docker服务: sudo systemctl restart docker"
-echo "然后重新启动容器: ./start-containers.sh" 
+echo "然后重新启动容器: $ROOT_DIR/scripts/start-containers.sh" 

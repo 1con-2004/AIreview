@@ -62,7 +62,17 @@ AIreview/
 - 桥接网络配置
 - 卷挂载管理
 
-## 快速开始
+## 快速入门
+
+首次启动项目前，请先设置脚本执行权限：
+
+```bash
+# 设置所有脚本的执行权限
+chmod +x scripts/setup-permissions.sh
+./scripts/setup-permissions.sh
+```
+
+然后按照以下步骤启动项目:
 
 ### Docker部署（推荐）
 

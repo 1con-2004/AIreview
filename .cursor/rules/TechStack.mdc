@@ -1,0 +1,131 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 项目技术栈
+
+## 前端技术栈
+- **核心框架**
+  - Vue 3 框架
+  - Vue Router 路由管理
+  - Vuex 状态管理
+  - PrimeVue UI组件库
+
+- **网络请求**
+  - Axios 用于网络请求
+  - WebSocket 用于实时通信
+  - 支持Server-Sent Events(SSE)用于流式响应
+
+- **工具库**
+  - js-cookie 用于Cookie管理
+  - dayjs 用于日期处理
+  - lodash 用于数据处理
+  - prismjs 用于代码高亮
+
+- **开发工具**
+  - ESLint 代码规范检查
+  - Babel 代码转译
+  - Vue CLI 项目脚手架
+  - SCSS 预处理器
+
+## 后端技术栈
+- **核心框架**
+  - Node.js 运行环境
+  - Express 服务器框架
+  - MySQL 8.0 数据库（使用mysql2/promise库）
+  - Redis 缓存支持
+
+- **安全相关**
+  - bcrypt 密码加密
+  - jsonwebtoken 用于JWT认证
+  - CORS 跨域资源共享
+  - helmet 安全头配置
+  - rate-limiter-flexible 请求限流
+
+- **文件处理**
+  - multer 文件上传处理
+  - sharp 图像处理
+  - archiver 文件压缩
+
+- **AI集成**
+  - 智谱AI API集成
+  - DeepSeek AI API集成
+    - 通用对话模型(deepseek-chat)
+    - 代码特化模型(deepseek-coder)
+    - 增强推理模型(deepseek-reasoner)
+  - 支持流式和非流式响应
+
+- **开发工具**
+  - dotenv 环境变量管理
+  - winston 日志系统
+  - nodemon 热重载开发
+  - Swagger UI API文档生成
+
+## 部署技术栈
+- **容器化**
+  - Docker 容器化部署
+  - Docker Compose 多容器编排
+  - Docker健康检查
+
+- **Web服务器**
+  - Nginx 反向代理
+  - 支持gzip压缩
+  - 静态资源缓存
+  - 跨域请求处理
+  - WebSocket代理
+
+- **网络配置**
+  - 桥接网络（aireview_network）
+  - 端口映射
+  - 容器间通信
+  - 健康检查机制
+
+- **存储管理**
+  - Docker卷挂载
+  - 命名卷管理
+  - 文件持久化存储
+  - 数据库备份策略
+
+## 开发流程
+- **版本控制**
+  - Git 代码版本控制
+  - GitFlow 工作流
+  - 语义化版本管理
+
+- **依赖管理**
+  - yarn 包管理
+  - 锁定依赖版本
+  - 包安全审计
+
+- **开发环境**
+  - 支持热重载
+  - 开发服务器代理
+  - 日志管理
+  - 环境变量配置
+  - Docker开发环境
+
+- **测试与调试**
+  - 支持日志级别动态调整
+  - 健康检查机制
+  - 容器状态监控
+  - API测试端点
+
+## 监控与维护
+- **日志系统**
+  - winston 多级别日志
+  - 文件轮转策略
+  - 错误详情记录
+  - 性能指标收集
+
+- **健康检查**
+  - API健康端点
+  - 容器健康检查
+  - 数据库连接检测
+  - 服务可用性监控
+- **性能优化**
+  - Redis缓存
+  - 数据库索引优化
+  - 静态资源CDN加速
+  - 响应压缩
+  - API请求批处理 

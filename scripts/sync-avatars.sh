@@ -2,8 +2,12 @@
 
 # 同步头像文件到Nginx容器
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 echo "开始同步头像文件到Nginx容器..."
-AVATARS_DIR="./uploads/avatars"
+AVATARS_DIR="$ROOT_DIR/uploads/avatars"
 
 if [ ! -d "$AVATARS_DIR" ]; then
     echo "错误：头像目录不存在: $AVATARS_DIR"

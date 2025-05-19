@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 转到项目根目录
+cd "$(dirname "$0")/.."
+ROOT_DIR=$(pwd)
+
 # AIreview日志级别管理脚本
 # 用于控制后端日志输出级别
 
@@ -42,7 +46,7 @@ check_backend_container() {
         exit 0
       fi
     else 
-      echo -e "${RED}容器不存在。请先使用 ./start-containers.sh 启动环境。${NC}"
+      echo -e "${RED}容器不存在。请先使用 $ROOT_DIR/scripts/start-containers.sh 启动环境。${NC}"
       exit 1
     fi
   fi
