@@ -95,6 +95,9 @@ networks:
   aireview_network:
     name: aireview_network
     driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.88.0/24
 
 volumes:
   db_data:

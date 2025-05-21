@@ -17,8 +17,7 @@ services:
     depends_on:
       - backend
     networks:
-      aireview_network:
-        ipv4_address: 172.18.0.2
+      - aireview_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
@@ -59,8 +58,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      aireview_network:
-        ipv4_address: 172.18.0.3
+      - aireview_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', res => (res.statusCode === 200 ? process.exit(0) : process.exit(1)))"]
@@ -85,8 +83,7 @@ services:
     ports:
       - "3307:3306"
     networks:
-      aireview_network:
-        ipv4_address: 172.18.0.4
+      - aireview_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
@@ -99,14 +96,6 @@ networks:
   aireview_network:
     name: aireview_network
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
-      com.docker.network.bridge.enable_icc: "true"
-      com.docker.network.bridge.enable_ip_masquerade: "true"
 
 volumes:
   db_data:
