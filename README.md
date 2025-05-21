@@ -455,13 +455,13 @@ chmod +x scripts/setup-permissions.sh
    cd frontend
    sudo rm -rf dist
    mkdir -p dist
-   sudo chown -R $USER:staff dist
+   sudo chown -R apple:staff dist
    chmod -R 755 dist
    yarn build
    cd ..
 
    # 处理后端权限
-   sudo chown -R $USER:staff backend
+   sudo chown -R apple:staff backend
    chmod -R 755 backend
 
    # 重启两个容器

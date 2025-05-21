@@ -47,6 +47,7 @@
             <el-avatar
               :size="40"
               :src="getAvatarUrl(row.avatar)"
+              @error="() => avatarLoadError(row)"
             >
               {{ row.username.charAt(0).toUpperCase() }}
             </el-avatar>
@@ -289,28 +290,72 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 // 导入API工具函数
 import apiService, { getResourceUrl } from '@/utils/api'
 
+// 获取令牌的通用函数
+const getToken = () => {
+  const accessToken = localStorage.getItem('accessToken')
+  if (accessToken) return accessToken
+  
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    try {
+      const userInfo = JSON.parse(userInfoStr)
+      if (userInfo.accessToken) return userInfo.accessToken
+      if (userInfo.token) return userInfo.token
+    } catch (e) {
+      console.error('解析userInfo失败:', e)
+    }
+  }
+  return null
+}
+
+// 获取router实例
+const router = useRouter()
+
 // 获取完整的头像URL，使用getResourceUrl函数
 const getAvatarUrl = (avatar) => {
-  if (!avatar) return getResourceUrl('uploads/avatars/default-avatar.png')
-  if (avatar.startsWith('http')) return avatar
+  try {
+    // 如果没有头像，返回默认头像
+    if (!avatar) return getResourceUrl('uploads/avatars/default-avatar.png')
+    // 如果是完整的URL，直接返回
+    if (avatar.startsWith('http')) return avatar
 
-  // 处理数据库中存储的路径，确保使用正确的URL格式
-  // 数据库中存储的格式为 public/uploads/avatars/filename.jpeg
-  // 使用getResourceUrl处理
-  if (avatar.includes('public/uploads/avatars/')) {
-    // 提取文件名
-    const fileName = avatar.split('/').pop()
-    return getResourceUrl(`uploads/avatars/${fileName}`)
+    // 处理数据库中存储的路径，确保使用正确的URL格式
+    if (avatar.includes('public/uploads/avatars/')) {
+      // 提取文件名
+      const fileName = avatar.split('/').pop()
+      return getResourceUrl(`uploads/avatars/${fileName}`)
+    }
+
+    // 处理可能的相对路径情况
+    if (avatar.includes('uploads/avatars/')) {
+      return getResourceUrl(avatar)
+    }
+    
+    // 如果只是文件名，添加完整路径
+    if (!avatar.includes('/')) {
+      return getResourceUrl(`uploads/avatars/${avatar}`)
+    }
+
+    // 处理其他情况
+    return getResourceUrl(avatar)
+  } catch (error) {
+    console.error('处理头像URL时出错:', error)
+    // 出错时返回默认头像
+    return getResourceUrl('uploads/avatars/default-avatar.png')
   }
+}
 
-  // 处理其他情况
-  return getResourceUrl(avatar)
+// 处理头像加载错误
+const avatarLoadError = (user) => {
+  console.error('头像加载失败:', user.username)
+  // 使用首字母作为备用显示方式，无需额外处理，el-avatar组件会自动显示默认内容
 }
 
 // 角色数据
@@ -409,9 +454,19 @@ const fetchUsers = async () => {
       search: searchQuery.value
     })
 
-    const token = localStorage.getItem('token')
+    // 获取令牌并验证是否存在
+    const token = getToken()
+    if (!token) {
+      console.error('用户未登录或令牌不存在')
+      ElMessage.error('登录已过期，请重新登录后再试')
+      return
+    }
+    
     // 使用apiService替代原有的axios请求
-    const response = await apiService.get('user/admin/list', {
+    // 这里直接使用axios创建一个新的实例，避免使用apiService可能的全局拦截器问题
+    const response = await axios({
+      method: 'get',
+      url: '/api/user/admin/list',
       params: {
         page: currentPage.value,
         pageSize: pageSize.value,
@@ -425,15 +480,30 @@ const fetchUsers = async () => {
 
     console.log('获取用户列表响应:', response)
 
-    if (response.code === 200) {
-      users.value = response.data.list
-      totalUsers.value = response.data.total
+    // 处理响应，根据实际响应结构调整
+    if (response.data && response.data.code === 200) {
+      users.value = response.data.data.list || []
+      totalUsers.value = response.data.data.total || 0
+    } else if (response.data && response.data.success) {
+      // 兼容其他可能的成功响应格式
+      users.value = response.data.data.list || []
+      totalUsers.value = response.data.data.total || 0
     } else {
-      throw new Error(response.message || '获取用户列表失败')
+      throw new Error(response.data.message || '获取用户列表失败')
     }
   } catch (error) {
     console.error('获取用户列表错误:', error)
-    ElMessage.error(error.message || '获取用户列表失败')
+    
+    // 特殊处理401未授权错误，但不强制跳转
+    if (error.response && error.response.status === 401) {
+      ElMessage.error('登录已过期，请刷新页面或重新登录')
+    } else {
+      ElMessage.error(error.message || '获取用户列表失败')
+    }
+    
+    // 清空用户列表，确保UI不显示过期数据
+    users.value = []
+    totalUsers.value = 0
   }
 }
 
@@ -441,9 +511,19 @@ const fetchUsers = async () => {
 const fetchRoleStats = async () => {
   try {
     console.log('开始获取角色统计')
-    const token = localStorage.getItem('token')
-    // 使用apiService替代原有的axios请求
-    const response = await apiService.get('user/admin/role-stats', {
+    
+    // 获取令牌并验证是否存在
+    const token = getToken()
+    if (!token) {
+      console.error('获取角色统计失败: 用户未登录或令牌不存在')
+      ElMessage.error('登录已过期，请重新登录后再试')
+      return
+    }
+    
+    // 直接使用axios发送请求
+    const response = await axios({
+      method: 'get',
+      url: '/api/user/admin/role-stats',
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -451,15 +531,35 @@ const fetchRoleStats = async () => {
 
     console.log('角色统计响应:', response)
 
-    if (response.code === 200) {
-      roleCount.value = response.data.stats
-      totalUsers.value = response.data.total
+    // 处理响应，根据实际响应结构调整
+    if (response.data && response.data.code === 200) {
+      roleCount.value = response.data.data.stats || {}
+      totalUsers.value = response.data.data.total || 0
+    } else if (response.data && response.data.success) {
+      // 兼容其他可能的成功响应格式
+      roleCount.value = response.data.data.stats || {}
+      totalUsers.value = response.data.data.total || 0
     } else {
-      throw new Error(response.message || '获取角色统计失败')
+      throw new Error(response.data.message || '获取角色统计失败')
     }
   } catch (error) {
     console.error('获取角色统计错误:', error)
-    ElMessage.error(error.message || '获取角色统计失败')
+    
+    // 特殊处理401未授权错误，但不强制跳转
+    if (error.response && error.response.status === 401) {
+      ElMessage.error('登录已过期，请刷新页面或重新登录')
+    } else {
+      ElMessage.error(error.message || '获取角色统计失败')
+    }
+    
+    // 初始化空数据，确保UI显示正常
+    roleCount.value = {
+      normal: 0,
+      vip: 0,
+      super_vip: 0,
+      teacher: 0,
+      admin: 0
+    }
   }
 }
 
@@ -548,30 +648,39 @@ const handleSaveEdit = async () => {
     await editFormRef.value.validate()
 
     saveLoading.value = true
-    const token = localStorage.getItem('token')
-    // 使用apiService替代原有的axios请求
-    const response = await apiService.put(
-      `user/admin/update/${currentEditUser.value.id}`,
-      editForm.value,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+    const token = getToken()
+    if (!token) {
+      ElMessage.error('登录已过期，请重新登录后再试')
+      saveLoading.value = false
+      return
+    }
+    
+    // 直接使用axios发送请求
+    const response = await axios({
+      method: 'put',
+      url: `/api/user/admin/update/${currentEditUser.value.id}`,
+      data: editForm.value,
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    )
+    })
 
-    if (response.success) {
+    if (response.data && response.data.success) {
       ElMessage.success('保存成功')
       editDialogVisible.value = false
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.message || '保存失败')
+      throw new Error(response.data.message || '保存失败')
     }
   } catch (error) {
     console.error('保存失败:', error)
-    ElMessage.error(error.message || '保存失败')
+    if (error.response && error.response.status === 401) {
+      ElMessage.error('登录已过期，请刷新页面或重新登录')
+    } else {
+      ElMessage.error(error.message || '保存失败')
+    }
   } finally {
     saveLoading.value = false
   }
@@ -654,15 +763,24 @@ const handleSaveAdd = async () => {
     saveLoading.value = true
 
     console.log('准备添加新用户:', addForm.value)
-    const token = localStorage.getItem('token')
-    // 使用apiService替代原有的axios请求
-    const response = await apiService.post('user/add', {
-      username: addForm.value.username,
-      password: addForm.value.password,
-      email: addForm.value.email,
-      display_name: addForm.value.displayName,
-      role: addForm.value.role
-    }, {
+    const token = getToken()
+    if (!token) {
+      ElMessage.error('登录已过期，请重新登录后再试')
+      saveLoading.value = false
+      return
+    }
+    
+    // 直接使用axios发送请求
+    const response = await axios({
+      method: 'post',
+      url: '/api/user/add',
+      data: {
+        username: addForm.value.username,
+        password: addForm.value.password,
+        email: addForm.value.email,
+        display_name: addForm.value.displayName,
+        role: addForm.value.role
+      },
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -670,18 +788,22 @@ const handleSaveAdd = async () => {
 
     console.log('添加用户响应:', response)
 
-    if (response.success) {
+    if (response.data && response.data.success) {
       ElMessage.success('添加用户成功')
       addDialogVisible.value = false
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.message || '添加用户失败')
+      throw new Error(response.data.message || '添加用户失败')
     }
   } catch (error) {
     console.error('添加用户失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '添加用户失败')
+    if (error.response && error.response.status === 401) {
+      ElMessage.error('登录已过期，请刷新页面或重新登录')
+    } else {
+      ElMessage.error(error.response?.data?.message || error.message || '添加用户失败')
+    }
   } finally {
     saveLoading.value = false
   }
@@ -724,25 +846,37 @@ const handleDelete = (user) => {
 const deleteUser = async (userId) => {
   try {
     deleteLoading.value = true
-    const token = localStorage.getItem('token')
-    // 使用apiService替代原有的axios请求
-    const response = await apiService.delete(`user/admin/delete/${userId}`, {
+    const token = getToken()
+    if (!token) {
+      ElMessage.error('登录已过期，请重新登录后再试')
+      deleteLoading.value = false
+      return
+    }
+    
+    // 直接使用axios发送请求
+    const response = await axios({
+      method: 'delete',
+      url: `/api/user/admin/delete/${userId}`,
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
 
-    if (response.success) {
+    if (response.data && response.data.success) {
       ElMessage.success('用户删除成功')
       // 刷新用户列表和角色统计
       await fetchUsers()
       await fetchRoleStats()
     } else {
-      throw new Error(response.message || '删除用户失败')
+      throw new Error(response.data.message || '删除用户失败')
     }
   } catch (error) {
     console.error('删除用户失败:', error)
-    ElMessage.error(error.response?.data?.message || error.message || '删除用户失败')
+    if (error.response && error.response.status === 401) {
+      ElMessage.error('登录已过期，请刷新页面或重新登录')
+    } else {
+      ElMessage.error(error.response?.data?.message || error.message || '删除用户失败')
+    }
   } finally {
     deleteLoading.value = false
   }
@@ -751,8 +885,32 @@ const deleteUser = async (userId) => {
 // 页面加载时获取数据
 onMounted(() => {
   console.log('页面加载，开始获取数据')
-  fetchRoleStats()
-  fetchUsers()
+  
+  // 检查用户是否已登录
+  const token = getToken()
+  
+  if (!token) {
+    console.error('用户未登录或令牌不存在')
+    ElMessage.error('请先登录')
+    return
+  }
+  
+  // 检查用户角色权限
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    if (!['admin', 'teacher'].includes(userInfo.role)) {
+      console.error('用户无权限访问此页面')
+      ElMessage.error('您没有权限访问此页面')
+      return
+    }
+    
+    // 正常进入页面后加载数据
+    fetchRoleStats()
+    fetchUsers()
+  } catch (error) {
+    console.error('解析用户信息失败:', error)
+    ElMessage.error('获取用户信息失败，请重新登录')
+  }
 })
 </script>
 

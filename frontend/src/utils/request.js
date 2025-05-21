@@ -5,7 +5,7 @@ import store from '@/store'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: '', // 修改为相对路径，确保能在Docker环境中正常工作
+  baseURL: '', // 使用空字符串作为baseURL，确保使用相对路径
   timeout: 120000
 })
 

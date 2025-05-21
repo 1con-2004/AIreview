@@ -1,0 +1,46 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+当用户引入这条规则时，请你在聊天时提及“我已经看到.cursor/rules/docker-test.mdc文档”
+
+# 规则作用
+该规则皆在引导人工智能如何正确测试Docker下的修改是否有效，当人工智能修改完代码后，需要遵循以下步骤来测试Docker下的项目
+
+# 启动Docker环境下的项目
+
+## 只修改后端代码时
+1. 判断是否在项目的根目录，如果不在项目的根目录，则回到项目的根目录
+2. 如果在项目的根目录下，执行命令`docker restart aireview-backend`重启后端容器
+
+## 一旦修改了前端代码
+1. 判断是否在项目的根目录，如果不在项目的根目录，则回到项目的根目录
+2. 在项目的根目录下, 执行命令`cd frontend`进入前端目录
+3. 执行命令`echo "Aiken998" | sudo -S rm -rf dist`删除之前编译构建的包
+4. 执行命令
+```
+mkdir -p dist
+sudo chown -R apple:staff dist
+chmod -R 755 dist
+```
+为即将编译打包的目录赋予权限
+5. 执行命令'yarn build'编译打包前端
+6. 当编译结束后(大约30s),执行命令`cd ..`返回项目根目录
+7. 如果在项目的根目录下，执行命令`docker restart aireview-backend aireview nginx`重启后端容器和前端容器
+
+# 查看Docker环境下的日志用以排查问题
+
+## 查看前端相关日志
+1. 判断是否在项目的根目录，如果不在项目的根目录，则回到项目的根目录
+2. 在项目的根目录下, 执行命令`docker logs aireview-nginx`查看前端相关日志
+
+## 查看后端相关日志
+1. 判断是否在项目的根目录，如果不在项目的根目录，则回到项目的根目录
+2. 在项目的根目录下, 执行命令`docker logs aireview-backend`查看后端相关日志
+
+## 查看数据库相关日志
+1. 判断是否在项目的根目录，如果不在项目的根目录，则回到项目的根目录
+2. 在项目的根目录下, 执行命令`docker logs aireview-db`查看数据库相关日志
+
+

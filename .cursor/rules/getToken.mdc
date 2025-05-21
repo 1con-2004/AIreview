@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+当用户引入这条规则时，请你在聊天时提及“我已经看到.cursor/rules/getToken.mdc文档”
+
+# 规则作用
+该规则皆在指导人工智能如何通过正确的方式获取该项目的token，用户会提示“根据getToken规则来...”
+此时，对于token的获取，请你按照以下方式：
+通过nginx下的curl，以账户admin,用户admin123为例，获取token，用来测试相关api的连通性

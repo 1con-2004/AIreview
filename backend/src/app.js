@@ -252,6 +252,34 @@ if (!fs.existsSync(avatarsPath)) {
 
 // 配置静态文件中间件
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// 添加特殊的头像访问中间件，允许在Docker环境中正确加载头像
+app.use('/api/uploads/avatars', (req, res, next) => {
+    // 从URL中提取文件名
+    const fileName = req.path.split('/').pop();
+    console.log('请求头像文件:', fileName);
+    
+    // 构建文件完整路径
+    const filePath = path.join(__dirname, '../public/uploads/avatars', fileName);
+    console.log('头像文件完整路径:', filePath);
+    
+    // 检查文件是否存在
+    if (fs.existsSync(filePath)) {
+        // 发送文件
+        res.sendFile(filePath);
+    } else {
+        // 文件不存在，尝试发送默认头像
+        const defaultAvatarPath = path.join(__dirname, '../public/uploads/avatars/default-avatar.png');
+        if (fs.existsSync(defaultAvatarPath)) {
+            console.log('使用默认头像');
+            res.sendFile(defaultAvatarPath);
+        } else {
+            console.error('默认头像也不存在');
+            next(); // 继续下一个中间件
+        }
+    }
+});
+
 // 添加 /api/uploads 路径，以便前端可以通过 /api/uploads 访问上传的文件
 app.use('/api/uploads', express.static(path.join(__dirname, '../public/uploads')));
 

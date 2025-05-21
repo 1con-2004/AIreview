@@ -8,17 +8,8 @@ import store from '@/store'
  * 封装环境变量逻辑，支持开发环境和生产环境
  */
 const getBaseUrl = () => {
-  // 检查环境变量是否已设置
-  if (process.env.VUE_APP_BASE_API) {
-    return process.env.VUE_APP_BASE_API
-  }
-
-  // 默认使用相对路径，确保通过Nginx代理
+  // 本地开发环境强制使用/api路径
   return '/api'
-
-  // 注释掉以下代码，防止使用硬编码的localhost地址
-  // 开发环境使用localhost
-  // return process.env.VUE_APP_BASE_API || 'http://localhost:3000'
 }
 
 /**
@@ -44,17 +35,7 @@ export const getApiUrl = (path) => {
   }
 
   // 始终使用相对路径
-  return `${process.env.VUE_APP_BASE_API || '/api'}/${cleanPath}`
-
-  // 注释掉以下代码，防止使用硬编码的localhost地址
-  // 如果使用相对路径，直接返回相对路径
-  // if (process.env.VUE_APP_USE_RELATIVE_PATH === 'true') {
-  //   // 如果VUE_APP_BASE_API已经包含/api前缀，则不需要再添加
-  //   return `${process.env.VUE_APP_BASE_API}/${cleanPath}`
-  // }
-
-  // 开发环境返回完整URL
-  // return `${process.env.VUE_APP_BASE_API || 'http://localhost:3000'}/${cleanPath}`
+  return `/api/${cleanPath}`
 }
 
 /**
@@ -85,6 +66,22 @@ export const getResourceUrl = (path) => {
   const resourceBaseUrl = process.env.VUE_APP_RESOURCE_BASE_URL || ''
   // 处理不同类型的资源路径
   if (processedPath.includes('uploads/avatars/')) {
+    // 获取用户认证令牌
+    const accessToken = localStorage.getItem('accessToken') || 
+      (localStorage.getItem('userInfo') ? 
+        JSON.parse(localStorage.getItem('userInfo')).accessToken || 
+        JSON.parse(localStorage.getItem('userInfo')).token : 
+        null)
+
+    // 使用API访问静态资源以便携带认证令牌
+    if (accessToken && window.location.hostname !== 'localhost') {
+      // 提取文件名
+      const fileName = processedPath.split('/').pop().split('?')[0]
+      // 使用API端点访问头像
+      return `/api/uploads/avatars/${fileName}?t=${Date.now()}`
+    }
+
+    // 本地环境或无令牌时使用普通路径
     // 添加时间戳避免缓存问题
     if (processedPath.includes('?t=')) {
       return `${resourceBaseUrl}/${processedPath}`
@@ -169,19 +166,87 @@ apiService.interceptors.response.use(
     const res = response.data
     return res
   },
-  error => {
+  async error => {
     console.error('请求错误:', error)
 
     // 如果是401错误，可能是token过期
     if (error.response && error.response.status === 401) {
-      // 这里可以添加token刷新逻辑
-      ElMessage.error('登录已过期，请重新登录')
-      store.dispatch('logout')
-      router.push('/login')
+      console.log('[前端日志] 捕获到401错误，尝试刷新令牌')
+
+      // 尝试刷新token
+      const refreshToken = localStorage.getItem('refreshToken') || 
+                        (localStorage.getItem('userInfo') ? 
+                         JSON.parse(localStorage.getItem('userInfo')).refreshToken : null)
+      
+      // 如果没有refreshToken，直接跳转登录页
+      if (!refreshToken) {
+        console.error('[前端日志] 无法刷新令牌：refreshToken不存在')
+        ElMessage.error('登录已过期，请重新登录')
+        store.dispatch('logout')
+        router.push('/login')
+        return Promise.reject(error)
+      }
+
+      try {
+        // 尝试使用refreshToken获取新的accessToken
+        console.log('[前端日志] 开始刷新令牌')
+        const result = await refreshAccessToken(refreshToken)
+        
+        if (result.success) {
+          console.log('[前端日志] 令牌刷新成功，重新发送原始请求')
+          const { accessToken, refreshToken: newRefreshToken } = result.data
+          
+          // 更新本地存储的token
+          localStorage.setItem('accessToken', accessToken)
+          localStorage.setItem('refreshToken', newRefreshToken)
+          
+          // 更新userInfo中的token
+          const userInfoStr = localStorage.getItem('userInfo')
+          if (userInfoStr) {
+            const userInfo = JSON.parse(userInfoStr)
+            userInfo.accessToken = accessToken
+            userInfo.refreshToken = newRefreshToken
+            localStorage.setItem('userInfo', JSON.stringify(userInfo))
+          }
+          
+          // 更新Vuex中的token
+          store.dispatch('updateTokens', { accessToken, refreshToken: newRefreshToken })
+          
+          // 使用新的token重新发送之前失败的请求
+          error.config.headers.Authorization = `Bearer ${accessToken}`
+          return apiService(error.config)
+        } else {
+          console.error('[前端日志] 令牌刷新失败:', result.message)
+          throw new Error(result.message || '令牌刷新失败')
+        }
+      } catch (refreshError) {
+        console.error('[前端日志] 令牌刷新异常:', refreshError)
+        ElMessage.error('登录已过期，请重新登录')
+        store.dispatch('logout')
+        router.push('/login')
+      }
     }
 
     return Promise.reject(error)
   }
 )
+
+/**
+ * [令牌刷新] 刷新访问令牌
+ * 当访问令牌过期时使用刷新令牌获取新的访问令牌
+ */
+async function refreshAccessToken(refreshToken) {
+  try {
+    console.log('[前端日志] 发送刷新令牌请求')
+    // 创建一个新的axios实例用于刷新令牌，避免循环拦截
+    const refreshResponse = await axios.post('/api/login/refresh-token', { refresh_token: refreshToken })
+    
+    console.log('[前端日志] 刷新令牌响应:', refreshResponse.data)
+    return refreshResponse.data
+  } catch (error) {
+    console.error('[前端日志] 刷新令牌请求失败:', error)
+    throw error
+  }
+}
 
 export default apiService

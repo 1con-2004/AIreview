@@ -49,7 +49,7 @@ module.exports = defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
         logLevel: 'debug',
@@ -59,7 +59,7 @@ module.exports = defineConfig({
         }
       },
       '/uploads': {
-        target: process.env.VUE_APP_DOCKER_ENV ? 'http://backend:3000' : 'http://localhost',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
         onProxyReq: (proxyReq, req, res) => {

@@ -197,7 +197,7 @@ router.post('/', async (req, res) => {
 
     console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 密码验证成功，准备生成令牌`);
     
-    // 生成访问令牌和刷新令牌
+    // 生成访问令牌
     const tokenPayload = {
       id: user.id,
       username: user.username,
@@ -205,12 +205,6 @@ router.post('/', async (req, res) => {
       type: 'access'
     }
 
-    const refreshTokenPayload = {
-      id: user.id,
-      type: 'refresh'
-    }
-
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 生成访问令牌，Payload: ${JSON.stringify(tokenPayload)}`);
     const accessToken = jwt.sign(
       tokenPayload,
       jwtConfig.SECRET_KEY,
@@ -220,8 +214,13 @@ router.post('/', async (req, res) => {
       }
     )
 
-    console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 生成刷新令牌，Payload: ${JSON.stringify(refreshTokenPayload)}`);
-    const refreshToken = jwt.sign(
+    // 生成新的刷新令牌
+    const refreshTokenPayload = {
+      id: user.id,
+      type: 'refresh'
+    }
+
+    const newRefreshToken = jwt.sign(
       refreshTokenPayload,
       jwtConfig.SECRET_KEY,
       {
@@ -230,23 +229,23 @@ router.post('/', async (req, res) => {
       }
     )
 
-    // 存储刷新令牌到数据库 - 检查refresh_token字段是否存在
+    // 更新数据库中的刷新令牌
     try {
-      // 尝试更新刷新令牌
       await pool.execute(
         'UPDATE users SET refresh_token = ? WHERE id = ?',
-        [refreshToken, user.id]
+        [newRefreshToken, user.id]
       )
-      console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] 刷新令牌已存储到数据库`);
-    } catch (tokenError) {
-      // 如果更新失败，检查是否是因为字段不存在
-      if (tokenError.code === 'ER_BAD_FIELD_ERROR') {
-        console.log(`[DEBUG] [${new Date().toISOString()}] [${requestId}] refresh_token字段不存在，跳过更新`);
-        // 字段不存在时不影响登录流程继续
-      } else {
-        // 其他错误则抛出
-        throw tokenError;
-      }
+    } catch (updateError) {
+      console.error('更新刷新令牌失败:', updateError)
+      // 如果更新失败，继续使用当前的refreshToken
+      res.json({
+        success: true,
+        data: {
+          accessToken,
+          refreshToken: refresh_token
+        }
+      })
+      return
     }
 
     const { password: _, refresh_token: __, ...userInfo } = user
@@ -283,7 +282,7 @@ router.post('/', async (req, res) => {
         role: user.role,
         avatar_url: avatarUrl,
         accessToken,
-        refreshToken
+        refreshToken: newRefreshToken
       }
     })
   } catch (error) {
